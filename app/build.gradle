@@ -14,8 +14,6 @@ def keystorePath = System.getenv('KEYSTORE_PATH') ?: signingProps.getProperty('K
 def keystorePwd = System.getenv('KEYSTORE_PASS') ?: signingProps.getProperty('KEYSTORE_PASS')
 def alias = System.getenv('KEY_ALIAS') ?: signingProps.getProperty('KEY_ALIAS')
 def keyPwd = System.getenv('KEY_PASSWORD') ?: signingProps.getProperty('KEY_PASSWORD')
-
-// Pull request builds cannot access signing secrets; always use the default debug signing.
 def isPrBuild = System.getenv('GITHUB_EVENT_NAME') == 'pull_request' || (System.getenv('GITHUB_REF') ?: '').startsWith('refs/pull/')
 def hasReleaseSigning = !isPrBuild && keystorePath && keystorePwd && alias && keyPwd
 
@@ -48,15 +46,12 @@ def escapeJavaString = { String value ->
     value.replace('\\', '\\\\').replace('"', '\\"')
 }
 
-// STRUCT_OFFSETS_* macros from src/kernels/offsets.h, expanded into field maps.
 def parseStructMacros = { String text ->
     def macros = [:]
     def lines = text.readLines()
     for (int i = 0; i < lines.size(); i++) {
         def m = lines[i] =~ /#define\s+(STRUCT_OFFSETS_[A-Za-z0-9_]+)\s*(.*)/
-        if (!m.matches()) {
-            continue
-        }
+        if (!m.matches()) continue
         def name = m.group(1)
         def body = m.group(2)
         while (lines[i].trim().endsWith('\\')) {
@@ -65,15 +60,12 @@ def parseStructMacros = { String text ->
         }
         def fields = [:]
         def fm = body =~ offsetFieldRe
-        while (fm.find()) {
-            fields[fm.group(1)] = parseOffsetValue(fm.group(2))
-        }
+        while (fm.find()) fields[fm.group(1)] = parseOffsetValue(fm.group(2))
         macros[name] = fields
     }
     macros
 }
 
-// Per-kernel OFFSETS_ENTRY bodies: macro reference plus explicit overrides.
 def parseKernelEntries = { File header, macros ->
     def text = header.text
     def names = []
@@ -89,23 +81,17 @@ def parseKernelEntries = { File header, macros ->
         def macroMatch = body =~ /STRUCT_OFFSETS_[A-Za-z0-9_]+/
         if (macroMatch.find()) {
             def base = macros[macroMatch.group()]
-            if (base != null) {
-                fields.putAll(base)
-            }
+            if (base != null) fields.putAll(base)
         }
         def fm = body =~ offsetFieldRe
-        while (fm.find()) {
-            fields[fm.group(1)] = parseOffsetValue(fm.group(2))
-        }
+        while (fm.find()) fields[fm.group(1)] = parseOffsetValue(fm.group(2))
         entries[release] = fields
     }
     [names: names, entries: entries]
 }
 
 tasks.register('generateSupportedKernels') {
-    def offsets = fileTree(rootProject.projectDir) {
-        include 'src/kernels/*/offsets.h'
-    }
+    def offsets = fileTree(rootProject.projectDir) { include 'src/kernels/*/offsets.h' }
     def outFile = supportedKernelsSrc.map { it.file('com/ghostlock/app/SupportedKernels.java') }
     inputs.files(offsets)
     inputs.file(sharedOffsetsHeader)
@@ -122,33 +108,18 @@ tasks.register('generateSupportedKernels') {
         def names = allNames.unique()
         def sb = new StringBuilder()
         sb << "package com.ghostlock.app;\n\n"
-        sb << "import java.util.Collections;\n"
-        sb << "import java.util.HashMap;\n"
-        sb << "import java.util.Map;\n\n"
-        sb << "/** Generated from kernel offset headers; do not edit. */\n"
-        sb << "public final class SupportedKernels {\n"
+        sb << "import java.util.Collections;\nimport java.util.HashMap;\nimport java.util.Map;\n\n"
+        sb << "/** Generated from kernel offset headers; do not edit. */\npublic final class SupportedKernels {\n"
         sb << "    public static final String[] UNAMES = {\n"
-        names.each { name ->
-            sb << "        \"${escapeJavaString(name)}\",\n"
-        }
-        sb << "    };\n\n"
-        sb << "    /** Built-in release -> field -> value (STRUCT_OFFSETS_* macros expanded). */\n"
-        sb << "    public static final Map<String, Map<String, Long>> BUILTIN = builtin();\n\n"
-        sb << "    private static Map<String, Map<String, Long>> builtin() {\n"
-        sb << "        Map<String, Map<String, Long>> builtin = new HashMap<>();\n"
+        names.each { name -> sb << "        \"${escapeJavaString(name)}\",\n" }
+        sb << "    };\n\n    public static final Map<String, Map<String, Long>> BUILTIN = builtin();\n\n"
+        sb << "    private static Map<String, Map<String, Long>> builtin() {\n        Map<String, Map<String, Long>> builtin = new HashMap<>();\n"
         builtins.each { release, fields ->
-            sb << "        {\n"
-            sb << "            Map<String, Long> e = new HashMap<>();\n"
-            fields.each { key, value ->
-                sb << "            e.put(\"${escapeJavaString(key)}\", ${formatOffsetValue(value)});\n"
-            }
-            sb << "            builtin.put(\"${escapeJavaString(release)}\", Collections.unmodifiableMap(e));\n"
-            sb << "        }\n"
+            sb << "        {\n            Map<String, Long> e = new HashMap<>();\n"
+            fields.each { key, value -> sb << "            e.put(\"${escapeJavaString(key)}\", ${formatOffsetValue(value)});\n" }
+            sb << "            builtin.put(\"${escapeJavaString(release)}\", Collections.unmodifiableMap(e));\n        }\n"
         }
-        sb << "        return Collections.unmodifiableMap(builtin);\n"
-        sb << "    }\n\n"
-        sb << "    private SupportedKernels() {}\n"
-        sb << "}\n"
+        sb << "        return Collections.unmodifiableMap(builtin);\n    }\n\n    private SupportedKernels() {}\n}\n"
         def file = outFile.get().asFile
         file.parentFile.mkdirs()
         file.text = sb.toString()
@@ -170,9 +141,7 @@ android {
     }
 
     namespace = 'com.ghostlock.app'
-    compileSdk {
-        version = release(37)
-    }
+    compileSdk { version = release(37) }
 
     defaultConfig {
         applicationId "com.ghostlock.app"
@@ -180,33 +149,20 @@ android {
         targetSdk 37
         versionCode gitVersionCode
         versionName appVersionName
-        ndk {
-            //noinspection ChromeOsAbiSupport
-            abiFilters "arm64-v8a"
-        }
+        ndk { abiFilters "arm64-v8a" }
     }
 
-    sourceSets {
-        main {
-            java.srcDir(supportedKernelsSrc.get())
-        }
-    }
+    sourceSets { main { java.srcDir(supportedKernelsSrc.get()) } }
 
     buildTypes {
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            if (hasReleaseSigning) {
-                signingConfig signingConfigs.release
-            } else {
-                signingConfig signingConfigs.debug
-            }
+            if (hasReleaseSigning) signingConfig signingConfigs.release else signingConfig signingConfigs.debug
         }
         debug {
             minifyEnabled false
-            if (hasReleaseSigning) {
-                signingConfig signingConfigs.release
-            }
+            if (hasReleaseSigning) signingConfig signingConfigs.release
         }
     }
 
@@ -216,12 +172,7 @@ android {
     }
 
     enableKotlin = false
-
-    packaging {
-        jniLibs {
-            useLegacyPackaging = true
-        }
-    }
+    packaging { jniLibs { useLegacyPackaging = true } }
 }
 
 tasks.named('preBuild') {
@@ -230,13 +181,10 @@ tasks.named('preBuild') {
     dependsOn(tasks.named('generateSupportedKernels'))
 }
 
-base {
-    archivesName = "${appName}-v${appVersionName}(${gitVersionCode})"
-}
+base { archivesName = "${appName}-v${appVersionName}(${gitVersionCode})" }
 
 dependencies {
+    implementation 'com.google.android.material:material:1.13.0'
     testImplementation 'junit:junit:4.13.2'
-    // local unit tests run against a mockable android.jar whose org.json
-    // stubs throw; the real artifact shadows it on the test classpath
     testImplementation 'org.json:json:20240303'
 }
