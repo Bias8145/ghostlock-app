@@ -3,7 +3,7 @@
     <string name="app_name">GhostLock</string>
     <string name="action_run">Run</string>
     <string name="action_running">Running…</string>
-    <string name="action_advanced">Advanced</string>
+    <string name="action_advanced">Settings</string>
     <string name="action_import_offsets">Import offsets.json</string>
     <string name="action_export_offsets">Export offsets.json</string>
     <string name="action_parse_ota">Parse OTA link</string>
@@ -43,4 +43,10 @@
     <string name="kernel_unsupported">Not supported</string>
     <string name="support_label">Support</string>
     <string name="cpu_pair_label">CPU cores</string>
+    <string name="header_subtitle">Kernel exploit &amp; runtime control</string>
+    <string name="about_modder_title">About modder</string>
+    <string name="about_modder_summary">VOLD_NAMESPACE (khaliq)</string>
+    <string name="about_modder_message">GhostLock modification by VOLD_NAMESPACE (khaliq). Original project and developer credit are retained.</string>
+    <string name="telegram">Telegram</string>
+    <string name="github">GitHub</string>
 </resources>
