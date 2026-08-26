@@ -7,6 +7,7 @@
     <color name="text_secondary">#FF625F66</color>
     <color name="icon_tint">#FF49454F</color>
     <color name="accent">#FF6750A4</color>
+    <color name="primary">#FF6750A4</color>
     <color name="accent_pressed">#FF4F378B</color>
     <color name="accent_disabled">#FFCAC4D0</color>
     <color name="accent_container">#FFEADDFF</color>
