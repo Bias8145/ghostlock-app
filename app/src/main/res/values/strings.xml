@@ -45,8 +45,5 @@
     <string name="cpu_pair_label">CPU cores</string>
     <string name="header_subtitle">Kernel exploit &amp; runtime control</string>
     <string name="about_modder_title">About modder</string>
-    <string name="about_modder_summary">VOLD_NAMESPACE (khaliq)</string>
-    <string name="about_modder_message">GhostLock modification by VOLD_NAMESPACE (khaliq). Original project and developer credit are retained.</string>
-    <string name="telegram">Telegram</string>
-    <string name="github">GitHub</string>
+    <string name="about_modder_message">GhostLock modification by VOLD_NAMESPACE (khaliq).\nOriginal project and developer credit are retained.</string>
 </resources>
