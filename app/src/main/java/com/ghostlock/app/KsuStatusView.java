@@ -35,9 +35,10 @@ public class KsuStatusView extends TextView {
 
     public void refreshStatus() {
         String name = installedManager();
-        String status = name == null ? "Uninstalled" : "Installed";
-        setText("Manager:  " + (name == null ? "—" : name) + "  |  Status:  " + status);
-        setTextColor(getResources().getColor(name == null ? R.color.text_secondary : R.color.status_success));
+        boolean installed = name != null;
+        String status = installed ? "Installed" : "Uninstalled";
+        setText("Manager:  " + (installed ? name : "—") + "  |  Status:  " + status);
+        setTextColor(getResources().getColor(installed ? R.color.status_success : R.color.status_error));
     }
 
     private String installedManager() {
@@ -79,7 +80,7 @@ public class KsuStatusView extends TextView {
         TextView github = link("  GitHub");
         github.setOnClickListener(v -> openLink("https://github.com/Bias8145"));
         LinearLayout.LayoutParams githubParams = new LinearLayout.LayoutParams(0, dp(44), 1);
-        githubParams.setMarginStart(dp(12));
+        githubParams.setMarginStart(dp(18));
         links.addView(github, githubParams);
         content.addView(links);
 
