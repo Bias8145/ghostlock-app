@@ -10,6 +10,8 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@color/bg</item>
         <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:alertDialogTheme">@style/ThemeOverlay.GhostLock.MaterialAlertDialog</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.GhostLock.MaterialAlertDialog</item>
         <item name="colorPrimary">@color/accent</item>
         <item name="colorOnPrimary">@color/on_accent</item>
         <item name="colorPrimaryContainer">@color/accent_container</item>
@@ -18,7 +20,6 @@
         <item name="colorOnSurface">@color/text_primary</item>
         <item name="colorOutline">@color/border</item>
         <item name="colorOutlineVariant">@color/outline_variant</item>
-        <item name="materialAlertDialogTheme">@style/ThemeOverlay.GhostLock.MaterialAlertDialog</item>
     </style>
 
     <style name="ThemeOverlay.GhostLock.MaterialAlertDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
