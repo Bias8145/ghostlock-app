@@ -81,7 +81,7 @@ public class KsuStatusView extends TextView {
         content.setPadding(pad, dp(8), pad, 0);
 
         TextView description = new TextView(context);
-        description.setText("GhostLock modification by VOLD_NAMESPACE (khaliq).\nOriginal project and developer credit are retained.");
+        description.setText(R.string.about_modder_message);
         description.setTextColor(getResources().getColor(R.color.text_secondary));
         description.setTextSize(14);
         description.setLineSpacing(dp(2), 1f);
@@ -92,11 +92,11 @@ public class KsuStatusView extends TextView {
         links.setOrientation(LinearLayout.HORIZONTAL);
         links.setPadding(0, dp(16), 0, dp(8));
 
-        TextView telegram = link("Telegram");
+        TextView telegram = link("  Telegram");
         telegram.setOnClickListener(v -> openLink("https://t.me/VOLD_NAMESPACE"));
         links.addView(telegram, new LinearLayout.LayoutParams(0, dp(48), 1));
 
-        TextView github = link("GitHub");
+        TextView github = link("  GitHub");
         github.setOnClickListener(v -> openLink("https://github.com/Bias8145"));
         LinearLayout.LayoutParams githubParams = new LinearLayout.LayoutParams(0, dp(48), 1);
         githubParams.setMarginStart(dp(8));
@@ -105,9 +105,9 @@ public class KsuStatusView extends TextView {
         content.addView(links);
 
         new AlertDialog.Builder(context)
-                .setTitle("About modder")
+                .setTitle(R.string.about_modder_title)
                 .setView(content)
-                .setNegativeButton("Close", null)
+                .setNegativeButton(R.string.cancel, null)
                 .show();
     }
 
@@ -117,7 +117,7 @@ public class KsuStatusView extends TextView {
         view.setGravity(Gravity.CENTER);
         view.setTextSize(14);
         view.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        view.setTextColor(getResources().getColor(R.color.primary));
+        view.setTextColor(getResources().getColor(R.color.accent));
         view.setBackgroundResource(android.R.drawable.btn_default);
         return view;
     }
