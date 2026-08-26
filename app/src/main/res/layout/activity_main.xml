@@ -8,46 +8,72 @@
     android:background="@color/bg"
     android:clipToPadding="false"
     android:fillViewport="true"
-    android:paddingStart="20dp"
+    android:paddingStart="16dp"
     android:paddingTop="8dp"
-    android:paddingEnd="20dp"
-    android:paddingBottom="28dp">
+    android:paddingEnd="16dp"
+    android:paddingBottom="24dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
+        <!-- Web Test header adapted to a native Material 3 app bar. -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
-            android:minHeight="88dp"
-            android:paddingTop="8dp"
-            android:paddingBottom="12dp">
+            android:minHeight="72dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="8dp">
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:orientation="vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-                <TextView
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    app:cardBackgroundColor="@color/accent_container"
+                    app:cardCornerRadius="14dp"
+                    app:cardElevation="0dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:text="G"
+                        android:textColor="@color/on_accent_container"
+                        android:textSize="20sp"
+                        android:textStyle="bold" />
+                </com.google.android.material.card.MaterialCardView>
+
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:letterSpacing="-0.02"
-                    android:text="@string/app_name"
-                    android:textColor="@color/text_primary"
-                    android:textSize="32sp"
-                    android:textStyle="bold" />
+                    android:layout_marginStart="12dp"
+                    android:orientation="vertical">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="3dp"
-                    android:text="Kernel runtime controller"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="14sp" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:letterSpacing="-0.015"
+                        android:text="@string/app_name"
+                        android:textColor="@color/text_primary"
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="1dp"
+                        android:text="v1.0.0"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
+                </LinearLayout>
             </LinearLayout>
 
             <ImageButton
@@ -61,11 +87,12 @@
                 android:tint="@color/icon_tint" />
         </LinearLayout>
 
+        <!-- StatusCard: same information hierarchy as the Test web UI. -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:cardBackgroundColor="@color/surface_container"
-            app:cardCornerRadius="28dp"
+            app:cardCornerRadius="24dp"
             app:cardElevation="0dp"
             app:strokeColor="@color/outline_variant"
             app:strokeWidth="1dp">
@@ -74,21 +101,35 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="20dp">
+                android:padding="16dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical">
 
-                    <TextView
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Device status"
-                        android:textColor="@color/text_primary"
-                        android:textSize="20sp"
-                        android:textStyle="bold" />
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Device status"
+                            android:textColor="@color/text_primary"
+                            android:textSize="19sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Kernel compatibility and device details"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp" />
+                    </LinearLayout>
 
                     <LinearLayout
                         android:id="@+id/kernelChip"
@@ -96,18 +137,17 @@
                         android:layout_height="wrap_content"
                         android:background="@drawable/bg_status_chip"
                         android:gravity="center_vertical"
-                        android:minHeight="32dp"
-                        android:orientation="horizontal"
-                        android:paddingStart="13dp"
-                        android:paddingTop="6dp"
-                        android:paddingEnd="13dp"
-                        android:paddingBottom="6dp">
+                        android:minHeight="30dp"
+                        android:paddingStart="11dp"
+                        android:paddingTop="5dp"
+                        android:paddingEnd="11dp"
+                        android:paddingBottom="5dp">
 
                         <TextView
                             android:id="@+id/kernelChipText"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textSize="12sp"
+                            android:textSize="11sp"
                             android:textStyle="bold" />
                     </LinearLayout>
                 </LinearLayout>
@@ -117,27 +157,78 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
-                    android:ellipsize="end"
-                    android:lineSpacingExtra="5dp"
-                    android:maxLines="3"
+                    android:lineSpacingExtra="3dp"
                     android:textColor="@color/text_secondary"
-                    android:textSize="14sp" />
+                    android:textSize="13sp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- Primary action from Test ActionButtons. -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/runButton"
             style="@style/Widget.Material3.Button"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="12dp"
             android:text="@string/action_run"
             android:textAllCaps="false"
             android:textSize="16sp"
             android:textStyle="bold"
-            app:cornerRadius="28dp"
-            app:iconGravity="textStart" />
+            app:cornerRadius="28dp" />
 
+        <!-- Secondary Test actions are kept directly reachable on Android. -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:baselineAligned="false"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/importButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="68dp"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1"
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp"
+                android:text="@string/action_import_offsets"
+                android:textAllCaps="false"
+                android:textSize="11sp"
+                app:cornerRadius="16dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/otaButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="68dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1"
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp"
+                android:text="@string/action_parse_ota"
+                android:textAllCaps="false"
+                android:textSize="11sp"
+                app:cornerRadius="16dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/parseButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="68dp"
+                android:layout_marginStart="4dp"
+                android:layout_weight="1"
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp"
+                android:text="@string/action_parse"
+                android:textAllCaps="false"
+                android:textSize="11sp"
+                app:cornerRadius="16dp" />
+        </LinearLayout>
+
+        <!-- Advanced remains available for CPU tuning; actions are no longer hidden here. -->
         <LinearLayout
             android:id="@+id/advancedPanel"
             android:layout_width="match_parent"
@@ -148,9 +239,9 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="12dp"
                 app:cardBackgroundColor="@color/surface_container_low"
-                app:cardCornerRadius="24dp"
+                app:cardCornerRadius="20dp"
                 app:cardElevation="0dp"
                 app:strokeColor="@color/outline_variant"
                 app:strokeWidth="1dp">
@@ -159,33 +250,33 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="20dp">
+                    android:padding="16dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Advanced"
                         android:textColor="@color/text_primary"
-                        android:textSize="18sp"
+                        android:textSize="17sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="Fine-tune execution and manage kernel offsets."
+                        android:layout_marginTop="3dp"
+                        android:text="Fine-tune execution and manage exported offsets."
                         android:textColor="@color/text_secondary"
-                        android:textSize="13sp" />
+                        android:textSize="12sp" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="58dp"
-                        android:layout_marginTop="16dp"
+                        android:layout_marginTop="14dp"
                         android:background="@drawable/bg_spinner"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
-                        android:paddingStart="16dp"
-                        android:paddingEnd="8dp">
+                        android:paddingStart="14dp"
+                        android:paddingEnd="6dp">
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -198,7 +289,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="@string/cpu_pair_label"
                                 android:textColor="@color/text_primary"
-                                android:textSize="14sp"
+                                android:textSize="13sp"
                                 android:textStyle="bold" />
 
                             <TextView
@@ -207,7 +298,7 @@
                                 android:layout_marginTop="1dp"
                                 android:text="Select the execution core pair"
                                 android:textColor="@color/text_secondary"
-                                android:textSize="11sp" />
+                                android:textSize="10sp" />
                         </LinearLayout>
 
                         <Spinner
@@ -219,41 +310,11 @@
                     </LinearLayout>
 
                     <com.google.android.material.button.MaterialButton
-                        android:id="@+id/importButton"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="48dp"
-                        android:layout_marginTop="14dp"
-                        android:text="@string/action_import_offsets"
-                        android:textAllCaps="false"
-                        app:cornerRadius="24dp" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/otaButton"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="48dp"
-                        android:layout_marginTop="8dp"
-                        android:text="@string/action_parse_ota"
-                        android:textAllCaps="false"
-                        app:cornerRadius="24dp" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/parseButton"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="48dp"
-                        android:layout_marginTop="8dp"
-                        android:text="@string/action_parse"
-                        android:textAllCaps="false"
-                        app:cornerRadius="24dp" />
-
-                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/exportButton"
                         style="@style/Widget.Material3.Button.OutlinedButton"
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="10dp"
                         android:text="@string/action_export_offsets"
                         android:textAllCaps="false"
                         app:cornerRadius="24dp" />
@@ -261,19 +322,20 @@
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
 
+        <!-- LogPanel from Test, rendered with a native monospace log surface. -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
-            android:layout_height="400dp"
-            android:layout_marginTop="16dp"
+            android:layout_height="360dp"
+            android:layout_marginTop="12dp"
             app:cardBackgroundColor="@color/log_bg"
-            app:cardCornerRadius="24dp"
+            app:cardCornerRadius="22dp"
             app:cardElevation="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="14dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -300,7 +362,7 @@
                             android:layout_marginTop="1dp"
                             android:text="Live execution output"
                             android:textColor="@color/log_secondary"
-                            android:textSize="11sp" />
+                            android:textSize="10sp" />
                     </LinearLayout>
 
                     <com.google.android.material.button.MaterialButton
@@ -312,15 +374,15 @@
                         android:text="@string/action_copy"
                         android:textAllCaps="false"
                         android:textColor="@color/log_title"
-                        android:textSize="12sp"
+                        android:textSize="11sp"
                         app:cornerRadius="20dp" />
                 </LinearLayout>
 
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:layout_marginTop="10dp"
-                    android:layout_marginBottom="10dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
                     android:background="@color/log_divider" />
 
                 <ScrollView
@@ -338,10 +400,10 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:fontFamily="monospace"
-                        android:lineSpacingExtra="3dp"
+                        android:lineSpacingExtra="2dp"
                         android:textColor="@color/log_text"
                         android:textIsSelectable="true"
-                        android:textSize="12sp" />
+                        android:textSize="11sp" />
                 </ScrollView>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -349,10 +411,10 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="12dp"
             android:gravity="center"
             android:text="GhostLock"
             android:textColor="@color/text_secondary"
-            android:textSize="12sp" />
+            android:textSize="11sp" />
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>
