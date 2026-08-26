@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">GhostLock</string>
+    <string name="header_dev_mode">DEV MOD · VOLD_NAMESPACE</string>
     <string name="action_run">Run</string>
     <string name="action_running">Running…</string>
     <string name="action_advanced">Advanced</string>
