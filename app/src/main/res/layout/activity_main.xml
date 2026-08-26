@@ -12,68 +12,22 @@
     android:paddingTop="10dp"
     android:paddingEnd="20dp"
     android:paddingBottom="24dp">
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:minHeight="100dp"
-            android:paddingTop="2dp"
-            android:paddingBottom="8dp">
-            <ImageView
-                android:layout_width="84dp"
-                android:layout_height="84dp"
-                android:contentDescription="@string/app_name"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_launcher_foreground"
-                android:tint="@color/icon_tint" />
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="0dp"
-                android:layout_weight="1"
-                android:orientation="vertical">
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:letterSpacing="-0.025"
-                    android:text="@string/app_name"
-                    android:textColor="@color/text_primary"
-                    android:textSize="25sp"
-                    android:textStyle="bold" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="@string/header_subtitle"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:minHeight="100dp" android:paddingTop="2dp" android:paddingBottom="8dp">
+            <ImageView android:layout_width="84dp" android:layout_height="84dp" android:contentDescription="@string/app_name" android:scaleType="fitCenter" android:src="@drawable/ic_launcher_foreground" android:tint="@color/icon_tint" />
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="-4dp" android:layout_weight="1" android:orientation="vertical">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:letterSpacing="-0.025" android:text="@string/app_name" android:textColor="@color/text_primary" android:textSize="25sp" android:textStyle="bold" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="@string/header_subtitle" android:textColor="@color/text_secondary" android:textSize="12sp" />
             </LinearLayout>
-            <ImageButton
-                android:id="@+id/advancedButton"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="@drawable/bg_icon_button"
-                android:contentDescription="@string/action_advanced"
-                android:padding="12dp"
-                android:src="@drawable/ic_settings_24"
-                android:tint="@color/icon_tint" />
+            <ImageButton android:id="@+id/advancedButton" android:layout_width="48dp" android:layout_height="48dp" android:background="@drawable/bg_icon_button" android:contentDescription="@string/action_advanced" android:padding="12dp" android:src="@drawable/ic_settings_24" android:tint="@color/icon_tint" />
         </LinearLayout>
-
         <View android:layout_width="42dp" android:layout_height="2dp" android:layout_marginBottom="12dp" android:background="@color/accent" />
-
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="18dp" android:background="@drawable/bg_status_card">
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/device_label" android:textColor="@color/text_secondary" android:textSize="12sp" />
             <TextView android:id="@+id/deviceInfo" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:textColor="@color/text_primary" android:textSize="16sp" android:textStyle="bold" tools:text="Pixel · Android · kernel" />
             <TextView android:id="@+id/kernelChipText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:text="Supported" android:textColor="@color/status_success" android:textSize="12sp" android:textStyle="bold" />
             <TextView android:id="@+id/kernelChip" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
         </LinearLayout>
-
         <Button android:id="@+id/runButton" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="14dp" android:text="@string/action_run" android:textSize="15sp" android:textStyle="bold" android:textAllCaps="false" />
         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="22dp" android:text="Tools" android:textColor="@color/text_primary" android:textSize="18sp" android:textStyle="bold" />
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:orientation="vertical">
