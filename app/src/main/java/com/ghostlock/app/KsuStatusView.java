@@ -1,16 +1,15 @@
 package com.ghostlock.app;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Typeface;
-import android.net.Uri;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
 import android.view.Gravity;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
-/** Small non-invasive status indicator for the installed KSU manager. */
+/** Compact manager/status indicator. */
 public class KsuStatusView extends TextView {
     private static final String KSU = "me.weishu.kernelsu";
     private static final String RESUKISU = "com.resukisu.resukisu";
@@ -22,9 +21,8 @@ public class KsuStatusView extends TextView {
 
     private void init() {
         setGravity(Gravity.CENTER_VERTICAL);
-        setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.NORMAL));
+        setTypeface(Typeface.DEFAULT);
         setTextSize(12);
-        setOnClickListener(v -> showModderAbout());
         refreshStatus();
     }
 
@@ -34,11 +32,17 @@ public class KsuStatusView extends TextView {
     }
 
     public void refreshStatus() {
-        String name = installedManager();
-        boolean installed = name != null;
+        String manager = installedManager();
+        boolean installed = manager != null;
         String status = installed ? "Installed" : "Uninstalled";
-        setText("Manager:  " + (installed ? name : "—") + "  |  Status:  " + status);
-        setTextColor(getResources().getColor(installed ? R.color.status_success : R.color.status_error));
+        String text = "Manager:  " + (installed ? manager : "—") + "  |  Status:  " + status;
+        SpannableString styled = new SpannableString(text);
+        int statusStart = text.lastIndexOf(status);
+        styled.setSpan(new ForegroundColorSpan(getResources().getColor(
+                installed ? R.color.status_success : R.color.status_error)),
+                statusStart, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        setText(styled);
+        setTextColor(getResources().getColor(R.color.text_primary));
     }
 
     private String installedManager() {
@@ -53,59 +57,4 @@ public class KsuStatusView extends TextView {
         try { pm.getApplicationInfo(packageName, 0); return true; }
         catch (PackageManager.NameNotFoundException ignored) { return false; }
     }
-
-    private void showModderAbout() {
-        Context context = getContext();
-        LinearLayout content = new LinearLayout(context);
-        content.setOrientation(LinearLayout.VERTICAL);
-        int pad = dp(20);
-        content.setPadding(pad, dp(4), pad, 0);
-
-        TextView description = new TextView(context);
-        description.setText(R.string.about_modder_message);
-        description.setTextColor(getResources().getColor(R.color.text_secondary));
-        description.setTextSize(12);
-        description.setLineSpacing(dp(2), 1f);
-        content.addView(description);
-
-        LinearLayout links = new LinearLayout(context);
-        links.setGravity(Gravity.CENTER);
-        links.setOrientation(LinearLayout.HORIZONTAL);
-        links.setPadding(0, dp(14), 0, dp(4));
-
-        TextView telegram = link("  Telegram");
-        telegram.setOnClickListener(v -> openLink("https://t.me/VOLD_NAMESPACE"));
-        links.addView(telegram, new LinearLayout.LayoutParams(0, dp(44), 1));
-
-        TextView github = link("  GitHub");
-        github.setOnClickListener(v -> openLink("https://github.com/Bias8145"));
-        LinearLayout.LayoutParams githubParams = new LinearLayout.LayoutParams(0, dp(44), 1);
-        githubParams.setMarginStart(dp(18));
-        links.addView(github, githubParams);
-        content.addView(links);
-
-        new AlertDialog.Builder(context)
-                .setTitle(R.string.about_modder_title)
-                .setView(content)
-                .setNegativeButton(R.string.cancel, null)
-                .show();
-    }
-
-    private TextView link(String label) {
-        TextView view = new TextView(getContext());
-        view.setText(label);
-        view.setGravity(Gravity.CENTER);
-        view.setTextSize(13);
-        view.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        view.setTextColor(getResources().getColor(R.color.accent));
-        view.setBackgroundResource(android.R.drawable.btn_default);
-        return view;
-    }
-
-    private void openLink(String url) {
-        try { getContext().startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); }
-        catch (Exception ignored) { }
-    }
-
-    private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
 }
