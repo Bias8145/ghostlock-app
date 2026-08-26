@@ -9,9 +9,9 @@
     android:clipToPadding="false"
     android:fillViewport="true"
     android:paddingStart="20dp"
-    android:paddingTop="8dp"
+    android:paddingTop="10dp"
     android:paddingEnd="20dp"
-    android:paddingBottom="28dp">
+    android:paddingBottom="32dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -22,43 +22,38 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
-            android:minHeight="100dp"
-            android:paddingTop="8dp"
-            android:paddingBottom="12dp">
-
+            android:minHeight="112dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="10dp">
             <ImageView
-                android:layout_width="56dp"
-                android:layout_height="56dp"
+                android:layout_width="76dp"
+                android:layout_height="76dp"
                 android:contentDescription="@string/app_name"
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_launcher_foreground"
                 android:tint="@color/icon_tint" />
-
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="14dp"
+                android:layout_marginStart="15dp"
                 android:layout_weight="1"
                 android:orientation="vertical">
-
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:letterSpacing="-0.025"
+                    android:letterSpacing="-0.03"
                     android:text="@string/app_name"
                     android:textColor="@color/text_primary"
                     android:textSize="30sp"
                     android:textStyle="bold" />
-
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
+                    android:layout_marginTop="3dp"
                     android:text="Kernel runtime controller"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
             </LinearLayout>
-
             <ImageButton
                 android:id="@+id/advancedButton"
                 android:layout_width="48dp"
@@ -70,6 +65,12 @@
                 android:tint="@color/icon_tint" />
         </LinearLayout>
 
+        <View
+            android:layout_width="44dp"
+            android:layout_height="3dp"
+            android:layout_marginBottom="14dp"
+            android:background="@color/primary" />
+
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -78,24 +79,20 @@
             app:cardElevation="0dp"
             app:strokeColor="@color/outline_variant"
             app:strokeWidth="1dp">
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:padding="20dp">
-
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical">
-
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:orientation="vertical">
-
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -103,7 +100,6 @@
                             android:textColor="@color/text_primary"
                             android:textSize="20sp"
                             android:textStyle="bold" />
-
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -112,7 +108,6 @@
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
                     </LinearLayout>
-
                     <LinearLayout
                         android:id="@+id/kernelChip"
                         android:layout_width="wrap_content"
@@ -125,7 +120,6 @@
                         android:paddingTop="6dp"
                         android:paddingEnd="13dp"
                         android:paddingBottom="6dp">
-
                         <TextView
                             android:id="@+id/kernelChipText"
                             android:layout_width="wrap_content"
@@ -134,7 +128,6 @@
                             android:textStyle="bold" />
                     </LinearLayout>
                 </LinearLayout>
-
                 <TextView
                     android:id="@+id/deviceInfo"
                     android:layout_width="match_parent"
@@ -145,149 +138,137 @@
                     android:maxLines="3"
                     android:textColor="@color/text_secondary"
                     android:textSize="14sp" />
-
                 <com.ghostlock.app.KsuStatusView
                     android:layout_width="match_parent"
                     android:layout_height="36dp"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="10dp"
                     android:background="@drawable/bg_status_chip"
                     android:paddingStart="12dp"
                     android:paddingEnd="12dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            android:text="Execution"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"
+            android:textStyle="bold" />
         <com.google.android.material.button.MaterialButton
             android:id="@+id/runButton"
             style="@style/Widget.Material3.Button"
             android:layout_width="match_parent"
             android:layout_height="58dp"
-            android:layout_marginTop="18dp"
+            android:layout_marginTop="8dp"
             android:minHeight="58dp"
             android:text="@string/action_run"
             android:textAllCaps="false"
             android:textSize="16sp"
             android:textStyle="bold"
-            app:cornerRadius="29dp" />
+            app:cornerRadius="18dp"
+            app:iconGravity="textStart" />
 
-        <!-- Frequently used offset/parser tools are intentionally one tap away. -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Tools"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="8dp"
             app:cardBackgroundColor="@color/surface_container_low"
-            app:cardCornerRadius="24dp"
+            app:cardCornerRadius="16dp"
             app:cardElevation="0dp"
             app:strokeColor="@color/outline_variant"
             app:strokeWidth="1dp">
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Offsets &amp; parser"
-                    android:textColor="@color/text_primary"
-                    android:textSize="17sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="3dp"
-                    android:text="Import, parse, or export kernel offsets."
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
-
+                android:padding="12dp">
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
                     android:orientation="horizontal">
-
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/importButton"
                         style="@style/Widget.Material3.Button.OutlinedButton"
                         android:layout_width="0dp"
-                        android:layout_height="48dp"
+                        android:layout_height="50dp"
                         android:layout_weight="1"
                         android:text="@string/action_import_offsets"
                         android:textAllCaps="false"
                         android:textSize="13sp"
-                        app:cornerRadius="24dp" />
-
+                        app:cornerRadius="12dp" />
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/otaButton"
                         style="@style/Widget.Material3.Button.OutlinedButton"
                         android:layout_width="0dp"
-                        android:layout_height="48dp"
+                        android:layout_height="50dp"
                         android:layout_marginStart="8dp"
                         android:layout_weight="1"
                         android:text="@string/action_parse_ota"
                         android:textAllCaps="false"
                         android:textSize="13sp"
-                        app:cornerRadius="24dp" />
+                        app:cornerRadius="12dp" />
                 </LinearLayout>
-
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:orientation="horizontal">
-
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/parseButton"
                         style="@style/Widget.Material3.Button.OutlinedButton"
                         android:layout_width="0dp"
-                        android:layout_height="48dp"
+                        android:layout_height="50dp"
                         android:layout_weight="1"
                         android:text="@string/action_parse"
                         android:textAllCaps="false"
                         android:textSize="13sp"
-                        app:cornerRadius="24dp" />
-
+                        app:cornerRadius="12dp" />
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/exportButton"
                         style="@style/Widget.Material3.Button.OutlinedButton"
                         android:layout_width="0dp"
-                        android:layout_height="48dp"
+                        android:layout_height="50dp"
                         android:layout_marginStart="8dp"
                         android:layout_weight="1"
                         android:text="@string/action_export_offsets"
                         android:textAllCaps="false"
                         android:textSize="13sp"
-                        app:cornerRadius="24dp" />
+                        app:cornerRadius="12dp" />
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Advanced is reserved for execution settings. -->
         <LinearLayout
             android:id="@+id/advancedPanel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:visibility="gone">
-
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 app:cardBackgroundColor="@color/surface_container_low"
-                app:cardCornerRadius="24dp"
+                app:cardCornerRadius="22dp"
                 app:cardElevation="0dp"
                 app:strokeColor="@color/outline_variant"
                 app:strokeWidth="1dp">
-
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:padding="20dp">
-
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -295,7 +276,6 @@
                         android:textColor="@color/text_primary"
                         android:textSize="19sp"
                         android:textStyle="bold" />
-
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -303,7 +283,6 @@
                         android:text="Fine-tune execution behavior."
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
-
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="60dp"
@@ -313,13 +292,11 @@
                         android:orientation="horizontal"
                         android:paddingStart="16dp"
                         android:paddingEnd="8dp">
-
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical">
-
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
@@ -327,16 +304,13 @@
                                 android:textColor="@color/text_primary"
                                 android:textSize="14sp"
                                 android:textStyle="bold" />
-
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="1dp"
                                 android:text="Select the execution core pair"
                                 android:textColor="@color/text_secondary"
                                 android:textSize="11sp" />
                         </LinearLayout>
-
                         <Spinner
                             android:id="@+id/cpuSpinner"
                             android:layout_width="150dp"
@@ -348,31 +322,35 @@
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Live output"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"
+            android:textStyle="bold" />
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
-            android:layout_height="460dp"
-            android:layout_marginTop="16dp"
+            android:layout_height="520dp"
+            android:layout_marginTop="8dp"
             app:cardBackgroundColor="@color/log_bg"
-            app:cardCornerRadius="24dp"
+            app:cardCornerRadius="12dp"
             app:cardElevation="0dp">
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical"
                 android:padding="16dp">
-
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical">
-
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:orientation="vertical">
-
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -380,7 +358,6 @@
                             android:textColor="@color/log_title"
                             android:textSize="14sp"
                             android:textStyle="bold" />
-
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -389,7 +366,6 @@
                             android:textColor="@color/log_secondary"
                             android:textSize="11sp" />
                     </LinearLayout>
-
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/copyButton"
                         style="@style/Widget.Material3.Button.TextButton"
@@ -400,16 +376,14 @@
                         android:textAllCaps="false"
                         android:textColor="@color/log_title"
                         android:textSize="12sp"
-                        app:cornerRadius="20dp" />
+                        app:cornerRadius="12dp" />
                 </LinearLayout>
-
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:layout_marginTop="10dp"
                     android:layout_marginBottom="10dp"
                     android:background="@color/log_divider" />
-
                 <ScrollView
                     android:id="@+id/logScroll"
                     android:layout_width="match_parent"
@@ -419,7 +393,6 @@
                     android:overScrollMode="ifContentScrolls"
                     android:scrollbars="vertical"
                     tools:ignore="NestedWeights">
-
                     <TextView
                         android:id="@+id/logView"
                         android:layout_width="match_parent"
