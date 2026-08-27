@@ -26,7 +26,7 @@ public class ThemedToolButton extends MaterialButton {
         Object tag = getTag();
         if (tag == null) return super.performClick();
         String action = String.valueOf(tag);
-        if ("import".equals(action)) { invoke("pickDocument", new Class[]{int.class}, new Object[]{1001}); return true; }
+        if ("import".equals(action)) { invokeBySignature(new Class[]{int.class}, new Object[]{1001}); return true; }
         if ("parse_link".equals(action)) { showUrlDialog(); return true; }
         if ("parse_boot".equals(action)) { showParseChoice(); return true; }
         return super.performClick();
@@ -35,8 +35,8 @@ public class ThemedToolButton extends MaterialButton {
     private void showParseChoice() {
         Dialog d = baseDialog("Parse Boot", "Choose the source used for offset extraction.");
         LinearLayout box = content(d);
-        addAction(box, "Boot image", "Parse boot.img only", () -> { d.dismiss(); invoke("pickParseBoot", new Class[]{boolean.class}, new Object[]{false}); });
-        addAction(box, "Boot + XBL config", "Parse with xbl_config.img", () -> { d.dismiss(); invoke("pickParseBoot", new Class[]{boolean.class}, new Object[]{true}); });
+        addAction(box, "Boot image", "Parse boot.img only", () -> { d.dismiss(); invokeBySignature(new Class[]{boolean.class}, new Object[]{false}); });
+        addAction(box, "Boot + XBL config", "Parse with xbl_config.img", () -> { d.dismiss(); invokeBySignature(new Class[]{boolean.class}, new Object[]{true}); });
         addCancel(box, d);
         d.show(); size(d);
     }
@@ -64,7 +64,7 @@ public class ThemedToolButton extends MaterialButton {
                 return;
             }
             d.dismiss();
-            invoke("runExtract", new Class[]{String.class, java.io.File.class}, new Object[]{url, null});
+            invokeBySignature(new Class[]{String.class, java.io.File.class}, new Object[]{url, null});
         });
         actions.addView(cancel, new LinearLayout.LayoutParams(-2, dp(48)));
         LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-2, dp(48));
@@ -167,13 +167,44 @@ public class ThemedToolButton extends MaterialButton {
                 ViewGroup.LayoutParams.WRAP_CONTENT);
     }
 
-    private void invoke(String name, Class<?>[] types, Object[] args) {
+    /**
+     * Resolve private MainActivity tool handlers by their parameter signature.
+     * Release builds may obfuscate method names, which made name-based
+     * reflection fail with messages such as h6.runExtract.  These handlers
+     * have unique signatures in MainActivity, so resolving by parameter types
+     * keeps the themed UI decoupled from R8-renamed method names.
+     */
+    private void invokeBySignature(Class<?>[] types, Object[] args) {
         try {
-            Method m = getContext().getClass().getDeclaredMethod(name, types);
-            m.setAccessible(true);
-            m.invoke(getContext(), args);
+            if (!(getContext() instanceof MainActivity)) {
+                throw new IllegalStateException("Tool host is not MainActivity");
+            }
+            Class<?> host = getContext().getClass();
+            Method found = null;
+            for (Method m : host.getDeclaredMethods()) {
+                Class<?>[] params = m.getParameterTypes();
+                if (params.length != types.length) continue;
+                boolean match = true;
+                for (int i = 0; i < params.length; i++) {
+                    if (!params[i].equals(types[i])) {
+                        match = false;
+                        break;
+                    }
+                }
+                if (match) {
+                    found = m;
+                    break;
+                }
+            }
+            if (found == null) {
+                throw new NoSuchMethodException("No tool handler for signature");
+            }
+            found.setAccessible(true);
+            found.invoke(getContext(), args);
         } catch (Throwable t) {
-            Toast.makeText(getContext(), "Tool action failed: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            String detail = t.getCause() != null && t.getCause().getMessage() != null
+                    ? t.getCause().getMessage() : t.getMessage();
+            Toast.makeText(getContext(), "Tool action failed: " + (detail == null ? "unknown error" : detail), Toast.LENGTH_SHORT).show();
         }
     }
 
