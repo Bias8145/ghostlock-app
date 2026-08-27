@@ -18,6 +18,7 @@
         <item name="colorOutline">@color/border</item>
         <item name="colorOutlineVariant">@color/outline_variant</item>
         <item name="materialAlertDialogTheme">@style/ThemeOverlay.GhostLock.AlertDialog</item>
+        <item name="android:alertDialogTheme">@style/ThemeOverlay.GhostLock.AlertDialog</item>
     </style>
 
     <style name="ThemeOverlay.GhostLock.AlertDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
