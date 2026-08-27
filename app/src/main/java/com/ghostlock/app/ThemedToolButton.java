@@ -1,7 +1,9 @@
 package com.ghostlock.app;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.graphics.drawable.GradientDrawable;
 import android.text.InputType;
 import android.view.Gravity;
@@ -168,17 +170,17 @@ public class ThemedToolButton extends MaterialButton {
     }
 
     /**
-     * Resolve the original MainActivity tool handlers by their parameter
-     * signature. MainActivity is used explicitly instead of the runtime
-     * context class so release builds cannot break dispatch through an
-     * obfuscated/wrapped Context class.
+     * Resolve the Activity behind themed/wrapped view contexts, then invoke
+     * the original MainActivity tool handlers by their exact parameter
+     * signatures. XML-inflated Material views commonly receive a
+     * ContextThemeWrapper, so checking getContext() directly is not reliable.
      */
     private void invokeBySignature(Class<?>[] types, Object[] args) {
         try {
-            if (!(getContext() instanceof MainActivity)) {
-                throw new IllegalStateException("Tool host is not MainActivity");
+            MainActivity host = findMainActivity(getContext());
+            if (host == null) {
+                throw new IllegalStateException("Tool host activity unavailable");
             }
-            MainActivity host = (MainActivity) getContext();
             Method found = null;
             for (Method m : MainActivity.class.getDeclaredMethods()) {
                 Class<?>[] params = m.getParameterTypes();
@@ -196,7 +198,7 @@ public class ThemedToolButton extends MaterialButton {
                 }
             }
             if (found == null) {
-                throw new NoSuchMethodException("No tool handler for signature");
+                throw new NoSuchMethodException("No tool handler for requested signature");
             }
             found.setAccessible(true);
             found.invoke(host, args);
@@ -205,6 +207,22 @@ public class ThemedToolButton extends MaterialButton {
             String detail = cause.getMessage();
             Toast.makeText(getContext(), "Tool action failed: " + (detail == null ? cause.getClass().getSimpleName() : detail), Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private MainActivity findMainActivity(Context context) {
+        Context current = context;
+        while (current instanceof ContextWrapper) {
+            if (current instanceof MainActivity) {
+                return (MainActivity) current;
+            }
+            Context base = ((ContextWrapper) current).getBaseContext();
+            if (base == current) break;
+            current = base;
+        }
+        if (current instanceof MainActivity) {
+            return (MainActivity) current;
+        }
+        return null;
     }
 
     private int dp(int v) {
