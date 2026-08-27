@@ -141,31 +141,21 @@ public class ConfirmRunButton extends MaterialButton {
 
     private String blockTitle(ManagerCompatibility.Result result) {
         switch (result.state) {
-            case MANAGER_REQUIRED:
-                return "Manager required";
-            case KERNEL_UNSUPPORTED_MANAGER_REQUIRED:
-                return "Kernel and manager unavailable";
-            case SPOOFED_MANAGER:
-                return "Manager identity mismatch";
-            case UNSUPPORTED_MANAGER:
-                return "Unsupported manager";
-            default:
-                return "Kernel unsupported";
+            case MANAGER_REQUIRED: return "Manager required";
+            case KERNEL_UNSUPPORTED_MANAGER_REQUIRED: return "Kernel and manager unavailable";
+            case SPOOFED_MANAGER: return "Manager identity mismatch";
+            case UNSUPPORTED_MANAGER: return "Unsupported manager";
+            default: return "Kernel unsupported";
         }
     }
 
     private String blockMessage(ManagerCompatibility.Result result) {
         switch (result.state) {
-            case MANAGER_REQUIRED:
-                return "The kernel is supported, but a registered manager is not installed.";
-            case KERNEL_UNSUPPORTED_MANAGER_REQUIRED:
-                return "The current kernel is not supported and no manager is installed. Installing a manager will not make this kernel compatible.";
-            case SPOOFED_MANAGER:
-                return "The detected manager identity is not trusted. Check the package and signing certificate before running GhostLock.";
-            case UNSUPPORTED_MANAGER:
-                return "The installed manager is not registered with GhostLock.";
-            default:
-                return "The current kernel does not provide the capability required by GhostLock.";
+            case MANAGER_REQUIRED: return "The kernel is supported, but a registered manager is not installed.";
+            case KERNEL_UNSUPPORTED_MANAGER_REQUIRED: return "The current kernel is not supported and no manager is installed. Installing a manager will not make this kernel compatible.";
+            case SPOOFED_MANAGER: return "The detected manager identity is not trusted. Check the package and signing certificate before running GhostLock.";
+            case UNSUPPORTED_MANAGER: return "The installed manager is not registered with GhostLock.";
+            default: return "The current kernel does not provide the capability required by GhostLock.";
         }
     }
 
@@ -173,7 +163,7 @@ public class ConfirmRunButton extends MaterialButton {
 
     private LinearLayout box() {
         LinearLayout box = new LinearLayout(getContext());
-        box.setOrientation(VERTICAL);
+        box.setOrientation(LinearLayout.VERTICAL);
         box.setPadding(dp(22), dp(20), dp(22), dp(16));
         box.setBackground(round(0xFF202124, 26));
         return box;
@@ -186,8 +176,7 @@ public class ConfirmRunButton extends MaterialButton {
                 dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
                 dialog.getWindow().setDimAmount(.68f);
                 dialog.getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND);
-                dialog.getWindow().setLayout(
-                        (int) (getResources().getDisplayMetrics().widthPixels * .88f), -2);
+                dialog.getWindow().setLayout((int) (getResources().getDisplayMetrics().widthPixels * .88f), -2);
             }
         });
         dialog.show();
@@ -199,8 +188,7 @@ public class ConfirmRunButton extends MaterialButton {
         button.setAllCaps(false);
         button.setMinWidth(0);
         button.setTextSize(13);
-        button.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
-                primary ? 0xFFE7E8EB : 0xFF303238));
+        button.setBackgroundTintList(android.content.res.ColorStateList.valueOf(primary ? 0xFFE7E8EB : 0xFF303238));
         button.setTextColor(primary ? 0xFF17181A : 0xFFE7E8EB);
         return button;
     }
@@ -208,7 +196,7 @@ public class ConfirmRunButton extends MaterialButton {
     private TextView text(int size, boolean bold) {
         TextView view = new TextView(getContext());
         view.setTextSize(size);
-        view.setTextColor(0xFFE9EAED);
+        view.setTextColor(bold ? 0xFFF1F2F4 : 0xFFB8BBC2);
         if (bold) view.setTypeface(null, android.graphics.Typeface.BOLD);
         return view;
     }
@@ -226,7 +214,5 @@ public class ConfirmRunButton extends MaterialButton {
         return drawable;
     }
 
-    private int dp(int value) {
-        return Math.round(value * getResources().getDisplayMetrics().density);
-    }
+    private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
 }
