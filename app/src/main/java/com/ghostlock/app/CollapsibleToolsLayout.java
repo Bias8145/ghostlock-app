@@ -4,8 +4,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.content.Context;
-import android.graphics.Color;
-import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
@@ -19,7 +18,7 @@ public class CollapsibleToolsLayout extends LinearLayout {
     private View header;
     private View content;
     private TextView title;
-    private TextView arrow;
+    private ImageView arrow;
     private boolean expanded = false;
 
     public CollapsibleToolsLayout(Context context) { super(context); setOrientation(VERTICAL); }
@@ -36,12 +35,11 @@ public class CollapsibleToolsLayout extends LinearLayout {
         title = findFirstTextView(header);
         if (header instanceof LinearLayout) {
             LinearLayout row = (LinearLayout) header;
-            arrow = new TextView(getContext());
-            arrow.setText("›");
-            arrow.setTextSize(26);
-            arrow.setTextColor(0xFFB8BBC2);
-            arrow.setGravity(Gravity.CENTER);
-            row.addView(arrow, new LinearLayout.LayoutParams(dp(40), dp(48)));
+            arrow = new ImageView(getContext());
+            arrow.setImageResource(com.ghostlock.app.R.drawable.ic_chevron_down);
+            arrow.setScaleType(ImageView.ScaleType.CENTER);
+            arrow.setContentDescription("Expand tools");
+            row.addView(arrow, new LinearLayout.LayoutParams(dp(48), dp(48)));
         }
         header.setOnClickListener(v -> toggle());
         content.setVisibility(GONE);
@@ -83,7 +81,11 @@ public class CollapsibleToolsLayout extends LinearLayout {
 
     private void updateHeader() {
         if (title != null) { title.setText("Tools"); title.setTextColor(0xFFE7E8EB); }
-        if (arrow != null) { arrow.setText(expanded ? "⌄" : "›"); arrow.setTextColor(expanded ? 0xFFE7E8EB : 0xFFB8BBC2); }
+        if (arrow != null) {
+            arrow.animate().rotation(expanded ? 180f : 0f).setDuration(200).start();
+            arrow.setAlpha(expanded ? 1f : 0.82f);
+            arrow.setContentDescription(expanded ? "Collapse tools" : "Expand tools");
+        }
         header.setContentDescription(expanded ? "Collapse tools" : "Expand tools");
     }
     private int dp(int v){return Math.round(v*getResources().getDisplayMetrics().density);}
