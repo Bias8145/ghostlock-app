@@ -28,9 +28,9 @@ public class RuntimeStatusView extends LinearLayout {
         action = text(12, true);
         action.setGravity(Gravity.CENTER);
         action.setPadding(dp(12), 0, dp(12), 0);
-        action.setMinHeight(dp(44));
+        action.setMinHeight(dp(56));
         action.setVisibility(View.GONE);
-        addView(action, margin(-1, 44, 0, 14, 0, 0));
+        addView(action, margin(-1, dp(56), 0, 18, 0, 0));
         refresh();
     }
 
@@ -102,7 +102,7 @@ public class RuntimeStatusView extends LinearLayout {
         if (showInstall) {
             action.setText("Install supported manager");
             action.setTextColor(0xFF17181A);
-            action.setBackground(round(0xFFFFC94D, 21));
+            action.setBackground(round(0xFFFFC94D, 18));
             action.setOnClickListener(v -> showManagerPicker());
         } else {
             action.setOnClickListener(null);
