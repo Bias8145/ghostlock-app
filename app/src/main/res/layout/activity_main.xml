@@ -15,7 +15,7 @@
                 </LinearLayout>
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="@string/header_subtitle" android:textColor="@color/text_secondary" android:textSize="11sp"/>
             </LinearLayout>
-            <com.ghostlock.app.ThemeToggleButton android:id="@+id/themeButton" android:layout_width="44dp" android:layout_height="44dp" android:background="?attr/selectableItemBackgroundBorderless" android:padding="10dp" />
+            <com.ghostlock.app.ThemeToggleButton android:id="@+id/themeButton" android:layout_width="48dp" android:layout_height="48dp" android:background="?attr/selectableItemBackgroundBorderless" android:padding="11dp" />
             <ImageButton android:id="@+id/advancedButton" android:layout_width="48dp" android:layout_height="48dp" android:background="?attr/selectableItemBackgroundBorderless" android:contentDescription="@string/action_advanced" android:padding="11dp" android:src="@drawable/ic_advanced" android:tint="@color/icon_tint"/>
         </LinearLayout>
 
@@ -33,7 +33,7 @@
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="SETTINGS &amp; ADVANCED" android:textColor="@color/text_secondary" android:textSize="11sp" android:textStyle="bold"/>
                     <LinearLayout android:layout_width="match_parent" android:layout_height="60dp" android:layout_marginTop="12dp" android:background="@drawable/bg_spinner" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="14dp" android:paddingEnd="6dp">
                         <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/cpu_pair_label" android:textColor="@color/text_primary" android:textSize="13sp" android:textStyle="bold"/>
-                        <Spinner android:id="@+id/cpuSpinner" android:layout_width="150dp" android:layout_height="match_parent" android:background="@android:color/transparent"/>
+                        <Spinner android:id="@+id/cpuSpinner" android:layout_width="150dp" android:layout_height="match_parent" android:background="@android:color/transparent" android:popupBackground="@drawable/bg_spinner_popup" android:dropDownVerticalOffset="4dp"/>
                     </LinearLayout>
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:gravity="center" android:orientation="horizontal">
                         <com.ghostlock.app.SocialLinkButton android:id="@+id/telegramButton" style="@style/Widget.Material3.Button.TextButton" android:layout_width="wrap_content" android:layout_height="42dp" android:text="Telegram" android:textAllCaps="false" app:icon="@drawable/ic_telegram" app:iconGravity="textStart" app:iconPadding="6dp"/>
