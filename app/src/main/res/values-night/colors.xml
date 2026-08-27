@@ -28,4 +28,5 @@
     <color name="log_text">#FFEDE6D9</color>
     <color name="log_title">#FFFFF9EF</color>
     <color name="log_secondary">#FFCFC6B8</color>
+    <color name="launcher_icon_background">#FF5D4500</color>
 </resources>
