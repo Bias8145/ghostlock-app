@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.content.res.ColorStateList;
 import android.graphics.drawable.GradientDrawable;
 import android.text.InputType;
 import android.view.Gravity;
@@ -28,7 +29,7 @@ public class ThemedToolButton extends MaterialButton {
         Object tag = getTag();
         if (tag == null) return super.performClick();
         String action = String.valueOf(tag);
-        if ("import".equals(action)) { invokeBySignature(new Class[]{int.class}, new Object[]{1001}); return true; }
+        if ("import".equals(action)) { invokeBySignature(new Class<?>[0], new Object[0]); return true; }
         if ("parse_link".equals(action)) { showUrlDialog(); return true; }
         if ("parse_boot".equals(action)) { showParseChoice(); return true; }
         return super.performClick();
@@ -50,8 +51,8 @@ public class ThemedToolButton extends MaterialButton {
         input.setSingleLine(true);
         input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
         input.setHint("https://...");
-        input.setTextColor(0xFFF0F1F3);
-        input.setHintTextColor(0xFF8D9199);
+        input.setTextColor(getColor(R.color.text_primary));
+        input.setHintTextColor(getColor(R.color.text_secondary));
         input.setPadding(dp(14), 0, dp(14), 0);
         box.addView(input, margin(-1, dp(54), 0, 4, 0, 12));
         LinearLayout actions = new LinearLayout(getContext());
@@ -83,7 +84,7 @@ public class ThemedToolButton extends MaterialButton {
         LinearLayout root = new LinearLayout(getContext());
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(22), dp(20), dp(22), dp(16));
-        root.setBackground(round(0xFF202124, 26));
+        root.setBackground(round(getColor(R.color.surface_container), 26));
         TextView t = text(title, 20, true);
         root.addView(t, margin(-1, -2, 0, 0, 0, 4));
         TextView s = text(subtitle, 12, false);
@@ -96,9 +97,7 @@ public class ThemedToolButton extends MaterialButton {
         View content = d.findViewById(android.R.id.content);
         if (content instanceof ViewGroup) {
             ViewGroup group = (ViewGroup) content;
-            if (group.getChildCount() > 0 && group.getChildAt(0) instanceof LinearLayout) {
-                return (LinearLayout) group.getChildAt(0);
-            }
+            if (group.getChildCount() > 0 && group.getChildAt(0) instanceof LinearLayout) return (LinearLayout) group.getChildAt(0);
         }
         throw new IllegalStateException("GhostLock dialog content unavailable");
     }
@@ -107,7 +106,7 @@ public class ThemedToolButton extends MaterialButton {
         LinearLayout row = new LinearLayout(getContext());
         row.setOrientation(LinearLayout.VERTICAL);
         row.setPadding(dp(14), dp(9), dp(14), dp(9));
-        row.setBackground(round(0xFF2A2D32, 16));
+        row.setBackground(round(getColor(R.color.surface_container_low), 16));
         row.setClickable(true);
         row.setFocusable(true);
         row.setOnClickListener(v -> r.run());
@@ -115,8 +114,7 @@ public class ThemedToolButton extends MaterialButton {
         TextView b = text(sub, 11, false);
         row.addView(a);
         row.addView(b);
-        LinearLayout.LayoutParams p = margin(-1, dp(66), 0, 0, 0, 8);
-        box.addView(row, p);
+        box.addView(row, margin(-1, dp(66), 0, 0, 0, 8));
     }
 
     private void addCancel(LinearLayout box, Dialog d) {
@@ -133,8 +131,8 @@ public class ThemedToolButton extends MaterialButton {
         b.setAllCaps(false);
         b.setMinWidth(0);
         b.setTextSize(13);
-        b.setBackgroundTintList(android.content.res.ColorStateList.valueOf(primary ? 0xFFE7E8EB : 0xFF303238));
-        b.setTextColor(primary ? 0xFF17181A : 0xFFE7E8EB);
+        b.setBackgroundTintList(ColorStateList.valueOf(getColor(primary ? R.color.accent : R.color.surface_container_low)));
+        b.setTextColor(getColor(primary ? R.color.on_accent : R.color.text_primary));
         return b;
     }
 
@@ -142,90 +140,38 @@ public class ThemedToolButton extends MaterialButton {
         TextView v = new TextView(getContext());
         v.setText(s);
         v.setTextSize(size);
-        v.setTextColor(bold ? 0xFFF1F2F4 : 0xFFB8BBC2);
+        v.setTextColor(getColor(bold ? R.color.text_primary : R.color.text_secondary));
         if (bold) v.setTypeface(null, android.graphics.Typeface.BOLD);
         return v;
     }
 
-    private LinearLayout.LayoutParams margin(int w, int h, int l, int t, int r, int b) {
-        LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(w, h);
-        p.setMargins(dp(l), dp(t), dp(r), dp(b));
-        return p;
-    }
+    private int getColor(int id) { return getResources().getColor(id, getContext().getTheme()); }
+    private LinearLayout.LayoutParams margin(int w, int h, int l, int t, int r, int b) { LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(w, h); p.setMargins(dp(l), dp(t), dp(r), dp(b)); return p; }
+    private GradientDrawable round(int c, int r) { GradientDrawable d = new GradientDrawable(); d.setColor(c); d.setCornerRadius(dp(r)); return d; }
+    private void size(Dialog d) { if (d.getWindow() == null) return; d.getWindow().setBackgroundDrawableResource(android.R.color.transparent); d.getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND); d.getWindow().setDimAmount(.55f); d.getWindow().setLayout((int)(getResources().getDisplayMetrics().widthPixels*.88f), ViewGroup.LayoutParams.WRAP_CONTENT); }
 
-    private GradientDrawable round(int c, int r) {
-        GradientDrawable d = new GradientDrawable();
-        d.setColor(c);
-        d.setCornerRadius(dp(r));
-        return d;
-    }
-
-    private void size(Dialog d) {
-        if (d.getWindow() == null) return;
-        d.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-        d.getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND);
-        d.getWindow().setDimAmount(.68f);
-        d.getWindow().setLayout((int) (getResources().getDisplayMetrics().widthPixels * .88f),
-                ViewGroup.LayoutParams.WRAP_CONTENT);
-    }
-
-    /**
-     * Resolve the Activity behind themed/wrapped view contexts, then invoke
-     * the original MainActivity tool handlers by their exact parameter
-     * signatures. XML-inflated Material views commonly receive a
-     * ContextThemeWrapper, so checking getContext() directly is not reliable.
-     */
     private void invokeBySignature(Class<?>[] types, Object[] args) {
         try {
             MainActivity host = findMainActivity(getContext());
-            if (host == null) {
-                throw new IllegalStateException("Tool host activity unavailable");
-            }
+            if (host == null) throw new IllegalStateException("Tool host activity unavailable");
             Method found = null;
             for (Method m : MainActivity.class.getDeclaredMethods()) {
-                Class<?>[] params = m.getParameterTypes();
-                if (params.length != types.length) continue;
-                boolean match = true;
-                for (int i = 0; i < params.length; i++) {
-                    if (!params[i].equals(types[i])) {
-                        match = false;
-                        break;
-                    }
-                }
-                if (match) {
-                    found = m;
-                    break;
-                }
+                Class<?>[] params = m.getParameterTypes(); if (params.length != types.length) continue;
+                boolean match = true; for (int i=0;i<params.length;i++) if (!params[i].equals(types[i])) { match=false; break; }
+                if (match) { found=m; break; }
             }
-            if (found == null) {
-                throw new NoSuchMethodException("No tool handler for requested signature");
-            }
-            found.setAccessible(true);
-            found.invoke(host, args);
+            if (found == null) throw new NoSuchMethodException("No tool handler for requested signature");
+            found.setAccessible(true); found.invoke(host, args);
         } catch (Throwable t) {
-            Throwable cause = t.getCause() != null ? t.getCause() : t;
-            String detail = cause.getMessage();
-            Toast.makeText(getContext(), "Tool action failed: " + (detail == null ? cause.getClass().getSimpleName() : detail), Toast.LENGTH_SHORT).show();
+            Throwable cause=t.getCause()!=null?t.getCause():t; String detail=cause.getMessage();
+            Toast.makeText(getContext(), "Tool action failed: "+(detail==null?cause.getClass().getSimpleName():detail), Toast.LENGTH_SHORT).show();
         }
     }
 
     private MainActivity findMainActivity(Context context) {
-        Context current = context;
-        while (current instanceof ContextWrapper) {
-            if (current instanceof MainActivity) {
-                return (MainActivity) current;
-            }
-            Context base = ((ContextWrapper) current).getBaseContext();
-            if (base == current) break;
-            current = base;
-        }
-        if (current instanceof MainActivity) {
-            return (MainActivity) current;
-        }
-        return null;
+        Context current=context;
+        while(current instanceof ContextWrapper){ if(current instanceof MainActivity)return(MainActivity)current; Context base=((ContextWrapper)current).getBaseContext(); if(base==current)break; current=base; }
+        return current instanceof MainActivity?(MainActivity)current:null;
     }
-
-    private int dp(int v) {
-        return Math.round(v * getResources().getDisplayMetrics().density);
-    }
+    private int dp(int v){return Math.round(v*getResources().getDisplayMetrics().density);}
 }
