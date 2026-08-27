@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
@@ -73,7 +74,7 @@ public class CollapsibleToolsLayout extends LinearLayout {
     }
 
     private void animateCollapse() {
-        final int start = content.getHeight();
+        final int start = Math.max(content.getHeight(), 0);
         ValueAnimator a = ValueAnimator.ofInt(start, 0);
         a.addUpdateListener(x -> {
             ViewGroup.LayoutParams p = content.getLayoutParams();
@@ -123,18 +124,29 @@ public class CollapsibleToolsLayout extends LinearLayout {
         updateHeader();
     }
 
-    /** Scrolls only as much as needed to reveal the expanded Tools section. */
+    /** Scrolls the minimum amount needed to reveal the complete expanded Tools section. */
     private void scrollExpandedToolsIntoView() {
         final NestedScrollView scrollView = findParentScrollView();
         if (scrollView == null) return;
 
         post(() -> {
+            Rect rect = new Rect(0, 0, getWidth(), getHeight());
+            scrollView.offsetDescendantRectToMyCoords(this, rect);
+
+            int viewportTop = scrollView.getScrollY() + scrollView.getPaddingTop();
             int viewportBottom = scrollView.getScrollY() + scrollView.getHeight()
                     - scrollView.getPaddingBottom();
-            int toolsBottom = getBottom() + getPaddingBottom();
-            int delta = toolsBottom - viewportBottom;
-            if (delta > 0) {
-                scrollView.smoothScrollBy(0, delta + dp(12));
+            int desiredScroll = scrollView.getScrollY();
+
+            if (rect.bottom > viewportBottom) {
+                desiredScroll += rect.bottom - viewportBottom + dp(12);
+            } else if (rect.top < viewportTop) {
+                desiredScroll -= viewportTop - rect.top + dp(12);
+            }
+
+            desiredScroll = Math.max(0, Math.min(desiredScroll, scrollView.getChildAt(0).getHeight()));
+            if (desiredScroll != scrollView.getScrollY()) {
+                scrollView.smoothScrollTo(0, desiredScroll);
             }
         });
     }
@@ -149,15 +161,12 @@ public class CollapsibleToolsLayout extends LinearLayout {
     }
 
     private NestedScrollView findParentScrollView() {
-        ViewParentWalker:
-        {
-            android.view.ViewParent parent = getParent();
-            while (parent != null) {
-                if (parent instanceof NestedScrollView) {
-                    return (NestedScrollView) parent;
-                }
-                parent = parent.getParent();
+        android.view.ViewParent parent = getParent();
+        while (parent != null) {
+            if (parent instanceof NestedScrollView) {
+                return (NestedScrollView) parent;
             }
+            parent = parent.getParent();
         }
         return null;
     }
