@@ -168,20 +168,19 @@ public class ThemedToolButton extends MaterialButton {
     }
 
     /**
-     * Resolve private MainActivity tool handlers by their parameter signature.
-     * Release builds may obfuscate method names, which made name-based
-     * reflection fail with messages such as h6.runExtract.  These handlers
-     * have unique signatures in MainActivity, so resolving by parameter types
-     * keeps the themed UI decoupled from R8-renamed method names.
+     * Resolve the original MainActivity tool handlers by their parameter
+     * signature. MainActivity is used explicitly instead of the runtime
+     * context class so release builds cannot break dispatch through an
+     * obfuscated/wrapped Context class.
      */
     private void invokeBySignature(Class<?>[] types, Object[] args) {
         try {
             if (!(getContext() instanceof MainActivity)) {
                 throw new IllegalStateException("Tool host is not MainActivity");
             }
-            Class<?> host = getContext().getClass();
+            MainActivity host = (MainActivity) getContext();
             Method found = null;
-            for (Method m : host.getDeclaredMethods()) {
+            for (Method m : MainActivity.class.getDeclaredMethods()) {
                 Class<?>[] params = m.getParameterTypes();
                 if (params.length != types.length) continue;
                 boolean match = true;
@@ -200,11 +199,11 @@ public class ThemedToolButton extends MaterialButton {
                 throw new NoSuchMethodException("No tool handler for signature");
             }
             found.setAccessible(true);
-            found.invoke(getContext(), args);
+            found.invoke(host, args);
         } catch (Throwable t) {
-            String detail = t.getCause() != null && t.getCause().getMessage() != null
-                    ? t.getCause().getMessage() : t.getMessage();
-            Toast.makeText(getContext(), "Tool action failed: " + (detail == null ? "unknown error" : detail), Toast.LENGTH_SHORT).show();
+            Throwable cause = t.getCause() != null ? t.getCause() : t;
+            String detail = cause.getMessage();
+            Toast.makeText(getContext(), "Tool action failed: " + (detail == null ? cause.getClass().getSimpleName() : detail), Toast.LENGTH_SHORT).show();
         }
     }
 
