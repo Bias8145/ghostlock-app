@@ -4,6 +4,9 @@
     <queries>
         <package android:name="me.weishu.kernelsu" />
         <package android:name="com.resukisu.resukisu" />
+        <package android:name="com.kowx712.supermanager" />
+        <package android:name="com.rifsxd.ksunext" />
+        <package android:name="com.sukisu.ultra" />
     </queries>
     <application
         android:allowBackup="false"
