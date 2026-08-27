@@ -6,6 +6,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.text.InputType;
 import android.view.Gravity;
 import android.view.ViewGroup;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -90,7 +91,14 @@ public class ThemedToolButton extends MaterialButton {
     }
 
     private LinearLayout content(Dialog d) {
-        return (LinearLayout) d.findViewById(android.R.id.content).getChildAt(0);
+        View content = d.findViewById(android.R.id.content);
+        if (content instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) content;
+            if (group.getChildCount() > 0 && group.getChildAt(0) instanceof LinearLayout) {
+                return (LinearLayout) group.getChildAt(0);
+            }
+        }
+        throw new IllegalStateException("GhostLock dialog content unavailable");
     }
 
     private void addAction(LinearLayout box, String title, String sub, Runnable r) {
