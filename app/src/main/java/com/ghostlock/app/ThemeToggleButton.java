@@ -5,15 +5,19 @@ import android.app.UiModeManager;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.res.Configuration;
-import android.util.AttributeSet;
 import android.widget.ImageButton;
 import androidx.core.content.ContextCompat;
 
 /** Compact Light/Dark theme toggle used in the main header. */
 public class ThemeToggleButton extends ImageButton {
+    private static final String PREFS = "ghostlock_prefs";
+    private static final String PREF_THEME = "theme_mode";
+    private static final int LIGHT = 1;
+    private static final int DARK = 2;
+
     public ThemeToggleButton(Context context) { super(context); init(); }
-    public ThemeToggleButton(Context context, AttributeSet attrs) { super(context, attrs); init(); }
-    public ThemeToggleButton(Context context, AttributeSet attrs, int defStyleAttr) { super(context, attrs, defStyleAttr); init(); }
+    public ThemeToggleButton(Context context, android.util.AttributeSet attrs) { super(context, attrs); init(); }
+    public ThemeToggleButton(Context context, android.util.AttributeSet attrs, int defStyleAttr) { super(context, attrs, defStyleAttr); init(); }
 
     private void init() {
         setOnClickListener(v -> toggleTheme());
@@ -21,7 +25,7 @@ public class ThemeToggleButton extends ImageButton {
         setScaleType(ScaleType.CENTER_INSIDE);
         setMinimumWidth(dp(48));
         setMinimumHeight(dp(48));
-        setPadding(dp(11), dp(11), dp(11), dp(11));
+        setPadding(dp(10), dp(10), dp(10), dp(10));
         updateIconState();
     }
 
@@ -30,16 +34,25 @@ public class ThemeToggleButton extends ImageButton {
         if (activity == null) return;
         UiModeManager manager = (UiModeManager) activity.getSystemService(Context.UI_MODE_SERVICE);
         if (manager == null) return;
-        boolean dark = (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+        boolean dark = isDarkMode();
+        int next = dark ? LIGHT : DARK;
+        activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putInt(PREF_THEME, next).apply();
         manager.setApplicationNightMode(dark ? UiModeManager.MODE_NIGHT_NO : UiModeManager.MODE_NIGHT_YES);
+        updateIconState();
         activity.recreate();
     }
 
+    private boolean isDarkMode() {
+        return (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+    }
+
     private void updateIconState() {
-        boolean dark = (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
-        // Light mode: dark sun. Dark mode: light moon.
+        boolean dark = isDarkMode();
         setImageResource(dark ? R.drawable.ic_theme_moon : R.drawable.ic_theme_sun);
         setColorFilter(ContextCompat.getColor(getContext(), R.color.icon_tint));
+        setAlpha(1f);
+        setPadding(dp(10), dp(10), dp(10), dp(10));
+        setContentDescription(dark ? "Switch to light theme" : "Switch to dark theme");
     }
 
     @Override protected void onConfigurationChanged(Configuration newConfig) {
@@ -58,7 +71,5 @@ public class ThemeToggleButton extends ImageButton {
         return current instanceof Activity ? (Activity) current : null;
     }
 
-    private int dp(int value) {
-        return Math.round(value * getResources().getDisplayMetrics().density);
-    }
+    private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
 }
