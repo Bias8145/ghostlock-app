@@ -1,5 +1,7 @@
 package com.ghostlock.app;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.util.AttributeSet;
@@ -14,20 +16,9 @@ public class CollapsibleToolsLayout extends LinearLayout {
     private View content;
     private boolean expanded = true;
 
-    public CollapsibleToolsLayout(Context context) {
-        super(context);
-        setOrientation(VERTICAL);
-    }
-
-    public CollapsibleToolsLayout(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        setOrientation(VERTICAL);
-    }
-
-    public CollapsibleToolsLayout(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        setOrientation(VERTICAL);
-    }
+    public CollapsibleToolsLayout(Context context) { super(context); setOrientation(VERTICAL); }
+    public CollapsibleToolsLayout(Context context, AttributeSet attrs) { super(context, attrs); setOrientation(VERTICAL); }
+    public CollapsibleToolsLayout(Context context, AttributeSet attrs, int defStyleAttr) { super(context, attrs, defStyleAttr); setOrientation(VERTICAL); }
 
     @Override
     protected void onFinishInflate() {
@@ -42,11 +33,7 @@ public class CollapsibleToolsLayout extends LinearLayout {
 
     private void toggle() {
         expanded = !expanded;
-        if (!expanded) {
-            animateCollapse();
-        } else {
-            animateExpand();
-        }
+        if (expanded) animateExpand(); else animateCollapse();
     }
 
     private void animateCollapse() {
@@ -56,16 +43,15 @@ public class CollapsibleToolsLayout extends LinearLayout {
             ViewGroup.LayoutParams lp = content.getLayoutParams();
             lp.height = (int) a.getAnimatedValue();
             content.setLayoutParams(lp);
-            content.setAlpha(a.getAnimatedFraction());
+            content.setAlpha(1f - a.getAnimatedFraction());
         });
-        animator.addListener(new android.animation.AnimatorListenerAdapter() {
-            @Override public void onAnimationEnd(android.animation.Animator animation) {
+        animator.addListener(new AnimatorListenerAdapter() {
+            @Override public void onAnimationEnd(Animator animation) {
                 content.setVisibility(GONE);
                 ViewGroup.LayoutParams lp = content.getLayoutParams();
                 lp.height = WRAP_CONTENT;
                 content.setLayoutParams(lp);
                 content.setAlpha(1f);
-                updateHeader();
             }
         });
         animator.setDuration(180).start();
@@ -74,7 +60,7 @@ public class CollapsibleToolsLayout extends LinearLayout {
 
     private void animateExpand() {
         content.setVisibility(VISIBLE);
-        content.measure(MeasureSpec.makeMeasureSpec(getMeasuredWidth(), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
+        content.measure(MeasureSpec.makeMeasureSpec(Math.max(getMeasuredWidth(), 1), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
         final int target = content.getMeasuredHeight();
         ViewGroup.LayoutParams lp = content.getLayoutParams();
         lp.height = 0;
@@ -86,12 +72,11 @@ public class CollapsibleToolsLayout extends LinearLayout {
             content.setLayoutParams(lp);
             content.setAlpha(a.getAnimatedFraction());
         });
-        animator.addListener(new android.animation.AnimatorListenerAdapter() {
-            @Override public void onAnimationEnd(android.animation.Animator animation) {
+        animator.addListener(new AnimatorListenerAdapter() {
+            @Override public void onAnimationEnd(Animator animation) {
                 lp.height = WRAP_CONTENT;
                 content.setLayoutParams(lp);
                 content.setAlpha(1f);
-                updateHeader();
             }
         });
         animator.setDuration(200).start();
