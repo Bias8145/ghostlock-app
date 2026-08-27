@@ -6,14 +6,10 @@ import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.res.Configuration;
 import android.util.AttributeSet;
-import android.view.View;
 import android.widget.ImageButton;
 
 /** Compact Light/Dark theme toggle used in the main header. */
 public class ThemeToggleButton extends ImageButton {
-    private static final String PREFS = "ghostlock_prefs";
-    private static final String PREF_DARK = "dark_theme";
-
     public ThemeToggleButton(Context context) { super(context); init(); }
     public ThemeToggleButton(Context context, AttributeSet attrs) { super(context, attrs); init(); }
     public ThemeToggleButton(Context context, AttributeSet attrs, int defStyleAttr) { super(context, attrs, defStyleAttr); init(); }
@@ -30,10 +26,8 @@ public class ThemeToggleButton extends ImageButton {
         UiModeManager manager = (UiModeManager) activity.getSystemService(Context.UI_MODE_SERVICE);
         if (manager == null) return;
         boolean dark = (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
-        int target = dark ? UiModeManager.MODE_NIGHT_NO : UiModeManager.MODE_NIGHT_YES;
-        manager.setApplicationNightMode(target);
-        activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(PREF_DARK, !dark).apply();
-        updateIconState();
+        manager.setApplicationNightMode(dark ? UiModeManager.MODE_NIGHT_NO : UiModeManager.MODE_NIGHT_YES);
+        activity.recreate();
     }
 
     private void updateIconState() {
