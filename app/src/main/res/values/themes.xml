@@ -1,10 +1,10 @@
 <resources>
-    <style name="Theme.GhostLock" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Theme.GhostLock" parent="Theme.Material3.Light.NoActionBar">
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:fontFamily">sans</item>
-        <item name="android:windowLightStatusBar">@bool/window_light_status_bar</item>
-        <item name="android:windowLightNavigationBar">@bool/window_light_navigation_bar</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
         <item name="android:windowBackground">@color/bg</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@color/bg</item>
@@ -40,12 +40,6 @@
         <item name="buttonBarNegativeButtonStyle">@style/Widget.GhostLock.DialogButton</item>
         <item name="buttonBarNeutralButtonStyle">@style/Widget.GhostLock.DialogButton</item>
     </style>
-    <style name="ShapeAppearance.GhostLock.Dialog" parent="ShapeAppearance.Material3.Corner.Large">
-        <item name="cornerSize">26dp</item>
-    </style>
-    <style name="Widget.GhostLock.DialogButton" parent="Widget.Material3.Button.TextButton">
-        <item name="android:textAllCaps">false</item>
-        <item name="cornerRadius">16dp</item>
-        <item name="android:minHeight">48dp</item>
-    </style>
+    <style name="ShapeAppearance.GhostLock.Dialog" parent="ShapeAppearance.Material3.Corner.Large"><item name="cornerSize">26dp</item></style>
+    <style name="Widget.GhostLock.DialogButton" parent="Widget.Material3.Button.TextButton"><item name="android:textAllCaps">false</item><item name="cornerRadius">16dp</item><item name="android:minHeight">48dp</item></style>
 </resources>
