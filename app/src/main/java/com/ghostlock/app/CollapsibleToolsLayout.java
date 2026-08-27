@@ -12,6 +12,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.core.content.ContextCompat;
 import androidx.core.widget.NestedScrollView;
 
 /** Polished expandable Tools section; collapsed by default. */
@@ -39,6 +40,7 @@ public class CollapsibleToolsLayout extends LinearLayout {
             LinearLayout row = (LinearLayout) header;
             arrow = new ImageView(getContext());
             arrow.setImageResource(com.ghostlock.app.R.drawable.ic_chevron_down);
+            arrow.setColorFilter(ContextCompat.getColor(getContext(), com.ghostlock.app.R.color.icon_tint));
             arrow.setScaleType(ImageView.ScaleType.CENTER);
             arrow.setContentDescription("Expand tools");
             row.addView(arrow, new LinearLayout.LayoutParams(dp(48), dp(48)));
@@ -64,9 +66,7 @@ public class CollapsibleToolsLayout extends LinearLayout {
         expanded = !expanded;
         if (expanded) {
             NestedScrollView scrollView = findParentScrollView();
-            if (scrollView != null) {
-                scrollYBeforeExpand = scrollView.getScrollY();
-            }
+            if (scrollView != null) scrollYBeforeExpand = scrollView.getScrollY();
             animateExpand();
         } else {
             animateCollapse();
@@ -98,9 +98,7 @@ public class CollapsibleToolsLayout extends LinearLayout {
 
     private void animateExpand() {
         content.setVisibility(VISIBLE);
-        content.measure(
-                MeasureSpec.makeMeasureSpec(Math.max(getMeasuredWidth(), 1), MeasureSpec.EXACTLY),
-                MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
+        content.measure(MeasureSpec.makeMeasureSpec(Math.max(getMeasuredWidth(), 1), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
         final int target = content.getMeasuredHeight();
         ViewGroup.LayoutParams p = content.getLayoutParams();
         p.height = 0;
@@ -124,34 +122,22 @@ public class CollapsibleToolsLayout extends LinearLayout {
         updateHeader();
     }
 
-    /** Scrolls the minimum amount needed to reveal the complete expanded Tools section. */
     private void scrollExpandedToolsIntoView() {
         final NestedScrollView scrollView = findParentScrollView();
         if (scrollView == null) return;
-
         post(() -> {
             Rect rect = new Rect(0, 0, getWidth(), getHeight());
             scrollView.offsetDescendantRectToMyCoords(this, rect);
-
             int viewportTop = scrollView.getScrollY() + scrollView.getPaddingTop();
-            int viewportBottom = scrollView.getScrollY() + scrollView.getHeight()
-                    - scrollView.getPaddingBottom();
+            int viewportBottom = scrollView.getScrollY() + scrollView.getHeight() - scrollView.getPaddingBottom();
             int desiredScroll = scrollView.getScrollY();
-
-            if (rect.bottom > viewportBottom) {
-                desiredScroll += rect.bottom - viewportBottom + dp(12);
-            } else if (rect.top < viewportTop) {
-                desiredScroll -= viewportTop - rect.top + dp(12);
-            }
-
+            if (rect.bottom > viewportBottom) desiredScroll += rect.bottom - viewportBottom + dp(12);
+            else if (rect.top < viewportTop) desiredScroll -= viewportTop - rect.top + dp(12);
             desiredScroll = Math.max(0, Math.min(desiredScroll, scrollView.getChildAt(0).getHeight()));
-            if (desiredScroll != scrollView.getScrollY()) {
-                scrollView.smoothScrollTo(0, desiredScroll);
-            }
+            if (desiredScroll != scrollView.getScrollY()) scrollView.smoothScrollTo(0, desiredScroll);
         });
     }
 
-    /** Returns the user to exactly the scroll position from before expansion. */
     private void restoreScrollPosition() {
         final NestedScrollView scrollView = findParentScrollView();
         if (scrollView == null || scrollYBeforeExpand < 0) return;
@@ -163,20 +149,16 @@ public class CollapsibleToolsLayout extends LinearLayout {
     private NestedScrollView findParentScrollView() {
         android.view.ViewParent parent = getParent();
         while (parent != null) {
-            if (parent instanceof NestedScrollView) {
-                return (NestedScrollView) parent;
-            }
+            if (parent instanceof NestedScrollView) return (NestedScrollView) parent;
             parent = parent.getParent();
         }
         return null;
     }
 
     private void updateHeader() {
-        if (title != null) {
-            title.setText("Tools");
-            title.setTextColor(0xFFE7E8EB);
-        }
+        if (title != null) title.setTextColor(ContextCompat.getColor(getContext(), com.ghostlock.app.R.color.text_primary));
         if (arrow != null) {
+            arrow.setColorFilter(ContextCompat.getColor(getContext(), com.ghostlock.app.R.color.icon_tint));
             arrow.animate().rotation(expanded ? 180f : 0f).setDuration(200).start();
             arrow.setAlpha(expanded ? 1f : 0.82f);
             arrow.setContentDescription(expanded ? "Collapse tools" : "Expand tools");
@@ -184,7 +166,5 @@ public class CollapsibleToolsLayout extends LinearLayout {
         header.setContentDescription(expanded ? "Collapse tools" : "Expand tools");
     }
 
-    private int dp(int v) {
-        return Math.round(v * getResources().getDisplayMetrics().density);
-    }
+    private int dp(int v) { return Math.round(v * getResources().getDisplayMetrics().density); }
 }
