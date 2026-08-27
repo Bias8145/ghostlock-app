@@ -22,15 +22,15 @@ public class RuntimeStatusView extends LinearLayout {
         state = text(15, true);
         addView(state);
         message = text(12, false);
-        addView(message, margin(-1, -2, 0, 5, 0, 0));
+        addView(message, margin(-1, -2, 0, 7, 0, 0));
         manager = text(11, true);
-        addView(manager, margin(-1, -2, 0, 10, 0, 0));
+        addView(manager, margin(-1, -2, 0, 13, 0, 0));
         action = text(12, true);
         action.setGravity(Gravity.CENTER);
         action.setPadding(dp(12), 0, dp(12), 0);
-        action.setMinHeight(dp(42));
+        action.setMinHeight(dp(44));
         action.setVisibility(View.GONE);
-        addView(action, margin(-1, 42, 0, 10, 0, 0));
+        addView(action, margin(-1, 44, 0, 14, 0, 0));
         refresh();
     }
 
@@ -121,7 +121,7 @@ public class RuntimeStatusView extends LinearLayout {
         box.addView(title);
         TextView subtitle = text(12, false);
         subtitle.setText("Select a registered manager to continue.");
-        box.addView(subtitle, margin(-1, -2, 0, 4, 0, 12));
+        box.addView(subtitle, margin(-1, -2, 0, 6, 0, 14));
         for (ManagerCompatibility.ManagerInfo managerInfo : managers) {
             TextView row = text(14, true);
             row.setText(managerInfo.name + (managerInfo.installed ? "  ·  Installed" : "  ·  Not installed"));
@@ -134,13 +134,13 @@ public class RuntimeStatusView extends LinearLayout {
                 dialog.dismiss();
                 ManagerCompatibility.openInstaller(getContext(), managerInfo);
             });
-            box.addView(row, margin(-1, 54, 0, 0, 0, 8));
+            box.addView(row, margin(-1, 54, 0, 0, 0, 9));
         }
         TextView cancel = text(13, true);
         cancel.setText("Cancel");
         cancel.setGravity(Gravity.CENTER);
         cancel.setOnClickListener(v -> dialog.dismiss());
-        box.addView(cancel, margin(-1, 44, 0, 2, 0, 0));
+        box.addView(cancel, margin(-1, 44, 0, 4, 0, 0));
         dialog.setContentView(box);
         dialog.setOnShowListener(x -> {
             if (dialog.getWindow() != null) {
