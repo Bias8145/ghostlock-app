@@ -5,9 +5,9 @@
     <color name="surface_container">#FFF1E6CC</color>
     <color name="text_primary">#FF211B10</color>
     <color name="text_secondary">#FF665D4D</color>
-    <color name="icon_tint">#FF665D4D</color>
+    <color name="icon_tint">#FF4A3B22</color>
     <color name="theme_icon_light">#FF4A3B22</color>
-    <color name="theme_icon_dark">#FFFFD978</color>
+    <color name="theme_icon_dark">#FF8A6500</color>
     <color name="accent">#FF8A6500</color>
     <color name="primary">#FF8A6500</color>
     <color name="accent_pressed">#FF6F5100</color>
