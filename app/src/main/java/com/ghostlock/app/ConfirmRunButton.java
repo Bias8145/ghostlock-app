@@ -36,10 +36,11 @@ public class ConfirmRunButton extends MaterialButton {
         LinearLayout box = box();
         TextView title = text(20, true);
         title.setText(blockTitle(result));
-        box.addView(title, margin(-1, -2, 0, 0, 0, 5));
+        box.addView(title, margin(-1, -2, 0, 0, 0, 7));
         TextView message = text(13, false);
         message.setText(blockMessage(result));
-        box.addView(message, margin(-1, -2, 0, 0, 0, 14));
+        message.setLineSpacing(0, 1.08f);
+        box.addView(message, margin(-1, -2, 0, 0, 0, 16));
 
         if (result.state == ManagerCompatibility.State.MANAGER_REQUIRED) {
             MaterialButton install = actionButton("Install supported manager", true);
@@ -47,7 +48,7 @@ public class ConfirmRunButton extends MaterialButton {
                 dialog.dismiss();
                 showManagerPicker();
             });
-            box.addView(install, margin(-1, dp(48), 0, 0, 0, 8));
+            box.addView(install, margin(-1, dp(48), 0, 0, 0, 10));
         }
 
         MaterialButton close = actionButton("Close", false);
@@ -64,16 +65,24 @@ public class ConfirmRunButton extends MaterialButton {
         box.addView(title, margin(-1, -2, 0, 0, 0, 4));
         TextView subtitle = text(12, false);
         subtitle.setText("Execute kernel exploit & runtime");
-        box.addView(subtitle, margin(-1, -2, 0, 0, 0, 14));
-        box.addView(infoRow("Kernel", result.kernelSupported ? "Supported" : "Unsupported",
+        box.addView(subtitle, margin(-1, -2, 0, 0, 0, 16));
+
+        LinearLayout info = new LinearLayout(getContext());
+        info.setOrientation(LinearLayout.VERTICAL);
+        info.setBackground(round(0xFF25282D, 16));
+        info.setPadding(dp(12), dp(10), dp(12), dp(10));
+        info.addView(infoRow("Kernel", result.kernelSupported ? "Supported" : "Unsupported",
                 result.kernelSupported ? 0xFF72D6A0 : 0xFFFF7777));
-        box.addView(infoRow("Manager", result.manager.name, 0xFFE0E2E6));
+        info.addView(infoRow("Manager", result.manager.name, 0xFFE0E2E6), margin(-1, dp(44), 0, 7, 0, 0));
         String identity = result.manager.identityVerified ? "Verified" : "Recognized";
-        box.addView(infoRow("Identity", identity,
-                result.manager.identityVerified ? 0xFF72D6A0 : 0xFFFFC94D));
+        info.addView(infoRow("Identity", identity,
+                result.manager.identityVerified ? 0xFF72D6A0 : 0xFFFFC94D), margin(-1, dp(44), 0, 7, 0, 0));
+        box.addView(info, margin(-1, -2, 0, 0, 0, 16));
+
         TextView message = text(12, false);
         message.setText("This operation will modify runtime state on the current device.");
-        box.addView(message, margin(-1, -2, 0, 14, 0, 0));
+        message.setLineSpacing(0, 1.08f);
+        box.addView(message, margin(-1, -2, 0, 0, 0, 16));
 
         LinearLayout actions = new LinearLayout(getContext());
         actions.setGravity(Gravity.END | Gravity.CENTER_VERTICAL);
@@ -101,7 +110,7 @@ public class ConfirmRunButton extends MaterialButton {
         box.addView(title);
         TextView subtitle = text(12, false);
         subtitle.setText("Select a registered manager to continue.");
-        box.addView(subtitle, margin(-1, -2, 0, 4, 0, 12));
+        box.addView(subtitle, margin(-1, -2, 0, 6, 0, 14));
 
         for (ManagerCompatibility.ManagerInfo manager : ManagerCompatibility.registeredManagers(getContext())) {
             TextView row = text(14, true);
@@ -115,12 +124,12 @@ public class ConfirmRunButton extends MaterialButton {
                 dialog.dismiss();
                 ManagerCompatibility.openInstaller(getContext(), manager);
             });
-            box.addView(row, margin(-1, dp(54), 0, 0, 0, 8));
+            box.addView(row, margin(-1, dp(54), 0, 0, 0, 9));
         }
 
         MaterialButton cancel = actionButton("Cancel", false);
         cancel.setOnClickListener(v -> dialog.dismiss());
-        box.addView(cancel, margin(-1, dp(48), 0, 2, 0, 0));
+        box.addView(cancel, margin(-1, dp(48), 0, 4, 0, 0));
         show(dialog, box);
     }
 
@@ -128,13 +137,14 @@ public class ConfirmRunButton extends MaterialButton {
         LinearLayout row = new LinearLayout(getContext());
         row.setGravity(Gravity.CENTER_VERTICAL);
         row.setPadding(dp(12), 0, dp(12), 0);
-        row.setBackground(round(0xFF2A2D32, 14));
         TextView labelView = text(12, true);
         labelView.setText(label);
         row.addView(labelView, new LinearLayout.LayoutParams(0, dp(44), 1));
         TextView valueView = text(12, true);
         valueView.setText(value);
         valueView.setTextColor(color);
+        valueView.setGravity(Gravity.END | Gravity.CENTER_VERTICAL);
+        valueView.setMaxLines(1);
         row.addView(valueView, new LinearLayout.LayoutParams(-2, dp(44)));
         return row;
     }
