@@ -48,7 +48,7 @@ public class ConfirmRunButton extends MaterialButton {
                 dialog.dismiss();
                 showManagerPicker();
             });
-            box.addView(install, margin(-1, dp(48), 0, 0, 0, 10));
+            box.addView(install, margin(-1, dp(54), 0, 0, 0, 14));
         }
 
         MaterialButton close = actionButton("Close", false);
@@ -71,12 +71,11 @@ public class ConfirmRunButton extends MaterialButton {
         info.setOrientation(LinearLayout.VERTICAL);
         info.setBackground(round(0xFF25282D, 16));
         info.setPadding(dp(12), dp(10), dp(12), dp(10));
-        info.addView(infoRow("Kernel", result.kernelSupported ? "Supported" : "Unsupported",
-                result.kernelSupported ? 0xFF72D6A0 : 0xFFFF7777));
-        info.addView(infoRow("Manager", result.manager.name, 0xFFE0E2E6), margin(-1, dp(44), 0, 7, 0, 0));
+        info.addView(infoRow("Kernel", result.kernelSupported ? "Kernel supported" : "Kernel unsupported"),
+                new LinearLayout.LayoutParams(-1, dp(44)));
+        info.addView(infoRow("Manager", result.manager.name), margin(-1, dp(44), 0, 7, 0, 0));
         String identity = result.manager.identityVerified ? "Verified" : "Recognized";
-        info.addView(infoRow("Identity", identity,
-                result.manager.identityVerified ? 0xFF72D6A0 : 0xFFFFC94D), margin(-1, dp(44), 0, 7, 0, 0));
+        info.addView(infoRow("Identity", identity), margin(-1, dp(44), 0, 7, 0, 0));
         box.addView(info, margin(-1, -2, 0, 0, 0, 16));
 
         TextView message = text(12, false);
@@ -133,16 +132,14 @@ public class ConfirmRunButton extends MaterialButton {
         show(dialog, box);
     }
 
-    private LinearLayout infoRow(String label, String value, int color) {
+    private LinearLayout infoRow(String label, String value) {
         LinearLayout row = new LinearLayout(getContext());
         row.setGravity(Gravity.CENTER_VERTICAL);
-        row.setPadding(dp(12), 0, dp(12), 0);
         TextView labelView = text(12, true);
         labelView.setText(label);
         row.addView(labelView, new LinearLayout.LayoutParams(0, dp(44), 1));
         TextView valueView = text(12, true);
         valueView.setText(value);
-        valueView.setTextColor(color);
         valueView.setGravity(Gravity.END | Gravity.CENTER_VERTICAL);
         valueView.setMaxLines(1);
         row.addView(valueView, new LinearLayout.LayoutParams(-2, dp(44)));
