@@ -15,11 +15,11 @@
                 </LinearLayout>
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="@string/header_subtitle" android:textColor="@color/text_secondary" android:textSize="11sp"/>
             </LinearLayout>
+            <com.ghostlock.app.ThemeToggleButton android:id="@+id/themeButton" android:layout_width="44dp" android:layout_height="44dp" android:background="?attr/selectableItemBackgroundBorderless" android:padding="10dp" />
             <ImageButton android:id="@+id/advancedButton" android:layout_width="48dp" android:layout_height="48dp" android:background="?attr/selectableItemBackgroundBorderless" android:contentDescription="@string/action_advanced" android:padding="11dp" android:src="@drawable/ic_advanced" android:tint="@color/icon_tint"/>
         </LinearLayout>
 
         <com.ghostlock.app.RuntimeStatusView android:id="@+id/runtimeStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp"/>
-
         <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp" app:cardBackgroundColor="@color/surface_container_low" app:cardCornerRadius="20dp" app:cardElevation="0dp" app:strokeWidth="0dp">
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="DEVICE INFO" android:textColor="@color/text_secondary" android:textSize="11sp" android:textStyle="bold"/>
