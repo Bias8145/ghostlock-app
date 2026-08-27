@@ -4,11 +4,10 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
 import android.util.AttributeSet;
-import android.view.View;
 import android.widget.TextView;
 
 /** Device/kernel summary with a compact eye toggle for the kernel release. */
-public class KernelInfoView extends androidx.appcompat.widget.AppCompatTextView {
+public class KernelInfoView extends TextView {
     private boolean kernelVisible = true;
     private CharSequence fullText = "";
 
@@ -31,6 +30,7 @@ public class KernelInfoView extends androidx.appcompat.widget.AppCompatTextView 
         setCompoundDrawablePadding(dp(8));
         setEllipsize(TextUtils.TruncateAt.END);
         setOnClickListener(v -> setKernelVisible(!kernelVisible));
+        setContentDescription("Hide kernel version");
         updateEyeIcon();
     }
 
@@ -56,10 +56,7 @@ public class KernelInfoView extends androidx.appcompat.widget.AppCompatTextView 
 
     private void updateEyeIcon() {
         Drawable icon = getContext().getDrawable(kernelVisible ? R.drawable.ic_visibility : R.drawable.ic_visibility_off);
-        if (icon != null) {
-            int tint = getResources().getColor(R.color.icon_tint);
-            icon.setTint(tint);
-        }
+        if (icon != null) icon.setTint(getResources().getColor(R.color.icon_tint));
         setCompoundDrawablesWithIntrinsicBounds(null, null, icon, null);
     }
 
