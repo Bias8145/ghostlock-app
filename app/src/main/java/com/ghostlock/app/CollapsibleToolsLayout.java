@@ -49,7 +49,7 @@ public class CollapsibleToolsLayout extends LinearLayout {
             @Override public void onAnimationEnd(Animator animation) {
                 content.setVisibility(GONE);
                 ViewGroup.LayoutParams lp = content.getLayoutParams();
-                lp.height = WRAP_CONTENT;
+                lp.height = ViewGroup.LayoutParams.WRAP_CONTENT;
                 content.setLayoutParams(lp);
                 content.setAlpha(1f);
             }
@@ -74,7 +74,7 @@ public class CollapsibleToolsLayout extends LinearLayout {
         });
         animator.addListener(new AnimatorListenerAdapter() {
             @Override public void onAnimationEnd(Animator animation) {
-                lp.height = WRAP_CONTENT;
+                lp.height = ViewGroup.LayoutParams.WRAP_CONTENT;
                 content.setLayoutParams(lp);
                 content.setAlpha(1f);
             }
