@@ -12,6 +12,7 @@ import androidx.core.content.ContextCompat;
 public class ThemeToggleButton extends ImageButton {
     private static final String PREFS = "ghostlock_prefs";
     private static final String PREF_THEME = "theme_mode";
+    private static final int SYSTEM = 0;
     private static final int LIGHT = 1;
     private static final int DARK = 2;
 
@@ -26,7 +27,19 @@ public class ThemeToggleButton extends ImageButton {
         setMinimumWidth(dp(48));
         setMinimumHeight(dp(48));
         setPadding(dp(10), dp(10), dp(10), dp(10));
+        applySavedThemeIfNeeded();
         updateIconState();
+    }
+
+    private void applySavedThemeIfNeeded() {
+        Activity activity = findActivity(getContext());
+        if (activity == null) return;
+        int saved = activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getInt(PREF_THEME, SYSTEM);
+        if (saved == SYSTEM) return;
+        UiModeManager manager = (UiModeManager) activity.getSystemService(Context.UI_MODE_SERVICE);
+        if (manager == null) return;
+        int desired = saved == DARK ? UiModeManager.MODE_NIGHT_YES : UiModeManager.MODE_NIGHT_NO;
+        if (manager.getNightMode() != desired) manager.setApplicationNightMode(desired);
     }
 
     private void toggleTheme() {
@@ -38,7 +51,6 @@ public class ThemeToggleButton extends ImageButton {
         int next = dark ? LIGHT : DARK;
         activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putInt(PREF_THEME, next).apply();
         manager.setApplicationNightMode(dark ? UiModeManager.MODE_NIGHT_NO : UiModeManager.MODE_NIGHT_YES);
-        updateIconState();
         activity.recreate();
     }
 
@@ -49,8 +61,9 @@ public class ThemeToggleButton extends ImageButton {
     private void updateIconState() {
         boolean dark = isDarkMode();
         setImageResource(dark ? R.drawable.ic_theme_moon : R.drawable.ic_theme_sun);
-        setColorFilter(ContextCompat.getColor(getContext(), R.color.icon_tint));
+        setColorFilter(ContextCompat.getColor(getContext(), dark ? R.color.theme_icon_dark : R.color.theme_icon_light));
         setAlpha(1f);
+        setScaleType(ScaleType.CENTER_INSIDE);
         setPadding(dp(10), dp(10), dp(10), dp(10));
         setContentDescription(dark ? "Switch to light theme" : "Switch to dark theme");
     }
