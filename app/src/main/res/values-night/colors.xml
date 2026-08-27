@@ -6,6 +6,8 @@
     <color name="text_primary">#FFEDE4D0</color>
     <color name="text_secondary">#FFD1C5AC</color>
     <color name="icon_tint">#FFD1C5AC</color>
+    <color name="theme_icon_light">#FF4A3B22</color>
+    <color name="theme_icon_dark">#FFFFD978</color>
     <color name="accent">#FFE9B949</color>
     <color name="primary">#FFE9B949</color>
     <color name="accent_pressed">#FFF3C96B</color>
