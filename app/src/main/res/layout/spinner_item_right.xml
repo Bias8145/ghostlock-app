@@ -5,5 +5,5 @@
     android:gravity="end|center_vertical"
     android:paddingStart="12dp"
     android:paddingEnd="28dp"
-    android:textColor="?android:attr/textColorPrimary"
+    android:textColor="@color/text_primary"
     android:textSize="14sp" />
