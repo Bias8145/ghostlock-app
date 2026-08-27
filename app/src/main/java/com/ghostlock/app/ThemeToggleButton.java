@@ -7,6 +7,7 @@ import android.content.ContextWrapper;
 import android.content.res.Configuration;
 import android.util.AttributeSet;
 import android.widget.ImageButton;
+import androidx.core.content.ContextCompat;
 
 /** Compact Light/Dark theme toggle used in the main header. */
 public class ThemeToggleButton extends ImageButton {
@@ -17,6 +18,8 @@ public class ThemeToggleButton extends ImageButton {
     private void init() {
         setOnClickListener(v -> toggleTheme());
         setContentDescription("Toggle light and dark theme");
+        setScaleType(ScaleType.CENTER_INSIDE);
+        setPadding(dp(11), dp(11), dp(11), dp(11));
         updateIconState();
     }
 
@@ -32,7 +35,9 @@ public class ThemeToggleButton extends ImageButton {
 
     private void updateIconState() {
         boolean dark = (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
-        setImageResource(dark ? R.drawable.ic_theme_sun : R.drawable.ic_theme_moon);
+        // Light mode shows a dark sun; dark mode shows a light moon.
+        setImageResource(dark ? R.drawable.ic_theme_moon : R.drawable.ic_theme_sun);
+        setColorFilter(ContextCompat.getColor(getContext(), R.color.icon_tint));
     }
 
     @Override protected void onConfigurationChanged(Configuration newConfig) {
@@ -49,5 +54,9 @@ public class ThemeToggleButton extends ImageButton {
             current = base;
         }
         return current instanceof Activity ? (Activity) current : null;
+    }
+
+    private int dp(int value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
     }
 }
