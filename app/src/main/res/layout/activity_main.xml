@@ -7,11 +7,13 @@
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="18dp" android:gravity="center_vertical">
             <ImageView android:layout_width="64dp" android:layout_height="64dp" android:contentDescription="@string/app_name" android:scaleType="fitCenter" android:src="@drawable/ic_launcher_foreground" android:tint="@color/icon_tint"/>
             <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="10dp" android:layout_weight="1" android:orientation="vertical">
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/app_name" android:textColor="@color/text_primary" android:textSize="24sp" android:textStyle="bold"/>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/app_name" android:textColor="@color/text_primary" android:textSize="24sp" android:textStyle="bold"/>
+                    <LinearLayout android:id="@+id/kernelChip" android:layout_width="wrap_content" android:layout_height="28dp" android:layout_marginStart="8dp" android:background="@drawable/bg_kernel_status" android:gravity="center_vertical" android:minWidth="0dp" android:paddingStart="8dp" android:paddingEnd="8dp">
+                        <TextView android:id="@+id/kernelChipText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/kernel_supported" android:textSize="10sp" android:textStyle="bold"/>
+                    </LinearLayout>
+                </LinearLayout>
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="@string/header_subtitle" android:textColor="@color/text_secondary" android:textSize="11sp"/>
-            </LinearLayout>
-            <LinearLayout android:id="@+id/kernelChip" android:layout_width="wrap_content" android:layout_height="36dp" android:layout_marginStart="8dp" android:layout_marginEnd="4dp" android:background="@drawable/bg_kernel_status" android:gravity="center" android:minWidth="112dp" android:paddingStart="10dp" android:paddingEnd="10dp">
-                <TextView android:id="@+id/kernelChipText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Kernel" android:textSize="10sp" android:textStyle="bold"/>
             </LinearLayout>
             <ImageButton android:id="@+id/advancedButton" android:layout_width="48dp" android:layout_height="48dp" android:background="?attr/selectableItemBackgroundBorderless" android:contentDescription="@string/action_advanced" android:padding="11dp" android:src="@drawable/ic_advanced" android:tint="@color/icon_tint"/>
         </LinearLayout>
