@@ -19,6 +19,8 @@ public class ThemeToggleButton extends ImageButton {
         setOnClickListener(v -> toggleTheme());
         setContentDescription("Toggle light and dark theme");
         setScaleType(ScaleType.CENTER_INSIDE);
+        setMinimumWidth(dp(48));
+        setMinimumHeight(dp(48));
         setPadding(dp(11), dp(11), dp(11), dp(11));
         updateIconState();
     }
@@ -35,7 +37,7 @@ public class ThemeToggleButton extends ImageButton {
 
     private void updateIconState() {
         boolean dark = (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
-        // Light mode shows a dark sun; dark mode shows a light moon.
+        // Light mode: dark sun. Dark mode: light moon.
         setImageResource(dark ? R.drawable.ic_theme_moon : R.drawable.ic_theme_sun);
         setColorFilter(ContextCompat.getColor(getContext(), R.color.icon_tint));
     }
