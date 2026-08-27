@@ -32,9 +32,9 @@ public class RuntimeStatusView extends LinearLayout {
 
     @Override protected void onAttachedToWindow() { super.onAttachedToWindow(); refresh(); }
 
-    @Override protected void onWindowVisibilityChanged(int visibility) {
-        super.onWindowVisibilityChanged(visibility);
-        if (visibility == View.VISIBLE) post(this::refresh);
+    @Override public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) post(this::refresh);
     }
 
     public void refresh() {
