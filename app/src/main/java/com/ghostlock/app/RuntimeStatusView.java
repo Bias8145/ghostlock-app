@@ -28,8 +28,9 @@ public class RuntimeStatusView extends LinearLayout {
         action = text(12, true);
         action.setGravity(Gravity.CENTER);
         action.setPadding(dp(12), 0, dp(12), 0);
+        action.setMinHeight(dp(42));
         action.setVisibility(View.GONE);
-        addView(action, margin(-1, dp(42), 0, 0, 0, 0));
+        addView(action, margin(-1, 42, 0, 10, 0, 0));
         refresh();
     }
 
@@ -133,13 +134,13 @@ public class RuntimeStatusView extends LinearLayout {
                 dialog.dismiss();
                 ManagerCompatibility.openInstaller(getContext(), managerInfo);
             });
-            box.addView(row, margin(-1, dp(54), 0, 0, 0, 8));
+            box.addView(row, margin(-1, 54, 0, 0, 0, 8));
         }
         TextView cancel = text(13, true);
         cancel.setText("Cancel");
         cancel.setGravity(Gravity.CENTER);
         cancel.setOnClickListener(v -> dialog.dismiss());
-        box.addView(cancel, margin(-1, dp(44), 0, 2, 0, 0));
+        box.addView(cancel, margin(-1, 44, 0, 2, 0, 0));
         dialog.setContentView(box);
         dialog.setOnShowListener(x -> {
             if (dialog.getWindow() != null) {
