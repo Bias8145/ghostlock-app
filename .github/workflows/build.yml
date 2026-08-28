@@ -8,6 +8,7 @@ on:
       - main
       - ui/material3-redesign
       - redesign
+      - Test
   pull_request:
     branches:
       - main
@@ -51,6 +52,7 @@ jobs:
         run: cargo test --release
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
+        
       - name: Cache ONDK
         id: ondk-cache
         uses: actions/cache@v4
