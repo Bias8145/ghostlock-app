@@ -68,6 +68,7 @@
       </LinearLayout></FrameLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.button.MaterialButton android:id="@+id/runButton" android:layout_width="1dp" android:layout_height="1dp" android:visibility="gone" />
         <com.google.android.material.button.MaterialButton android:id="@+id/otaButton" android:layout_width="1dp" android:layout_height="1dp" android:visibility="gone" />
         <com.google.android.material.button.MaterialButton android:id="@+id/parseButton" android:layout_width="1dp" android:layout_height="1dp" android:visibility="gone" />
         <com.google.android.material.button.MaterialButton android:id="@+id/exportButton" android:layout_width="1dp" android:layout_height="1dp" android:visibility="gone" />
