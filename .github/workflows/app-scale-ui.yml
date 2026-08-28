@@ -1,0 +1,39 @@
+name: App Scale UI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [Test]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: Test
+          fetch-depth: 0
+      - name: Apply app-scale UI resources
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('app/src/main/res/values/dimens.xml')
+          if not p.exists():
+              p.parent.mkdir(parents=True, exist_ok=True)
+              p.write_text('''<resources>\n    <dimen name="app_scale_base">1.0</dimen>\n</resources>\n''')
+          else:
+              s=p.read_text()
+              if 'name="app_scale_base"' not in s:
+                  s=s.replace('</resources>', '    <dimen name="app_scale_base">1.0</dimen>\n</resources>')
+                  p.write_text(s)
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/src/main/res/values/dimens.xml
+          git diff --cached --quiet && exit 0
+          git commit -m "ui: add app scale resource baseline"
+          git push origin HEAD:Test
