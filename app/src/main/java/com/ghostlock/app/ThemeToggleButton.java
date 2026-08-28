@@ -5,8 +5,6 @@ import android.app.UiModeManager;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.res.Configuration;
-import android.view.MenuItem;
-import android.view.View;
 import android.widget.ImageButton;
 import android.widget.PopupMenu;
 import androidx.core.content.ContextCompat;
@@ -29,19 +27,10 @@ public class ThemeToggleButton extends ImageButton {
         setMinimumWidth(dp(48));
         setMinimumHeight(dp(48));
         setPadding(dp(10), dp(10), dp(10), dp(10));
-        applySavedTheme();
+        // Do not change the theme while the header is merely being constructed.
+        // The saved preference is applied by the Activity lifecycle, while this
+        // control only presents the explicit System/Light/Dark choice.
         updateIconState();
-    }
-
-    private void applySavedTheme() {
-        Activity activity = findActivity(getContext());
-        if (activity == null) return;
-        int saved = activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getInt(PREF_THEME, SYSTEM);
-        UiModeManager manager = (UiModeManager) activity.getSystemService(Context.UI_MODE_SERVICE);
-        if (manager == null) return;
-        int desired = saved == DARK ? UiModeManager.MODE_NIGHT_YES
-                : saved == LIGHT ? UiModeManager.MODE_NIGHT_NO : UiModeManager.MODE_NIGHT_AUTO;
-        if (manager.getNightMode() != desired) manager.setApplicationNightMode(desired);
     }
 
     private void showThemeMenu() {
@@ -49,10 +38,14 @@ public class ThemeToggleButton extends ImageButton {
         menu.getMenu().add(0, SYSTEM, 0, "System");
         menu.getMenu().add(0, LIGHT, 1, "Light");
         menu.getMenu().add(0, DARK, 2, "Dark");
-        int current = findActivity(getContext()) == null ? SYSTEM
-                : findActivity(getContext()).getSharedPreferences(PREFS, Context.MODE_PRIVATE).getInt(PREF_THEME, SYSTEM);
+        menu.getMenu().setGroupCheckable(0, true, true);
+        Activity activity = findActivity(getContext());
+        int current = activity == null ? SYSTEM
+                : activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getInt(PREF_THEME, SYSTEM);
+        current = Math.max(SYSTEM, Math.min(DARK, current));
         menu.getMenu().getItem(current).setChecked(true);
         menu.setOnMenuItemClickListener(item -> {
+            item.setChecked(true);
             setThemeMode(item.getItemId());
             return true;
         });
@@ -62,12 +55,14 @@ public class ThemeToggleButton extends ImageButton {
     private void setThemeMode(int mode) {
         Activity activity = findActivity(getContext());
         if (activity == null) return;
-        activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putInt(PREF_THEME, mode).apply();
+        activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .edit().putInt(PREF_THEME, mode).apply();
         UiModeManager manager = (UiModeManager) activity.getSystemService(Context.UI_MODE_SERVICE);
         if (manager == null) return;
         manager.setApplicationNightMode(mode == DARK ? UiModeManager.MODE_NIGHT_YES
                 : mode == LIGHT ? UiModeManager.MODE_NIGHT_NO : UiModeManager.MODE_NIGHT_AUTO);
-        // Stay on the current page; Android recreates the Activity only when required by the mode change.
+        // Theme changes may recreate the Activity. MainActivity owns page state;
+        // this control never performs navigation itself.
         updateIconState();
     }
 
@@ -78,7 +73,8 @@ public class ThemeToggleButton extends ImageButton {
 
     private void updateIconState() {
         Activity activity = findActivity(getContext());
-        int mode = activity == null ? SYSTEM : activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getInt(PREF_THEME, SYSTEM);
+        int mode = activity == null ? SYSTEM
+                : activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getInt(PREF_THEME, SYSTEM);
         boolean dark = isDarkMode();
         setImageResource(dark ? R.drawable.ic_theme_moon : R.drawable.ic_theme_sun);
         setColorFilter(ContextCompat.getColor(getContext(), dark ? R.color.theme_icon_dark : R.color.theme_icon_light));
