@@ -1,0 +1,36 @@
+name: History Cleanup
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [Test]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: Test
+          fetch-depth: 0
+      - name: Add history resource baseline
+        shell: bash
+        run: |
+          mkdir -p app/src/main/res/values
+          if [ ! -f app/src/main/res/values/history.xml ]; then
+            cat > app/src/main/res/values/history.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <string name="history_empty">No history yet</string>
+          </resources>
+          EOF
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/src/main/res/values/history.xml
+          git diff --cached --quiet && exit 0
+          git commit -m "ui: add history empty-state resource"
+          git push origin HEAD:Test
