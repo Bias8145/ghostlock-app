@@ -518,7 +518,14 @@ public class MainActivity extends Activity {
         applyKernelStatus();
         setRunState(RunState.IDLE);
 
-        runButton.setOnClickListener(v -> startExploit());
+        runButton.setOnClickListener(v -> {
+            if (!hasKsuManagerInstalled()) {
+                appendLog("error: no KernelSU-compatible manager installed");
+                toast(R.string.run_manager_required);
+                return;
+            }
+            startExploit();
+        });
         advancedButton.setVisibility(View.GONE);
         advancedButton.setOnClickListener(null);
         copyButton.setOnClickListener(v -> copyLogs());
@@ -536,6 +543,7 @@ public class MainActivity extends Activity {
         toolsFab.setOnClickListener(v -> {
             boolean opening = toolItems[0].getVisibility() != View.VISIBLE;
             toolsFab.setImageResource(opening ? R.drawable.ic_close : R.drawable.ic_tools);
+            setPanelBlur(opening);
             for (int i = 0; i < toolItems.length; i++) {
                 View item = toolItems[i];
                 if (opening) {
@@ -634,9 +642,14 @@ public class MainActivity extends Activity {
         clear.setText("Clear history");
         clear.setAllCaps(false);
         clear.setOnClickListener(v -> { getSharedPreferences(PREFS, MODE_PRIVATE).edit().remove("run_history").apply(); refreshHistory(); });
-        historyBody.addView(clear);
         historyScroll.addView(historyBody);
         pageHost.addView(historyScroll, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        FrameLayout.LayoutParams clearLp = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(48));
+        clearLp.gravity = android.view.Gravity.END | android.view.Gravity.BOTTOM;
+        clearLp.setMargins(0, 0, dp(16), dp(16));
+        clear.setLayoutParams(clearLp);
+        clear.setElevation(dp(4));
+        pageHost.addView(clear);
 
         ScrollView settingsScroll = new ScrollView(this);
         settingsScroll.setFillViewport(true);
@@ -1416,6 +1429,19 @@ public class MainActivity extends Activity {
         boolean cn = "CN".equalsIgnoreCase(Locale.getDefault().getCountry());
         String marketName = firstValidProperty(cn ? "ro.vendor.oplus.market.name" : "ro.vendor.oplus.market.enname", cn ? "ro.vendor.oplus.market.enname" : "ro.vendor.oplus.market.name", "ro.product.marketname");
         return marketName != null ? marketName : Build.MANUFACTURER + " " + Build.MODEL;
+    }
+
+
+    private boolean hasKsuManagerInstalled() {
+        PackageManager pm = getPackageManager();
+        for (String pkg : KSU_MANAGER_PACKAGES) {
+            try {
+                pm.getApplicationInfo(pkg, 0);
+                return true;
+            } catch (PackageManager.NameNotFoundException ignored) {
+            }
+        }
+        return false;
     }
 
     private void startExploit() {
