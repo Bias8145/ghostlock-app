@@ -2,12 +2,14 @@ name: Apply UI Report Fixes
 
 on:
   workflow_dispatch:
+  push:
+    branches: [Test]
 
 permissions:
   contents: write
 
 jobs:
-  apply:
+  cleanup:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,7 +17,7 @@ jobs:
           ref: Test
           fetch-depth: 0
 
-      - name: Apply reported UI fixes
+      - name: Remove duplicate XML attributes safely
         shell: python
         run: |
           from pathlib import Path
@@ -23,14 +25,14 @@ jobs:
 
           layout = Path('app/src/main/res/layout/activity_main.xml')
           x = layout.read_text()
-          x = re.sub(r'\s+android:visibility="gone"(?:\s+android:visibility="gone")+', ' android:visibility="gone"', x)
-          layout.write_text(x)
+          cleaned = re.sub(r'\s+android:visibility="gone"(?:\s+android:visibility="gone")+', ' android:visibility="gone"', x)
+          if cleaned == x:
+              print('No duplicate visibility attributes found')
+              raise SystemExit(0)
+          layout.write_text(cleaned)
 
           subprocess.run(['git','config','user.name','github-actions[bot]'], check=True)
           subprocess.run(['git','config','user.email','41898282+github-actions[bot]@users.noreply.github.com'], check=True)
           subprocess.run(['git','add', str(layout)], check=True)
-          if subprocess.run(['git','diff','--cached','--quiet']).returncode:
-              print('No source changes required')
-              raise SystemExit(0)
-          subprocess.run(['git','commit','-m','fix: clean duplicate layout attributes'], check=True)
+          subprocess.run(['git','commit','-m','fix: clean duplicate XML visibility attributes'], check=True)
           subprocess.run(['git','push','origin','HEAD:Test'], check=True)
