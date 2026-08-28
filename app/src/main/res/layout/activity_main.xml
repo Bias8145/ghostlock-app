@@ -14,8 +14,9 @@
                 </LinearLayout>
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="@string/header_subtitle" android:textColor="@color/text_secondary" android:textSize="11sp"/>
             </LinearLayout>
-            <com.ghostlock.app.ThemeToggleButton android:layout_width="48dp" android:layout_height="48dp" android:background="?attr/selectableItemBackgroundBorderless" android:layout_marginEnd="2dp"/>
-            <ImageButton android:id="@+id/advancedButton" android:layout_width="48dp" android:layout_height="48dp" android:background="?attr/selectableItemBackgroundBorderless" android:contentDescription="@string/action_menu" android:padding="11dp" android:src="@drawable/ic_advanced" android:tint="@color/icon_tint"/>
+            <!-- Theme and advanced actions now live exclusively on Settings/navbar. -->
+            <com.ghostlock.app.ThemeToggleButton android:layout_width="1dp" android:layout_height="1dp" android:visibility="gone"/>
+            <ImageButton android:id="@+id/advancedButton" android:layout_width="1dp" android:layout_height="1dp" android:visibility="gone" android:contentDescription="@string/action_menu"/>
         </LinearLayout>
         <com.ghostlock.app.RuntimeStatusView android:id="@+id/runtimeStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp"/>
         <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp" app:cardBackgroundColor="@color/surface_container_low" app:cardCornerRadius="20dp" app:cardElevation="0dp" app:strokeWidth="0dp">
