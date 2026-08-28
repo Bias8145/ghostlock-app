@@ -1,0 +1,97 @@
+name: Apply UI Report Fixes
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [Test]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: Test
+          fetch-depth: 0
+      - name: Apply fixes to source
+        shell: python
+        run: |
+          from pathlib import Path
+          import re, subprocess
+
+          layout = Path('app/src/main/res/layout/activity_main.xml')
+          main = Path('app/src/main/java/com/ghostlock/app/MainActivity.java')
+          x = layout.read_text()
+          j = main.read_text()
+
+          # Run: keep a real visible Material button with its icon.
+          x = re.sub(r'(<com\.google\.android\.material\.button\.MaterialButton android:id="@\+id/runButton"[^>]*?)(?:\s+android:visibility="gone")?([^>]*/>)',
+                     lambda m: m.group(1).replace('android:layout_width="1dp"','android:layout_width="match_parent"').replace('android:layout_height="1dp"','android:layout_height="56dp"') + m.group(2), x)
+          if 'android:id="@+id/runButton"' not in x:
+              raise SystemExit('runButton missing')
+
+          # Navbar: icon-only; remove visible labels and give every button a stable icon size.
+          for vid in ('navHome','navHistory','navSettings'):
+              pat = re.compile(r'(<[^>]+android:id="@\+id/'+vid+r'"[^>]*)(/?>)')
+              m = pat.search(x)
+              if m:
+                  block = m.group(1)
+                  block = re.sub(r'\s+android:text="[^"]*"', '', block)
+                  block = re.sub(r'\s+android:minHeight="[^"]*"', '', block)
+                  block = re.sub(r'\s+android:minWidth="[^"]*"', '', block)
+                  block = re.sub(r'\s+android:layout_height="[^"]*"', ' android:layout_height="56dp"', block)
+                  block = re.sub(r'\s+android:contentDescription="[^"]*"', '', block)
+                  desc = {'navHome':'Home','navHistory':'History','navSettings':'Settings'}[vid]
+                  block += f' android:contentDescription="{desc}" android:padding="14dp" app:iconGravity="textStart"'
+                  x = x[:m.start()] + block + m.group(2) + x[m.end():]
+
+          # FAB labels: explicit IDs + gone state; Java will reveal them only while menu is open.
+          mapping = {'Export offsets.json':'toolExportLabel','Parse Boot':'toolParseBootLabel','Parse Link':'toolParseLinkLabel','Import offsets':'toolImportLabel'}
+          for text, vid in mapping.items():
+              pattern = re.compile(r'<TextView([^>]*android:text="'+re.escape(text)+r'"[^>]*)/>')
+              x = pattern.sub(lambda m: '<TextView android:id="@+id/'+vid+'"'+m.group(1).replace(' android:visibility="gone" android:visibility="gone"',' android:visibility="gone"') + '/>', x, count=1)
+
+          # Remove duplicate XML visibility attributes introduced by older passes.
+          x = x.replace(' android:visibility="gone" android:visibility="gone"',' android:visibility="gone"')
+          layout.write_text(x)
+
+          # App scale: density only, never fontScale.
+          j = j.replace('PREF_FONT_SCALE', 'PREF_APP_SCALE')
+          j = j.replace('private static final String PREF_APP_SCALE = "font_scale";', 'private static final String PREF_APP_SCALE = "app_scale";')
+          j = re.sub(r'float savedScale = getSharedPreferences\(PREF_APP_SCALE, MODE_PRIVATE\)\.getFloat\(PREF_APP_SCALE, 1\.0f\);', 'float savedScale = getSharedPreferences(PREFS, MODE_PRIVATE).getFloat(PREF_APP_SCALE, 1.0f);', j)
+          j = j.replace('putFloat(PREF_APP_SCALE, scale)', 'putFloat(PREF_APP_SCALE, scale)')
+          if 'configuration.fontScale = scale;' in j:
+              j = j.replace('configuration.fontScale = scale;\n        ', '')
+          j = j.replace('float scale = base.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getFloat(PREF_APP_SCALE, 1.0f);', 'float scale = base.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getFloat(PREF_APP_SCALE, 1.0f);')
+
+          # Reveal/hide FAB labels together with their icon buttons.
+          old = 'View[] toolItems = {toolImport, toolParseLink, toolParseBoot, toolExport};'
+          new = '''View[] toolItems = {toolImport, toolParseLink, toolParseBoot, toolExport};
+        TextView[] toolLabels = {
+                findViewById(R.id.toolImportLabel), findViewById(R.id.toolParseLinkLabel),
+                findViewById(R.id.toolParseBootLabel), findViewById(R.id.toolExportLabel)
+        };'''
+          if old in j and 'TextView[] toolLabels' not in j:
+              j = j.replace(old, new)
+          j = j.replace('item.setVisibility(View.VISIBLE);\n                    item.setAlpha(0f);', 'item.setVisibility(View.VISIBLE);\n                    toolLabels[i].setVisibility(View.VISIBLE);\n                    item.setAlpha(0f);')
+          j = j.replace('item.animate().alpha(0f).translationY(18f).setDuration(100L).withEndAction(() -> item.setVisibility(View.GONE)).start();', 'item.animate().alpha(0f).translationY(18f).setDuration(100L).withEndAction(() -> { item.setVisibility(View.GONE); toolLabels[i].setVisibility(View.GONE); }).start();')
+
+          # Header theme is authoritative; hide duplicate Settings theme control.
+          x = layout.read_text()
+          x = re.sub(r'<com\.ghostlock\.app\.ThemeToggleButton android:id="@\+id/settingsThemeToggle"[^>]*/>', '<com.ghostlock.app.ThemeToggleButton android:id="@+id/settingsThemeToggle" android:layout_width="1dp" android:layout_height="1dp" android:visibility="gone" />', x)
+          layout.write_text(x)
+
+          # Make content reserve space for the floating nav and FAB.
+          x = layout.read_text().replace('android:paddingBottom="112dp"', 'android:paddingBottom="180dp"')
+          layout.write_text(x)
+
+          subprocess.run(['git','config','user.name','github-actions[bot]'],check=True)
+          subprocess.run(['git','config','user.email','41898282+github-actions[bot]@users.noreply.github.com'],check=True)
+          subprocess.run(['git','add','app/src/main/res/layout/activity_main.xml','app/src/main/java/com/ghostlock/app/MainActivity.java'],check=True)
+          if subprocess.run(['git','diff','--cached','--quiet']).returncode:
+              raise SystemExit(0)
+          subprocess.run(['git','commit','-m','fix: apply reported UI corrections'],check=True)
+          subprocess.run(['git','push','origin','HEAD:Test'],check=True)
