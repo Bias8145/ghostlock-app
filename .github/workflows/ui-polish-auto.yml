@@ -1,0 +1,118 @@
+name: UI polish auto patch
+
+on:
+  push:
+    branches: [Test]
+    paths:
+      - '.github/workflows/ui-polish-auto.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: Test
+          fetch-depth: 0
+      - name: Apply UI polish
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          java = Path('app/src/main/java/com/ghostlock/app/MainActivity.java')
+          s = java.read_text()
+
+          # Remove legacy hidden tool/header bridge fields and wiring.
+          for line in [
+              '    private ImageButton advancedButton;\n',
+              '    private Button importButton;\n',
+              '    private Button otaButton;\n',
+              '    private Button parseButton;\n',
+              '    private Button exportButton;\n',
+          ]:
+              s = s.replace(line, '')
+          s = s.replace('        advancedButton = findViewById(R.id.advancedButton);\n', '')
+          s = s.replace('        importButton = findViewById(R.id.importButton);\n', '')
+          s = s.replace('        otaButton = findViewById(R.id.otaButton);\n', '')
+          s = s.replace('        parseButton = findViewById(R.id.parseButton);\n', '')
+          s = s.replace('        exportButton = findViewById(R.id.exportButton);\n', '')
+          s = s.replace('        advancedButton.setVisibility(View.GONE);\n        advancedButton.setOnClickListener(null);\n', '')
+          s = s.replace('        importButton.setOnClickListener(v -> importOffsets());\n        otaButton.setOnClickListener(v -> promptParseUrl());\n        parseButton.setOnClickListener(v -> parseOffsets());\n        exportButton.setOnClickListener(v -> exportOffsets());\n', '')
+
+          old_tools = '''        toolImport.setOnClickListener(v -> importButton.performClick());
+        toolParseLink.setOnClickListener(v -> otaButton.performClick());
+        toolParseBoot.setOnClickListener(v -> parseButton.performClick());
+        toolExport.setOnClickListener(v -> exportButton.performClick());
+        otaButton.setVisibility(View.GONE);
+        parseButton.setVisibility(View.GONE);
+        exportButton.setVisibility(View.GONE);
+'''
+          new_tools = '''        toolImport.setOnClickListener(v -> importOffsets());
+        toolParseLink.setOnClickListener(v -> promptParseUrl());
+        toolParseBoot.setOnClickListener(v -> parseOffsets());
+        toolExport.setOnClickListener(v -> exportOffsets());
+'''
+          s = s.replace(old_tools, new_tools)
+
+          # Make the settings control an app-wide scale instead of font-only scaling.
+          s = s.replace('private static final String PREF_FONT_SCALE = "font_scale";', 'private static final String PREF_APP_SCALE = "app_scale";')
+          s = s.replace('PREF_FONT_SCALE', 'PREF_APP_SCALE')
+          s = s.replace('float scale = base.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getFloat(PREF_APP_SCALE, 1.0f);\n        Configuration configuration = new Configuration(base.getResources().getConfiguration());\n        configuration.fontScale = scale;', 'float scale = base.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getFloat(PREF_APP_SCALE, 1.0f);\n        Configuration configuration = new Configuration(base.getResources().getConfiguration());\n        configuration.densityDpi = Math.max(120, Math.round(configuration.densityDpi * scale));\n        configuration.fontScale = 1.0f;')
+          s = s.replace('String[] fontSizes = {getString(R.string.font_size_small), getString(R.string.font_size_default), getString(R.string.font_size_large)};', 'String[] fontSizes = {"85%", "100%", "115%"};')
+          s = s.replace('fontSizeSpinner.setSelection(savedScale < 0.95f ? 0 : savedScale > 1.05f ? 2 : 1);', 'fontSizeSpinner.setSelection(savedScale < 0.925f ? 0 : savedScale > 1.075f ? 2 : 1);')
+          s = s.replace('float scale = position == 0 ? 0.9f : position == 2 ? 1.15f : 1.0f;', 'float scale = position == 0 ? 0.85f : position == 2 ? 1.15f : 1.0f;')
+
+          # Add a theme control to Settings, with no header duplicate.
+          marker = '        settingsBody.addView(st);\n'
+          insertion = '''        settingsBody.addView(st);\n        LinearLayout themeRow = new LinearLayout(this);\n        themeRow.setGravity(android.view.Gravity.CENTER_VERTICAL);\n        themeRow.setPadding(dp(14), dp(4), dp(8), dp(8));\n        TextView themeLabel = new TextView(this);\n        themeLabel.setText("Theme");\n        themeLabel.setTextSize(13);\n        themeLabel.setTextColor(getColor(R.color.text_primary));\n        themeRow.addView(themeLabel, new LinearLayout.LayoutParams(0, dp(56), 1f));\n        ThemeToggleButton themeToggle = new ThemeToggleButton(this);\n        themeRow.addView(themeToggle, new LinearLayout.LayoutParams(dp(56), dp(56)));\n        settingsBody.addView(themeRow);\n'''
+          if marker in s and 'TextView themeLabel' not in s:
+              s = s.replace(marker, insertion, 1)
+
+          java.write_text(s)
+
+          xml = Path('app/src/main/res/layout/activity_main.xml')
+          x = xml.read_text()
+          x = x.replace('            <com.ghostlock.app.ThemeToggleButton android:layout_width="1dp" android:layout_height="1dp" android:visibility="gone"/>\n            <ImageButton android:id="@+id/advancedButton" android:layout_width="1dp" android:layout_height="1dp" android:visibility="gone" android:contentDescription="@string/action_menu"/>\n', '')
+          x = x.replace('android:layout_height="420dp" android:layout_marginBottom="12dp" app:cardBackgroundColor="@color/log_bg"', 'android:layout_height="520dp" android:layout_marginBottom="12dp" app:cardBackgroundColor="@color/log_bg"')
+
+          def wrap_tool(xml, ident, label):
+              pat = r'<ImageButton android:id="@\+id/' + re.escape(ident) + r'"([^>]*)/>'
+              m = re.search(pat, xml)
+              if not m:
+                  return xml
+              attrs = m.group(1)
+              attrs = attrs.replace(' android:visibility="gone"', '')
+              return xml[:m.start()] + '<LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:layout_marginBottom="8dp">' + '<TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="6dp" android:paddingStart="10dp" android:paddingEnd="10dp" android:paddingTop="7dp" android:paddingBottom="7dp" android:background="@drawable/bg_fab" android:text="' + label + '" android:textColor="@color/text_primary" android:textSize="11sp" android:textStyle="bold" android:visibility="visible" />' + '<ImageButton android:id="@+id/' + ident + '"' + attrs + '/></LinearLayout>' + xml[m.end():]
+
+          for ident, label in [('toolExport','Export offsets'), ('toolParseBoot','Parse Boot'), ('toolParseLink','Parse Link'), ('toolImport','Import offsets')]:
+              x = wrap_tool(x, ident, label)
+          # Avoid doubled margin because the wrapper owns spacing.
+          x = x.replace(' android:layout_marginBottom="8dp" android:background="@drawable/bg_fab"', ' android:background="@drawable/bg_fab"')
+
+          # Remove obsolete hidden bridge views.
+          x = re.sub(r'\s*<com\.google\.android\.material\.button\.MaterialButton android:id="@\+id/otaButton"[^>]*/>', '', x)
+          x = re.sub(r'\s*<com\.google\.android\.material\.button\.MaterialButton android:id="@\+id/parseButton"[^>]*/>', '', x)
+          x = re.sub(r'\s*<com\.google\.android\.material\.button\.MaterialButton android:id="@\+id/exportButton"[^>]*/>', '', x)
+          x = re.sub(r'\s*<com\.ghostlock\.app\.CollapsibleToolsLayout[^>]*>\s*<com\.google\.android\.material\.button\.MaterialButton android:id="@\+id/importButton"[^>]*/>\s*</com\.ghostlock\.app\.CollapsibleToolsLayout>', '', x)
+          xml.write_text(x)
+
+          drop = Path('app/src/main/res/layout/spinner_dropdown_item.xml')
+          if not drop.exists():
+              drop.write_text('''<?xml version="1.0" encoding="utf-8"?>\n<TextView xmlns:android="http://schemas.android.com/apk/res/android"\n    android:layout_width="match_parent"\n    android:layout_height="48dp"\n    android:gravity="center_vertical"\n    android:paddingStart="16dp"\n    android:paddingEnd="16dp"\n    android:textColor="@color/text_primary"\n    android:textSize="14sp" />\n''')
+
+          # Use theme-aware dropdown text instead of the platform light/dark-inconsistent item.
+          s = java.read_text().replace('adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);', 'adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);').replace('fontAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);', 'fontAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item);')
+          java.write_text(s)
+      - name: Commit patch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app/src/main/java/com/ghostlock/app/MainActivity.java app/src/main/res/layout/activity_main.xml app/src/main/res/layout/spinner_dropdown_item.xml .github/workflows/ui-polish-auto.yml
+          git diff --cached --quiet && exit 0
+          git commit -m 'ui: finalize theme scale log and tools menu'
+          git push origin Test
