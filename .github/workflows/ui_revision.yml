@@ -1,0 +1,184 @@
+name: UI Revision Pass
+
+on:
+  push:
+    branches: [Test]
+
+permissions:
+  contents: write
+
+jobs:
+  revise:
+    if: ${{ !contains(github.event.head_commit.message, '[ui-revision]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Apply UI and runtime fixes
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import re
+
+          layout = '''<?xml version="1.0" encoding="utf-8"?>
+          <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              android:id="@+id/root"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical"
+              android:background="@color/bg">
+
+              <androidx.core.widget.NestedScrollView
+                  android:id="@+id/contentScroll"
+                  android:layout_width="match_parent"
+                  android:layout_height="0dp"
+                  android:layout_weight="1"
+                  android:fillViewport="true"
+                  android:clipToPadding="false"
+                  android:paddingStart="12dp"
+                  android:paddingTop="12dp"
+                  android:paddingEnd="12dp"
+                  android:paddingBottom="16dp">
+                  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+                      <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="18dp" android:gravity="center_vertical">
+                          <ImageView android:layout_width="64dp" android:layout_height="64dp" android:src="@drawable/ic_launcher_foreground" android:tint="@color/icon_tint" android:scaleType="fitCenter" android:contentDescription="@string/app_name"/>
+                          <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="10dp" android:orientation="vertical">
+                              <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:gravity="center_vertical">
+                                  <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/app_name" android:textColor="@color/text_primary" android:textSize="24sp" android:textStyle="bold"/>
+                                  <LinearLayout android:id="@+id/kernelChip" android:layout_width="wrap_content" android:layout_height="26dp" android:layout_marginStart="7dp" android:background="@drawable/bg_kernel_status" android:gravity="center_vertical" android:paddingStart="8dp" android:paddingEnd="8dp">
+                                      <TextView android:id="@+id/kernelChipText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/kernel_supported" android:textColor="@color/text_primary" android:textSize="10sp" android:textStyle="bold"/>
+                                  </LinearLayout>
+                              </LinearLayout>
+                              <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="@string/header_subtitle" android:textColor="@color/text_secondary" android:textSize="11sp"/>
+                          </LinearLayout>
+                          <com.ghostlock.app.ThemeToggleButton android:id="@+id/headerThemeToggle" android:layout_width="56dp" android:layout_height="56dp" android:layout_marginStart="4dp" android:translationY="-2dp" android:background="@android:color/transparent" android:contentDescription="@string/theme_toggle"/>
+                          <ImageButton android:id="@+id/advancedButton" android:layout_width="1dp" android:layout_height="1dp" android:visibility="gone"/>
+                      </LinearLayout>
+
+                      <com.ghostlock.app.RuntimeStatusView android:id="@+id/runtimeStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp"/>
+                      <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp" app:cardBackgroundColor="@color/surface_container_low" app:cardCornerRadius="20dp" app:cardElevation="0dp" app:strokeWidth="0dp">
+                          <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+                              <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/device_info_title" android:textColor="@color/text_secondary" android:textSize="11sp" android:textStyle="bold"/>
+                              <com.ghostlock.app.KernelInfoView android:id="@+id/deviceInfo" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:maxLines="2" android:textColor="@color/text_primary" android:textSize="12sp"/>
+                          </LinearLayout>
+                      </com.google.android.material.card.MaterialCardView>
+
+                      <LinearLayout android:id="@+id/advancedPanel" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
+                          <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp" app:cardBackgroundColor="@color/surface_container_low" app:cardCornerRadius="20dp" app:cardElevation="0dp" app:strokeWidth="0dp">
+                              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="18dp">
+                                  <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/settings_advanced_title" android:textColor="@color/text_secondary" android:textSize="11sp" android:textStyle="bold"/>
+                                  <LinearLayout android:layout_width="match_parent" android:layout_height="60dp" android:layout_marginTop="12dp" android:background="@drawable/bg_spinner" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="14dp" android:paddingEnd="6dp">
+                                      <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/cpu_pair_label" android:textColor="@color/text_primary" android:textSize="13sp" android:textStyle="bold"/>
+                                      <Spinner android:id="@+id/cpuSpinner" android:layout_width="150dp" android:layout_height="match_parent" android:background="@android:color/transparent" android:popupBackground="@drawable/bg_spinner_popup"/>
+                                  </LinearLayout>
+                                  <LinearLayout android:layout_width="match_parent" android:layout_height="60dp" android:layout_marginTop="8dp" android:background="@drawable/bg_spinner" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="14dp" android:paddingEnd="6dp">
+                                      <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/app_scale_label" android:textColor="@color/text_primary" android:textSize="13sp" android:textStyle="bold"/>
+                                      <Spinner android:id="@+id/fontSizeSpinner" android:layout_width="150dp" android:layout_height="match_parent" android:background="@android:color/transparent" android:popupBackground="@drawable/bg_spinner_popup"/>
+                                  </LinearLayout>
+                              </LinearLayout>
+                          </com.google.android.material.card.MaterialCardView>
+                      </LinearLayout>
+
+                      <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="600dp" android:layout_marginBottom="12dp" app:cardBackgroundColor="@color/log_bg" app:cardCornerRadius="20dp" app:cardElevation="0dp" app:strokeWidth="0dp">
+                          <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="16dp">
+                              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical">
+                                  <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/log_title" android:textColor="@color/log_title" android:textSize="14sp" android:textStyle="bold"/>
+                                  <TextView android:id="@+id/logStatus" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/status_ready" android:textColor="@color/log_secondary" android:textSize="10sp" android:textStyle="bold"/>
+                                  <com.google.android.material.button.MaterialButton android:id="@+id/copyButton" style="@style/Widget.Material3.Button.TextButton" android:layout_width="wrap_content" android:layout_height="40dp" android:minWidth="0dp" android:text="@string/action_copy_log" android:textAllCaps="false" android:textColor="@color/log_title" app:cornerRadius="12dp"/>
+                              </LinearLayout>
+                              <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="10dp" android:layout_marginBottom="10dp" android:background="@color/log_divider"/>
+                              <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:clipChildren="false">
+                                  <com.ghostlock.app.LogScrollView android:id="@+id/logScroll" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="false" android:fadeScrollbars="false" android:overScrollMode="always" android:paddingBottom="96dp" android:scrollbars="vertical" android:clipToPadding="false">
+                                      <TextView android:id="@+id/logView" android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="monospace" android:lineSpacingExtra="3dp" android:textColor="@color/log_text" android:textIsSelectable="true" android:textSize="12sp"/>
+                                  </com.ghostlock.app.LogScrollView>
+                                  <com.ghostlock.app.ConfirmRunButton android:id="@+id/runButton" style="@style/Widget.Material3.Button" android:layout_width="148dp" android:layout_height="62dp" android:layout_gravity="end|bottom" android:layout_marginEnd="4dp" android:layout_marginBottom="4dp" android:elevation="6dp" android:text="@string/action_run" android:textAllCaps="false" android:textSize="14sp" android:textStyle="bold" app:cornerRadius="22dp"/>
+                                  <LinearLayout android:id="@+id/toolsFabMenu" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="end|bottom" android:layout_marginEnd="4dp" android:layout_marginBottom="76dp" android:gravity="end" android:orientation="vertical">
+                                      <com.ghostlock.app.ToolActionButton android:id="@+id/toolExport" android:layout_width="46dp" android:layout_height="46dp" android:layout_marginBottom="8dp" android:background="@drawable/bg_fab" android:contentDescription="Export offsets.json" android:padding="11dp" android:src="@drawable/ic_export" android:tint="@color/icon_tint" android:elevation="3dp" android:visibility="gone"/>
+                                      <com.ghostlock.app.ToolActionButton android:id="@+id/toolParseBoot" android:layout_width="46dp" android:layout_height="46dp" android:layout_marginBottom="8dp" android:background="@drawable/bg_fab" android:contentDescription="Parse Boot" android:padding="11dp" android:src="@drawable/ic_parse_boot" android:tint="@color/icon_tint" android:elevation="3dp" android:visibility="gone"/>
+                                      <com.ghostlock.app.ToolActionButton android:id="@+id/toolParseLink" android:layout_width="46dp" android:layout_height="46dp" android:layout_marginBottom="8dp" android:background="@drawable/bg_fab" android:contentDescription="Parse Link" android:padding="11dp" android:src="@drawable/ic_link" android:tint="@color/icon_tint" android:elevation="3dp" android:visibility="gone"/>
+                                      <com.ghostlock.app.ToolActionButton android:id="@+id/toolImport" android:layout_width="46dp" android:layout_height="46dp" android:background="@drawable/bg_fab" android:contentDescription="Import offsets" android:padding="11dp" android:src="@drawable/ic_import" android:tint="@color/icon_tint" android:elevation="3dp" android:visibility="gone"/>
+                                      <ImageButton android:id="@+id/toolsFab" android:layout_width="52dp" android:layout_height="52dp" android:background="@drawable/bg_fab" android:contentDescription="Tools" android:padding="13dp" android:src="@drawable/ic_tools" android:tint="@color/icon_tint" android:elevation="4dp"/>
+                                  </LinearLayout>
+                              </FrameLayout>
+                          </LinearLayout>
+                      </com.google.android.material.card.MaterialCardView>
+
+                      <com.google.android.material.button.MaterialButton android:id="@+id/otaButton" android:layout_width="1dp" android:layout_height="1dp" android:visibility="gone"/>
+                      <com.google.android.material.button.MaterialButton android:id="@+id/parseButton" android:layout_width="1dp" android:layout_height="1dp" android:visibility="gone"/>
+                      <com.google.android.material.button.MaterialButton android:id="@+id/exportButton" android:layout_width="1dp" android:layout_height="1dp" android:visibility="gone"/>
+                      <com.ghostlock.app.CollapsibleToolsLayout android:layout_width="1dp" android:layout_height="1dp" android:visibility="gone">
+                          <com.google.android.material.button.MaterialButton android:id="@+id/importButton" android:layout_width="1dp" android:layout_height="1dp"/>
+                      </com.ghostlock.app.CollapsibleToolsLayout>
+                  </LinearLayout>
+              </androidx.core.widget.NestedScrollView>
+
+              <LinearLayout android:id="@+id/bottomNav" android:layout_width="match_parent" android:layout_height="68dp" android:layout_marginStart="10dp" android:layout_marginEnd="10dp" android:layout_marginBottom="4dp" android:orientation="horizontal" android:gravity="center" android:padding="4dp" android:background="@drawable/bg_bottom_nav">
+                  <com.google.android.material.button.MaterialButton android:id="@+id/navHome" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:minWidth="0dp" android:text="" android:backgroundTint="@android:color/transparent" android:stateListAnimator="@null" app:strokeWidth="0dp" app:cornerRadius="20dp" app:icon="@drawable/ic_nav_home" app:iconGravity="textStart" app:iconPadding="0dp" app:iconSize="24dp"/>
+                  <com.google.android.material.button.MaterialButton android:id="@+id/navHistory" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:minWidth="0dp" android:text="" android:backgroundTint="@android:color/transparent" android:stateListAnimator="@null" app:strokeWidth="0dp" app:cornerRadius="20dp" app:icon="@drawable/ic_nav_history" app:iconGravity="textStart" app:iconPadding="0dp" app:iconSize="24dp"/>
+                  <com.google.android.material.button.MaterialButton android:id="@+id/navSettings" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:minWidth="0dp" android:text="" android:backgroundTint="@android:color/transparent" android:stateListAnimator="@null" app:strokeWidth="0dp" app:cornerRadius="20dp" app:icon="@drawable/ic_nav_settings" app:iconGravity="textStart" app:iconPadding="0dp" app:iconSize="24dp"/>
+              </LinearLayout>
+          </LinearLayout>
+          '''
+          Path('app/src/main/res/layout/activity_main.xml').write_text(layout.strip() + '\n')
+
+          java_path = Path('app/src/main/java/com/ghostlock/app/MainActivity.java')
+          s = java_path.read_text()
+
+          # 5: do not allow Run without a supported KSU-family manager installed.
+          marker = '    private void startExploit() {\n'
+          insert = '''    private boolean hasKsuManagerInstalled() {\n        PackageManager pm = getPackageManager();\n        for (String pkg : KSU_MANAGER_PACKAGES) {\n            try {\n                pm.getApplicationInfo(pkg, 0);\n                return true;\n            } catch (PackageManager.NameNotFoundException ignored) {\n            }\n        }\n        return false;\n    }\n\n'''
+          if 'private boolean hasKsuManagerInstalled()' not in s:
+              s = s.replace(marker, insert + marker, 1)
+          old = '''    private void startExploit() {\n        if (!running.compareAndSet(false, true)) {\n            return;\n        }'''
+          new = '''    private void startExploit() {\n        if (!hasKsuManagerInstalled()) {\n            appendLog("run blocked: no KernelSU/ReSukiSU/KoWSU manager installed");\n            Toast.makeText(this, "Install a supported manager before running", Toast.LENGTH_SHORT).show();\n            return;\n        }\n        if (!running.compareAndSet(false, true)) {\n            return;\n        }'''
+          if old not in s:
+              raise SystemExit('startExploit pattern not found')
+          s = s.replace(old, new, 1)
+
+          # 3: blur the log/device/status background while the floating tools are open.
+          old = '''            boolean opening = toolItems[0].getVisibility() != View.VISIBLE;\n            toolsFab.setImageResource(opening ? R.drawable.ic_close : R.drawable.ic_tools);'''
+          new = '''            boolean opening = toolItems[0].getVisibility() != View.VISIBLE;\n            setPanelBlur(opening);\n            toolsFab.setImageResource(opening ? R.drawable.ic_close : R.drawable.ic_tools);'''
+          if old not in s:
+              raise SystemExit('toolsFab pattern not found')
+          s = s.replace(old, new, 1)
+
+          # 6: make Clear history a fixed floating action instead of a scrolling child.
+          old = '''        com.google.android.material.button.MaterialButton clear = new com.google.android.material.button.MaterialButton(this);\n        clear.setText("Clear history");\n        clear.setAllCaps(false);\n        clear.setOnClickListener(v -> { getSharedPreferences(PREFS, MODE_PRIVATE).edit().remove("run_history").apply(); refreshHistory(); });\n        historyBody.addView(clear);\n        historyScroll.addView(historyBody);\n        pageHost.addView(historyScroll, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));'''
+          new = '''        FrameLayout historyHost = new FrameLayout(this);\n        historyHost.addView(historyScroll, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));\n        com.google.android.material.button.MaterialButton clear = new com.google.android.material.button.MaterialButton(this);\n        clear.setText("Clear history");\n        clear.setAllCaps(false);\n        clear.setTextSize(12);\n        clear.setElevation(dp(4));\n        clear.setOnClickListener(v -> { getSharedPreferences(PREFS, MODE_PRIVATE).edit().remove("run_history").apply(); refreshHistory(); });\n        FrameLayout.LayoutParams clearLp = new FrameLayout.LayoutParams(dp(132), dp(48), android.view.Gravity.END | android.view.Gravity.BOTTOM);\n        clearLp.setMargins(0, 0, dp(12), dp(12));\n        historyHost.addView(clear, clearLp);\n        historyScroll.setClipToPadding(false);\n        historyScroll.setPadding(dp(4), dp(8), dp(4), dp(72));\n        pageHost.addView(historyHost, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));'''
+          if old not in s:
+              raise SystemExit('history clear pattern not found')
+          s = s.replace(old, new, 1)
+
+          # Keep the existing parent-width fix for ViewParent -> View and make it robust.
+          s = s.replace('int width = view.getParent() instanceof View ? ((View) view.getParent()).getWidth() : 0;', 'int width = view.getParent() instanceof ViewGroup ? ((ViewGroup) view.getParent()).getWidth() : 0;')
+
+          java_path.write_text(s)
+          PY
+
+          cat > app/src/main/res/drawable/bg_fab.xml <<'XML'
+          <ripple xmlns:android="http://schemas.android.com/apk/res/android" android:color="@color/icon_tint">
+              <item>
+                  <shape android:shape="oval">
+                      <solid android:color="@color/surface_container_low"/>
+                      <stroke android:width="1dp" android:color="@color/outline_variant"/>
+                  </shape>
+              </item>
+          </ripple>
+          XML
+
+      - name: Build APK
+        run: |
+          chmod +x gradlew
+          ./gradlew :app:assembleDebug --no-daemon
+
+      - name: Commit revision
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -f .github/workflows/ui_revision.yml
+          git add app/src/main/res/layout/activity_main.xml app/src/main/java/com/ghostlock/app/MainActivity.java app/src/main/res/drawable/bg_fab.xml .github/workflows/ui_revision.yml
+          git commit -m "fix: refine test UI and run gating [ui-revision]"
+          git push origin HEAD:Test
