@@ -3,8 +3,17 @@ package com.ghostlock.app;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.res.ColorStateList;
+import android.graphics.RenderEffect;
+import android.graphics.Shader;
 import android.graphics.drawable.GradientDrawable;
+import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.Gravity;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.core.content.ContextCompat;
@@ -13,9 +22,110 @@ import com.google.android.material.button.MaterialButton;
 /** Primary Run action with themed confirmation and compatibility gating. */
 public class ConfirmRunButton extends MaterialButton {
     private boolean confirmedClick;
+    private boolean arranged;
+    private final Handler handler = new Handler(Looper.getMainLooper());
+
     public ConfirmRunButton(Context context) { super(context); }
     public ConfirmRunButton(Context context, android.util.AttributeSet attrs) { super(context, attrs); }
     public ConfirmRunButton(Context context, android.util.AttributeSet attrs, int defStyleAttr) { super(context, attrs, defStyleAttr); }
+
+    @Override protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        handler.post(this::finalizeUiLayout);
+    }
+
+    private void finalizeUiLayout() {
+        if (getRootView() == null) return;
+        View logScroll = getRootView().findViewById(R.id.logScroll);
+        View tools = getRootView().findViewById(R.id.toolsFabMenu);
+        View logCard = logScroll == null ? null : (View) logScroll.getParent();
+        if (logCard != null && logCard.getParent() instanceof View) {
+            View cardParent = (View) logCard.getParent();
+            ViewGroup.LayoutParams lp = logCard.getLayoutParams();
+            lp.height = dp(600);
+            logCard.setLayoutParams(lp);
+        }
+        if (!arranged && tools != null && tools.getParent() instanceof FrameLayout && getParent() instanceof ViewGroup) {
+            FrameLayout frame = (FrameLayout) tools.getParent();
+            ViewGroup oldParent = (ViewGroup) getParent();
+            oldParent.removeView(this);
+            frame.removeView(tools);
+            LinearLayout stack = new LinearLayout(getContext());
+            stack.setOrientation(LinearLayout.VERTICAL);
+            stack.setGravity(Gravity.END);
+            FrameLayout.LayoutParams stackLp = new FrameLayout.LayoutParams(-2, -2, Gravity.END | Gravity.BOTTOM);
+            stackLp.rightMargin = dp(4);
+            stackLp.bottomMargin = dp(4);
+            frame.addView(stack, stackLp);
+            stack.addView(tools, new LinearLayout.LayoutParams(-2, -2));
+            LinearLayout.LayoutParams runLp = new LinearLayout.LayoutParams(dp(148), dp(62));
+            runLp.topMargin = dp(8);
+            stack.addView(this, runLp);
+            setElevation(dp(4));
+            arranged = true;
+        }
+        View theme = getRootView().findViewById(R.id.headerThemeToggle);
+        if (theme != null) {
+            ViewGroup.LayoutParams tlp = theme.getLayoutParams();
+            tlp.width = dp(58); tlp.height = dp(58);
+            theme.setLayoutParams(tlp);
+            theme.setTranslationY(-dp(2));
+        }
+        View bottomNav = getRootView().findViewById(R.id.bottomNav);
+        if (bottomNav instanceof ViewGroup) {
+            bottomNav.setBackgroundResource(R.drawable.bg_bottom_nav);
+            ViewGroup nav = (ViewGroup) bottomNav;
+            for (int i = 0; i < nav.getChildCount(); i++) {
+                View child = nav.getChildAt(i);
+                if (child instanceof MaterialButton) {
+                    MaterialButton b = (MaterialButton) child;
+                    b.setBackgroundTintList(ColorStateList.valueOf(android.graphics.Color.TRANSPARENT));
+                    b.setCornerRadius(0);
+                }
+            }
+        }
+        installToolsBlurHook();
+        installClearHistory();
+    }
+
+    private void installToolsBlurHook() {
+        View toolsFab = getRootView().findViewById(R.id.toolsFab);
+        if (toolsFab == null || toolsFab.getTag(R.id.toolsFab) != null) return;
+        toolsFab.setTag(R.id.toolsFab, Boolean.TRUE);
+        toolsFab.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_UP && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                handler.postDelayed(() -> {
+                    View item = getRootView().findViewById(R.id.toolImport);
+                    boolean enabled = item != null && item.getVisibility() == View.VISIBLE;
+                    RenderEffect effect = enabled ? RenderEffect.createBlurEffect(8f, 8f, Shader.TileMode.CLAMP) : null;
+                    View log = getRootView().findViewById(R.id.logScroll);
+                    View device = getRootView().findViewById(R.id.deviceInfo);
+                    View status = getRootView().findViewById(R.id.runtimeStatus);
+                    if (log != null) log.setRenderEffect(effect);
+                    if (device != null) device.setRenderEffect(effect);
+                    if (status != null) status.setRenderEffect(effect);
+                }, 40L);
+            }
+            return false;
+        });
+    }
+
+    private void installClearHistory() {
+        if (!(getRootView() instanceof ViewGroup)) return;
+        if (getRootView().findViewById(R.id.clearHistoryButton) != null) return;
+        View root = getRootView();
+        View bottomNav = root.findViewById(R.id.bottomNav);
+        if (!(root instanceof LinearLayout) || bottomNav == null) return;
+        HistoryClearButton clear = new HistoryClearButton(getContext());
+        clear.setId(R.id.clearHistoryButton);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-2, dp(48));
+        lp.gravity = Gravity.END;
+        lp.rightMargin = dp(20);
+        lp.topMargin = -dp(58);
+        lp.bottomMargin = dp(10);
+        clear.setLayoutParams(lp);
+        ((LinearLayout) root).addView(clear);
+    }
 
     @Override public boolean performClick() {
         if (confirmedClick) { confirmedClick = false; return super.performClick(); }
