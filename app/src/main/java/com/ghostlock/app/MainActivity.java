@@ -32,8 +32,6 @@ import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.MenuItem;
-import android.widget.PopupMenu;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.view.WindowManager;
@@ -41,6 +39,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -138,6 +137,11 @@ public class MainActivity extends Activity {
     private Button parseButton;
     private Button exportButton;
     private View rootView;
+    private FrameLayout pageHost;
+    private TextView historyView;
+    private ScrollView historyScroll;
+    private View homePage;
+    private View settingsPage;
     private int cpuPairIndex;
     private boolean parseWantsXbl;
 
@@ -504,6 +508,7 @@ public class MainActivity extends Activity {
         cpuSpinner = findViewById(R.id.cpuSpinner);
         fontSizeSpinner = findViewById(R.id.fontSizeSpinner);
 
+        setupPages();
         applyWindowInsetsPadding();
         deviceInfo.setText(buildDeviceSummary());
         buildCpuPairs();
@@ -548,13 +553,7 @@ public class MainActivity extends Activity {
         otaButton.setVisibility(View.GONE);
         parseButton.setVisibility(View.GONE);
         exportButton.setVisibility(View.GONE);
-        findViewById(R.id.navHome).setOnClickListener(v -> logScroll.smoothScrollTo(0, 0));
-        findViewById(R.id.navHistory).setOnClickListener(v -> logScroll.smoothScrollTo(0, logView.getBottom()));
-        findViewById(R.id.navSettings).setOnClickListener(v -> {
-            setPanelBlur(false);
-            if (advancedPanel.getVisibility() != View.VISIBLE) animateShow(advancedPanel);
-            advancedPanel.post(() -> ((androidx.core.widget.NestedScrollView) rootView.findViewById(R.id.contentScroll)).smoothScrollTo(0, advancedPanel.getTop()));
-        });
+        setupNavigation();
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.spinner_item_right, cpuPairLabels);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -598,24 +597,113 @@ public class MainActivity extends Activity {
         super.onDestroy();
     }
 
-    private void showActionsMenu(View anchor) {
-        PopupMenu menu = new PopupMenu(this, anchor);
-        setPanelBlur(true);
-        menu.setOnDismissListener(dialog -> setPanelBlur(false));
-        menu.getMenu().add(0, 1, 0, "Parse Link");
-        menu.getMenu().add(0, 2, 1, "Parse Boot");
-        menu.getMenu().add(0, 3, 2, getString(R.string.action_export_offsets));
-        menu.getMenu().add(0, 4, 3, "Advanced settings");
-        menu.setOnMenuItemClickListener(item -> {
-            if (item.getItemId() == 1) otaButton.performClick();
-            else if (item.getItemId() == 2) parseButton.performClick();
-            else if (item.getItemId() == 3) exportButton.performClick();
-            else if (item.getItemId() == 4) {
-                if (advancedPanel.getVisibility() == View.VISIBLE) { setPanelBlur(false); animateHide(advancedPanel); } else { setPanelBlur(false); animateShow(advancedPanel); }
-            }
-            return true;
-        });
-        menu.show();
+    private void setupPages() {
+        LinearLayout root = (LinearLayout) rootView;
+        View content = findViewById(R.id.contentScroll);
+        homePage = content;
+        int index = root.indexOfChild(content);
+        root.removeView(content);
+        pageHost = new FrameLayout(this);
+        pageHost.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+        root.addView(pageHost, index);
+        content.setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        pageHost.addView(content);
+
+        historyScroll = new ScrollView(this);
+        historyScroll.setFillViewport(true);
+        historyScroll.setPadding(dp(4), dp(8), dp(4), dp(12));
+        LinearLayout historyBody = new LinearLayout(this);
+        historyBody.setOrientation(LinearLayout.VERTICAL);
+        TextView title = new TextView(this);
+        title.setText("History");
+        title.setTextSize(22);
+        title.setTextColor(getColor(R.color.text_primary));
+        title.setTypeface(null, android.graphics.Typeface.BOLD);
+        title.setPadding(dp(12), dp(8), dp(12), dp(12));
+        historyBody.addView(title);
+        historyView = new TextView(this);
+        historyView.setTextSize(12);
+        historyView.setTextColor(getColor(R.color.log_text));
+        historyView.setTypeface(android.graphics.Typeface.MONOSPACE);
+        historyView.setTextIsSelectable(true);
+        historyView.setPadding(dp(16), dp(16), dp(16), dp(16));
+        historyBody.addView(historyView, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        com.google.android.material.button.MaterialButton clear = new com.google.android.material.button.MaterialButton(this);
+        clear.setText("Clear history");
+        clear.setAllCaps(false);
+        clear.setOnClickListener(v -> { getSharedPreferences(PREFS, MODE_PRIVATE).edit().remove("run_history").apply(); refreshHistory(); });
+        historyBody.addView(clear);
+        historyScroll.addView(historyBody);
+        pageHost.addView(historyScroll, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+
+        ScrollView settingsScroll = new ScrollView(this);
+        settingsScroll.setFillViewport(true);
+        settingsScroll.setPadding(dp(4), dp(8), dp(4), dp(12));
+        LinearLayout settingsBody = new LinearLayout(this);
+        settingsBody.setOrientation(LinearLayout.VERTICAL);
+        TextView st = new TextView(this);
+        st.setText("Settings");
+        st.setTextSize(22);
+        st.setTextColor(getColor(R.color.text_primary));
+        st.setTypeface(null, android.graphics.Typeface.BOLD);
+        st.setPadding(dp(12), dp(8), dp(12), dp(12));
+        settingsBody.addView(st);
+        ViewGroup oldParent = (ViewGroup) advancedPanel.getParent();
+        oldParent.removeView(advancedPanel);
+        advancedPanel.setVisibility(View.VISIBLE);
+        settingsBody.addView(advancedPanel, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        settingsScroll.addView(settingsBody);
+        settingsPage = settingsScroll;
+        pageHost.addView(settingsScroll, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        refreshHistory();
+        showPage(0);
+    }
+
+    private void setupNavigation() {
+        com.google.android.material.button.MaterialButton home = findViewById(R.id.navHome);
+        com.google.android.material.button.MaterialButton history = findViewById(R.id.navHistory);
+        com.google.android.material.button.MaterialButton settings = findViewById(R.id.navSettings);
+        home.setIconResource(R.drawable.ic_nav_home);
+        history.setIconResource(R.drawable.ic_nav_history);
+        settings.setIconResource(R.drawable.ic_nav_settings);
+        home.setText("Home");
+        history.setText("History");
+        settings.setText("Settings");
+        home.setOnClickListener(v -> showPage(0));
+        history.setOnClickListener(v -> showPage(1));
+        settings.setOnClickListener(v -> showPage(2));
+    }
+
+    private void showPage(int page) {
+        if (pageHost == null) return;
+        homePage.setVisibility(page == 0 ? View.VISIBLE : View.GONE);
+        historyScroll.setVisibility(page == 1 ? View.VISIBLE : View.GONE);
+        settingsPage.setVisibility(page == 2 ? View.VISIBLE : View.GONE);
+        com.google.android.material.button.MaterialButton home = findViewById(R.id.navHome);
+        com.google.android.material.button.MaterialButton history = findViewById(R.id.navHistory);
+        com.google.android.material.button.MaterialButton settings = findViewById(R.id.navSettings);
+        home.setAlpha(page == 0 ? 1f : 0.62f);
+        history.setAlpha(page == 1 ? 1f : 0.62f);
+        settings.setAlpha(page == 2 ? 1f : 0.62f);
+        if (page == 1) refreshHistory();
+    }
+
+    private void refreshHistory() {
+        if (historyView == null) return;
+        String history = getSharedPreferences(PREFS, MODE_PRIVATE).getString("run_history", "");
+        historyView.setText(history.isEmpty() ? "No runs recorded yet." : history);
+    }
+
+    private void saveRunHistory(boolean success) {
+        String snapshot;
+        synchronized (logBuffer) { snapshot = logBuffer.toString().trim(); }
+        String entry = (success ? "✓ SUCCESS" : "✕ FAILED") + "  " + new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT).format(new java.util.Date()) + "\n" + snapshot;
+        String old = getSharedPreferences(PREFS, MODE_PRIVATE).getString("run_history", "");
+        String combined = entry + (old.isEmpty() ? "" : "\n\n──────────────\n\n" + old);
+        String[] blocks = combined.split("\n\n──────────────\n\n", -1);
+        if (blocks.length > 5) combined = String.join("\n\n──────────────\n\n", java.util.Arrays.copyOf(blocks, 5));
+        getSharedPreferences(PREFS, MODE_PRIVATE).edit().putString("run_history", combined).apply();
+        ui.post(this::refreshHistory);
     }
 
     private void setPanelBlur(boolean enabled) {
@@ -1293,8 +1381,7 @@ public class MainActivity extends Activity {
             Insets bars = insets.getInsets(WindowInsets.Type.systemBars());
             top = bars.top;
             bottom = bars.bottom;
-            int side = dp(20);
-            v.setPadding(side, top + dp(12), side, bottom + dp(12));
+            v.setPadding(0, top + dp(12), 0, bottom);
             return insets;
         });
         rootView.requestApplyInsets();
@@ -1386,6 +1473,7 @@ public class MainActivity extends Activity {
     private void setRunState(RunState state) {
         runButton.setEnabled(state != RunState.RUNNING);
         runButton.setText(state == RunState.RUNNING ? R.string.action_running : R.string.action_run);
+        if (state == RunState.SUCCESS || state == RunState.FAILED) saveRunHistory(state == RunState.SUCCESS);
     }
 
     private File resolveBinary() throws IOException {
