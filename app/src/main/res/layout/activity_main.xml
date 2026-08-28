@@ -81,4 +81,10 @@
             </com.ghostlock.app.CollapsibleToolsLayout>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
+
+    <LinearLayout android:id="@+id/bottomNav" android:layout_width="match_parent" android:layout_height="64dp" android:orientation="horizontal" android:gravity="center" android:paddingStart="8dp" android:paddingEnd="8dp" android:paddingTop="4dp" android:paddingBottom="4dp" android:background="@color/bg">
+        <com.google.android.material.button.MaterialButton android:id="@+id/navHome" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:minWidth="0dp" android:text="" android:contentDescription="Home" app:icon="@drawable/ic_nav_home" app:iconGravity="textStart" app:iconPadding="0dp" app:iconSize="24dp" app:cornerRadius="16dp"/>
+        <com.google.android.material.button.MaterialButton android:id="@+id/navHistory" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:minWidth="0dp" android:text="" android:contentDescription="History" app:icon="@drawable/ic_nav_history" app:iconGravity="textStart" app:iconPadding="0dp" app:iconSize="24dp" app:cornerRadius="16dp"/>
+        <com.google.android.material.button.MaterialButton android:id="@+id/navSettings" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:minWidth="0dp" android:text="" android:contentDescription="Settings" app:icon="@drawable/ic_nav_settings" app:iconGravity="textStart" app:iconPadding="0dp" app:iconSize="24dp" app:cornerRadius="16dp"/>
+    </LinearLayout>
 </LinearLayout>
