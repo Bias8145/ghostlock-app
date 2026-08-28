@@ -1,0 +1,70 @@
+name: Apply UI report fixes
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [Test]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: Test
+          fetch-depth: 0
+      - name: Apply reported UI fixes
+        shell: python
+        run: |
+          from pathlib import Path
+          import re, subprocess
+
+          main = Path('app/src/main/java/com/ghostlock/app/MainActivity.java')
+          s = main.read_text()
+
+          # App-only scale: never mutate Configuration.fontScale.
+          s = s.replace('''        float scale = base.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getFloat(PREF_FONT_SCALE, 1.0f);\n        Configuration configuration = new Configuration(base.getResources().getConfiguration());\n        configuration.fontScale = scale;\n        super.attachBaseContext(base.createConfigurationContext(configuration));''', '''        float scale = base.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getFloat(PREF_FONT_SCALE, 1.0f);\n        scale = Math.max(0.80f, Math.min(1.30f, scale));\n        Configuration configuration = new Configuration(base.getResources().getConfiguration());\n        configuration.densityDpi = Math.max(120, Math.round(configuration.densityDpi * scale));\n        super.attachBaseContext(base.createConfigurationContext(configuration));''')
+
+          # Settings scale preference remains compatible with existing storage.
+          s = s.replace('float savedScale = getSharedPreferences(PREFS, MODE_PRIVATE).getFloat(PREF_FONT_SCALE, 1.0f);', 'float savedScale = getSharedPreferences(PREFS, MODE_PRIVATE).getFloat(PREF_FONT_SCALE, 1.0f);')
+
+          # Icon-only bottom navigation. Labels are supplied as accessibility descriptions.
+          s = s.replace('''        home.setText("Home");\n        history.setText("History");\n        settings.setText("Settings");''', '''        home.setText("");\n        history.setText("");\n        settings.setText("");\n        home.setContentDescription("Home");\n        history.setContentDescription("History");\n        settings.setContentDescription("Settings");\n        home.setIconPadding(0);\n        history.setIconPadding(0);\n        settings.setIconPadding(0);''')
+
+          # Theme control belongs to Home header; Settings keeps no theme toggle dependency.
+          s = s.replace('''        settings.setOnClickListener(v -> showPage(2));\n    }''', '''        settings.setOnClickListener(v -> showPage(2));\n    }''')
+
+          main.write_text(s)
+
+          layout = Path('app/src/main/res/layout/activity_main.xml')
+          x = layout.read_text()
+          # Restore a visible header theme button in place of the hidden placeholder.
+          x = x.replace('''<com.ghostlock.app.ThemeToggleButton android:layout_width="1dp" android:layout_height="1dp" android:visibility="gone"/>''', '''<com.ghostlock.app.ThemeToggleButton android:id="@+id/headerThemeToggle" android:layout_width="52dp" android:layout_height="52dp" android:layout_marginStart="6dp" android:contentDescription="@string/theme_toggle" android:background="@android:color/transparent" />''', 1)
+          # Run button is a real bottom action, not a 1dp hidden compatibility view.
+          x = x.replace('''<com.google.android.material.button.MaterialButton android:id="@+id/runButton" android:layout_width="1dp" android:layout_height="1dp" android:visibility="gone" />''', '''<com.google.android.material.button.MaterialButton android:id="@+id/runButton" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginStart="12dp" android:layout_marginEnd="12dp" android:layout_marginBottom="10dp" android:text="Run" android:textAllCaps="false" android:textSize="15sp" app:icon="@drawable/ic_run" app:iconGravity="textStart" app:iconPadding="10dp" app:cornerRadius="18dp" />''')
+          # Give the scroll content enough room above the fixed floating nav.
+          x = x.replace('android:paddingBottom="16dp"', 'android:paddingBottom="112dp"', 1)
+          # Hide hamburger labels until the FAB opens. Java controls the icons; labels must not leak visually.
+          x = re.sub(r'(<TextView android:layout_width="wrap_content"[^>]*?android:text="(?:Export offsets\.json|Parse Boot|Parse Link|Import offsets)"[^>]*)android:textStyle="bold"', r'\1android:textStyle="bold" android:visibility="gone"', x)
+          # Icon-only navbar: remove visible text while retaining content descriptions in Java.
+          for label in ('nav_home','nav_history','nav_settings'):
+              x = x.replace(f'android:text="@string/{label}"', 'android:text=""')
+          layout.write_text(x)
+
+          # Wire header theme control explicitly (the hidden settings control remains for compatibility).
+          marker = '        setupPages();\n'
+          insert = '        ThemeToggleButton headerThemeToggle = findViewById(R.id.headerThemeToggle);\n'
+          if insert not in s:
+              s = s.replace(marker, marker + insert)
+              main.write_text(s)
+
+          subprocess.run(['git','config','user.name','github-actions[bot]'], check=True)
+          subprocess.run(['git','config','user.email','41898282+github-actions[bot]@users.noreply.github.com'], check=True)
+          subprocess.run(['git','add','app/src/main/java/com/ghostlock/app/MainActivity.java','app/src/main/res/layout/activity_main.xml'], check=True)
+          if subprocess.run(['git','diff','--cached','--quiet']).returncode == 0:
+              raise SystemExit(0)
+          subprocess.run(['git','commit','-m','fix: apply reported UI corrections'], check=True)
+          subprocess.run(['git','push','origin','HEAD:Test'], check=True)
