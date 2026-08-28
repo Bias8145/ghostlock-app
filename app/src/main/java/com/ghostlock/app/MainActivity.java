@@ -29,6 +29,8 @@ import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.MenuItem;
+import android.widget.PopupMenu;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.view.WindowManager;
@@ -423,7 +425,7 @@ public class MainActivity extends Activity {
             for (Map.Entry<Long, List<Integer>> entry : byFreq.entrySet()) {
                 List<Integer> cluster = entry.getValue();
                 Collections.sort(cluster);
-                String freqText = " · " + formatFreq(entry.getKey());
+                String freqText = " �� " + formatFreq(entry.getKey());
                 for (int i = 0; i + 1 < cluster.size(); i += 2) {
                     int main = cluster.get(i);
                     int consumer = cluster.get(i + 1);
@@ -505,18 +507,15 @@ public class MainActivity extends Activity {
         setRunState(RunState.IDLE);
 
         runButton.setOnClickListener(v -> startExploit());
-        advancedButton.setOnClickListener(v -> {
-            if (advancedPanel.getVisibility() == View.VISIBLE) {
-                animateHide(advancedPanel);
-            } else {
-                animateShow(advancedPanel);
-            }
-        });
+        advancedButton.setOnClickListener(this::showActionsMenu);
         copyButton.setOnClickListener(v -> copyLogs());
         importButton.setOnClickListener(v -> importOffsets());
         otaButton.setOnClickListener(v -> promptParseUrl());
         parseButton.setOnClickListener(v -> parseOffsets());
         exportButton.setOnClickListener(v -> exportOffsets());
+        otaButton.setVisibility(View.GONE);
+        parseButton.setVisibility(View.GONE);
+        exportButton.setVisibility(View.GONE);
         findViewById(R.id.navHome).setOnClickListener(v -> logScroll.smoothScrollTo(0, 0));
         findViewById(R.id.navHistory).setOnClickListener(v -> logScroll.smoothScrollTo(0, logView.getBottom()));
         findViewById(R.id.navSettings).setOnClickListener(v -> {
@@ -564,6 +563,24 @@ public class MainActivity extends Activity {
     protected void onDestroy() {
         worker.shutdownNow();
         super.onDestroy();
+    }
+
+    private void showActionsMenu(View anchor) {
+        PopupMenu menu = new PopupMenu(this, anchor);
+        menu.getMenu().add(0, 1, 0, "Parse Link");
+        menu.getMenu().add(0, 2, 1, "Parse Boot");
+        menu.getMenu().add(0, 3, 2, getString(R.string.action_export_offsets));
+        menu.getMenu().add(0, 4, 3, "Advanced settings");
+        menu.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == 1) otaButton.performClick();
+            else if (item.getItemId() == 2) parseButton.performClick();
+            else if (item.getItemId() == 3) exportButton.performClick();
+            else if (item.getItemId() == 4) {
+                if (advancedPanel.getVisibility() == View.VISIBLE) animateHide(advancedPanel); else animateShow(advancedPanel);
+            }
+            return true;
+        });
+        menu.show();
     }
 
     private void setupSystemBars() {
