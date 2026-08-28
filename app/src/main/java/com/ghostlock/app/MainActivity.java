@@ -20,7 +20,6 @@ import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Build;
 import android.graphics.RenderEffect;
 import android.graphics.Shader;
 import android.os.Handler;
@@ -513,12 +512,39 @@ public class MainActivity extends Activity {
         setRunState(RunState.IDLE);
 
         runButton.setOnClickListener(v -> startExploit());
-        advancedButton.setOnClickListener(this::showActionsMenu);
+        advancedButton.setVisibility(View.GONE);
+        advancedButton.setOnClickListener(null);
         copyButton.setOnClickListener(v -> copyLogs());
         importButton.setOnClickListener(v -> importOffsets());
         otaButton.setOnClickListener(v -> promptParseUrl());
         parseButton.setOnClickListener(v -> parseOffsets());
         exportButton.setOnClickListener(v -> exportOffsets());
+
+        ImageButton toolsFab = findViewById(R.id.toolsFab);
+        ImageButton toolImport = findViewById(R.id.toolImport);
+        ImageButton toolParseLink = findViewById(R.id.toolParseLink);
+        ImageButton toolParseBoot = findViewById(R.id.toolParseBoot);
+        ImageButton toolExport = findViewById(R.id.toolExport);
+        View[] toolItems = {toolImport, toolParseLink, toolParseBoot, toolExport};
+        toolsFab.setOnClickListener(v -> {
+            boolean opening = toolItems[0].getVisibility() != View.VISIBLE;
+            toolsFab.setImageResource(opening ? R.drawable.ic_close : R.drawable.ic_tools);
+            for (int i = 0; i < toolItems.length; i++) {
+                View item = toolItems[i];
+                if (opening) {
+                    item.setVisibility(View.VISIBLE);
+                    item.setAlpha(0f);
+                    item.setTranslationY(18f);
+                    item.animate().alpha(1f).translationY(0f).setDuration(140L + i * 25L).start();
+                } else {
+                    item.animate().alpha(0f).translationY(18f).setDuration(100L).withEndAction(() -> item.setVisibility(View.GONE)).start();
+                }
+            }
+        });
+        toolImport.setOnClickListener(v -> importButton.performClick());
+        toolParseLink.setOnClickListener(v -> otaButton.performClick());
+        toolParseBoot.setOnClickListener(v -> parseButton.performClick());
+        toolExport.setOnClickListener(v -> exportButton.performClick());
         otaButton.setVisibility(View.GONE);
         parseButton.setVisibility(View.GONE);
         exportButton.setVisibility(View.GONE);
