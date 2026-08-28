@@ -11,13 +11,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Apply final UI corrections
-        shell: python
+        shell: bash
         run: |
+          python3 - <<'PY'
           from pathlib import Path
 
           main = Path('app/src/main/java/com/ghostlock/app/MainActivity.java')
           s = main.read_text()
-
           s = s.replace('            setPanelBlur(opening);\n', '')
           s = s.replace('''    private void setPanelBlur(boolean enabled) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return;
@@ -26,14 +26,13 @@ jobs:
         deviceInfo.setRenderEffect(effect);
         runtimeStatus.setRenderEffect(effect);
     }
-''', '''    /** Blur was intentionally removed from the final tools interaction. */
+''', '''    /** Blur intentionally disabled for the final crisp redesign interaction. */
     private void setPanelBlur(boolean enabled) {
-        // No-op: the redesign panels stay crisp and do not blur the page behind them.
+        // No-op.
     }
 ''')
           s = s.replace('import android.graphics.RenderEffect;\n', '')
           s = s.replace('import android.graphics.Shader;\n', '')
-
           old_clear = '''        com.google.android.material.button.MaterialButton clear = new com.google.android.material.button.MaterialButton(this);
         clear.setText("Clear history");
         clear.setAllCaps(false);
@@ -53,7 +52,6 @@ jobs:
           if old_clear not in s:
               raise SystemExit('legacy clear-history block not found')
           s = s.replace(old_clear, new_clear, 1)
-
           old_show = '''        settingsPage.setVisibility(page == 2 ? View.VISIBLE : View.GONE);
         com.google.android.material.button.MaterialButton home = findViewById(R.id.navHome);
 '''
@@ -65,14 +63,10 @@ jobs:
           if old_show not in s:
               raise SystemExit('showPage anchor not found')
           s = s.replace(old_show, new_show, 1)
-
           main.write_text(s)
 
           history = Path('app/src/main/java/com/ghostlock/app/HistoryClearButton.java')
-          h = history.read_text()
-          h = h.replace('setIconSize(dp(22));', 'setIconSize(dp(24));')
-          h = h.replace('setPadding(dp(10), dp(10), dp(10), dp(10));', 'setPadding(dp(11), dp(11), dp(11), dp(11));')
+          h = history.read_text().replace('setIconSize(dp(22));', 'setIconSize(dp(24));').replace('setPadding(dp(10), dp(10), dp(10), dp(10));', 'setPadding(dp(11), dp(11), dp(11), dp(11));')
           history.write_text(h)
-
-          # Keep the temporary workflow out of the final branch.
           Path('.github/workflows/ui-finalize.yml').unlink()
+          PY
