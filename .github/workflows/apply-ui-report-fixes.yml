@@ -2,8 +2,6 @@ name: Apply UI Report Fixes
 
 on:
   workflow_dispatch:
-  push:
-    branches: [Test]
 
 permissions:
   contents: write
@@ -24,191 +22,15 @@ jobs:
           import re, subprocess
 
           layout = Path('app/src/main/res/layout/activity_main.xml')
-          main = Path('app/src/main/java/com/ghostlock/app/MainActivity.java')
-          theme = Path('app/src/main/java/com/ghostlock/app/ThemeToggleButton.java')
-
           x = layout.read_text()
-          j = main.read_text()
-          t = theme.read_text()
-
-          # 1) Run button: keep it visible and make the icon explicitly visible
-          # against the Material3 primary/on-primary colors.
-          run_pat = re.compile(r'(<com\\.google\\.android\\.material\\.button\\.MaterialButton[^>]*android:id="@\\+id/runButton"[^>]*)(/>)')
-          m = run_pat.search(x)
-          if not m:
-              raise SystemExit('runButton missing')
-          run_block = m.group(1)
-          run_block = re.sub(r'\\s+android:visibility="gone"', '', run_block)
-          if 'app:icon="@drawable/ic_run"' not in run_block:
-              run_block += ' app:icon="@drawable/ic_run"'
-          if 'app:iconTint=' not in run_block:
-              run_block += ' app:iconTint="@color/on_accent"'
-          if 'app:iconSize=' not in run_block:
-              run_block += ' app:iconSize="22dp"'
-          if 'app:iconPadding=' not in run_block:
-              run_block += ' app:iconPadding="10dp"'
-          x = x[:m.start()] + run_block + m.group(2) + x[m.end():]
-
-          # 2) Reserve enough bottom space so the fixed bottom navigation never
-          # covers the last part of the log/content.
-          x = re.sub(r'android:paddingBottom="\\d+dp"', 'android:paddingBottom="180dp"', x, count=1)
-
-          # 3) Navbar is icon-only. Remove button text/layout padding that can
-          # make the icon occupy the text slot or become clipped.
-          for vid in ('navHome', 'navHistory', 'navSettings'):
-              pat = re.compile(r'(<[^>]+android:id="@\\+id/'+vid+r'"[^>]*)(/>)')
-              m = pat.search(x)
-              if not m:
-                  continue
-              b = m.group(1)
-              b = re.sub(r'\\s+android:text="[^"]*"', ' android:text=""', b)
-              b = re.sub(r'\\s+android:paddingTop="[^"]*"', '', b)
-              b = re.sub(r'\\s+android:paddingBottom="[^"]*"', '', b)
-              b = re.sub(r'\\s+android:padding="[^"]*"', '', b)
-              b = re.sub(r'\\s+android:minHeight="[^"]*"', '', b)
-              b = re.sub(r'\\s+android:minWidth="[^"]*"', '', b)
-              b = re.sub(r'\\s+android:insetTop="[^"]*"', '', b)
-              b = re.sub(r'\\s+android:insetBottom="[^"]*"', '', b)
-              b = re.sub(r'\\s+android:insetStart="[^"]*"', '', b)
-              b = re.sub(r'\\s+android:insetEnd="[^"]*"', '', b)
-              b = re.sub(r'\\s+app:iconGravity="[^"]*"', '', b)
-              b = re.sub(r'\\s+app:iconPadding="[^"]*"', '', b)
-              b = re.sub(r'\\s+app:iconSize="[^"]*"', '', b)
-              b += ' android:padding="0dp" android:insetTop="0dp" android:insetBottom="0dp" android:insetStart="0dp" android:insetEnd="0dp" app:iconGravity="textStart" app:iconPadding="0dp" app:iconSize="28dp"'
-              x = x[:m.start()] + b + m.group(2) + x[m.end():]
-
-          # 4/5) Hamburger rows: labels get stable IDs and the whole row is
-          # hidden until the FAB is opened. This prevents empty rows/labels
-          # from appearing outside the menu and gives all labels one style.
-          mapping = {
-              'Export offsets.json': 'toolExportLabel',
-              'Parse Boot': 'toolParseBootLabel',
-              'Parse Link': 'toolParseLinkLabel',
-              'Import offsets': 'toolImportLabel',
-          }
-          for text, vid in mapping.items():
-              pattern = re.compile(r'<TextView([^>]*android:text="'+re.escape(text)+r'"[^>]*)/>')
-              def label_repl(m, vid=vid):
-                  b = m.group(1)
-                  b = re.sub(r'\\s+android:id="[^"]*"', '', b)
-                  b = re.sub(r'(?:\\s+android:visibility="gone")+', '', b)
-                  for attr in ('android:gravity','android:textSize','android:textStyle','android:paddingStart','android:paddingEnd'):
-                      pass
-                  return '<TextView android:id="@+id/'+vid+'"'+b+' android:visibility="gone" />'
-              x = pattern.sub(label_repl, x, count=1)
-
-          x = x.replace(' android:visibility="gone" android:visibility="gone" android:visibility="gone"', ' android:visibility="gone"')
-          layout.write_text(x)
-
-          # 6) All framework dialogs in MainActivity use the Material3 GhostLock
-          # dialog overlay so Parse/Import/Export have the same surface, shape,
-          # buttons and colors as the rest of the app.
-          j = j.replace('new AlertDialog.Builder(this)', 'new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)')
-
-          # Replace the old FAB listener with row-level visibility control.
-          old_start = '        ImageButton toolsFab = findViewById(R.id.toolsFab);'
-          old_end = '        toolExport.setOnClickListener(v -> exportButton.performClick());'
-          a = j.find(old_start)
-          b = j.find(old_end, a)
-          if a >= 0 and b >= 0:
-              b += len(old_end)
-              new_block = '''        ImageButton toolsFab = findViewById(R.id.toolsFab);
-        ImageButton toolImport = findViewById(R.id.toolImport);
-        ImageButton toolParseLink = findViewById(R.id.toolParseLink);
-        ImageButton toolParseBoot = findViewById(R.id.toolParseBoot);
-        ImageButton toolExport = findViewById(R.id.toolExport);
-        View[] toolItems = {toolImport, toolParseLink, toolParseBoot, toolExport};
-        TextView[] toolLabels = {
-                findViewById(R.id.toolImportLabel), findViewById(R.id.toolParseLinkLabel),
-                findViewById(R.id.toolParseBootLabel), findViewById(R.id.toolExportLabel)
-        };
-        View[] toolRows = new View[toolItems.length];
-        for (int i = 0; i < toolItems.length; i++) {
-            toolRows[i] = (View) toolItems[i].getParent();
-            toolRows[i].setVisibility(View.GONE);
-            toolItems[i].setVisibility(View.GONE);
-            toolLabels[i].setVisibility(View.GONE);
-        }
-        toolsFab.setOnClickListener(v -> {
-            boolean opening = toolRows[0].getVisibility() != View.VISIBLE;
-            toolsFab.setImageResource(opening ? R.drawable.ic_close : R.drawable.ic_tools);
-            for (int i = 0; i < toolItems.length; i++) {
-                final int index = i;
-                View item = toolItems[index];
-                View row = toolRows[index];
-                TextView label = toolLabels[index];
-                if (opening) {
-                    row.setVisibility(View.VISIBLE);
-                    item.setVisibility(View.VISIBLE);
-                    label.setVisibility(View.VISIBLE);
-                    item.setAlpha(0f);
-                    label.setAlpha(0f);
-                    item.setTranslationY(18f);
-                    label.setTranslationY(18f);
-                    item.animate().alpha(1f).translationY(0f).setDuration(140L + index * 25L).start();
-                    label.animate().alpha(1f).translationY(0f).setDuration(140L + index * 25L).start();
-                } else {
-                    item.animate().alpha(0f).translationY(18f).setDuration(100L).start();
-                    label.animate().alpha(0f).translationY(18f).setDuration(100L).withEndAction(() -> {
-                        item.setVisibility(View.GONE);
-                        label.setVisibility(View.GONE);
-                        row.setVisibility(View.GONE);
-                        item.setAlpha(1f);
-                        label.setAlpha(1f);
-                        item.setTranslationY(0f);
-                        label.setTranslationY(0f);
-                    }).start();
-                }
-            }
-        });
-        toolImport.setOnClickListener(v -> importButton.performClick());
-        toolParseLink.setOnClickListener(v -> otaButton.performClick());
-        toolParseBoot.setOnClickListener(v -> parseButton.performClick());
-        toolExport.setOnClickListener(v -> exportButton.performClick());'''
-              j = j[:a] + new_block + j[b:]
-          else:
-              raise SystemExit('FAB listener block not found')
-
-          main.write_text(j)
-
-          # 7) Theme picker: use a Material3 single-choice dialog. Clicking the
-          # header icon only opens the picker; the theme is applied only after
-          # pressing Apply. The control remains in the Home header.
-          start = t.find('    private void showThemeMenu() {')
-          end = t.find('    private void setThemeMode(int mode) {', start)
-          if start < 0 or end < 0:
-              raise SystemExit('theme menu method not found')
-          new_theme_menu = '''    private void showThemeMenu() {
-        Activity activity = findActivity(getContext());
-        int current = activity == null ? SYSTEM
-                : activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getInt(PREF_THEME, SYSTEM);
-        current = Math.max(SYSTEM, Math.min(DARK, current));
-        final int[] selected = {current};
-        new com.google.android.material.dialog.MaterialAlertDialogBuilder(getContext())
-                .setTitle("Theme")
-                .setSingleChoiceItems(new String[]{"System", "Light", "Dark"}, current,
-                        (dialog, which) -> selected[0] = which)
-                .setPositiveButton("Apply", (dialog, which) -> setThemeMode(selected[0]))
-                .setNegativeButton("Cancel", null)
-                .show();
-    }
-
-'''
-          t = t[:start] + new_theme_menu + t[end:]
-          theme.write_text(t)
-
-          # Keep theme control in the header and prevent any duplicate settings
-          # control from becoming visible if an older layout contains one.
-          x = layout.read_text()
-          x = re.sub(r'<com\\.ghostlock\\.app\\.ThemeToggleButton android:id="@\\+id/settingsThemeToggle"[^>]*/>',
-                     '<com.ghostlock.app.ThemeToggleButton android:id="@+id/settingsThemeToggle" android:layout_width="1dp" android:layout_height="1dp" android:visibility="gone" />', x)
+          x = re.sub(r'\s+android:visibility="gone"(?:\s+android:visibility="gone")+', ' android:visibility="gone"', x)
           layout.write_text(x)
 
           subprocess.run(['git','config','user.name','github-actions[bot]'], check=True)
           subprocess.run(['git','config','user.email','41898282+github-actions[bot]@users.noreply.github.com'], check=True)
-          subprocess.run(['git','add', str(layout), str(main), str(theme)], check=True)
+          subprocess.run(['git','add', str(layout)], check=True)
           if subprocess.run(['git','diff','--cached','--quiet']).returncode:
               print('No source changes required')
               raise SystemExit(0)
-          subprocess.run(['git','commit','-m','fix: resolve seven reported UI issues'], check=True)
+          subprocess.run(['git','commit','-m','fix: clean duplicate layout attributes'], check=True)
           subprocess.run(['git','push','origin','HEAD:Test'], check=True)
