@@ -79,6 +79,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MainActivity extends Activity {
+    @Override
+    protected void attachBaseContext(android.content.Context base) {
+        float scale = base.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getFloat(PREF_FONT_SCALE, 1.0f);
+        Configuration configuration = new Configuration(base.getResources().getConfiguration());
+        configuration.fontScale = scale;
+        super.attachBaseContext(base.createConfigurationContext(configuration));
+    }
     private static final String TAG = "GhostLockApp";
     private static final String BINARY_NAME = "libghostlock.so";
     private static final String EXTRACT_NAME = "libextract.so";
@@ -94,6 +101,7 @@ public class MainActivity extends Activity {
     private static final int REQ_PICK_XBL = 1003;
     private static final String PREFS = "ghostlock_prefs";
     private static final String PREF_CPU_PAIR = "cpu_pair";
+    private static final String PREF_FONT_SCALE = "font_scale";
     private static final String[] KSU_MANAGER_PACKAGES = {"me.weishu.kernelsu", "com.resukisu.resukisu", "com.kowx712.supermanager",};
     private static final int COLOR_RED = 0xFFFF6B6B;
     private static final int COLOR_GREEN = 0xFF5FD68A;
@@ -112,6 +120,7 @@ public class MainActivity extends Activity {
     private LinearLayout kernelChip;
     private TextView kernelChipText;
     private Spinner cpuSpinner;
+    private Spinner fontSizeSpinner;
     private ScrollView logScroll;
     private Button runButton;
     private ImageButton advancedButton;
@@ -485,6 +494,7 @@ public class MainActivity extends Activity {
         kernelChip = findViewById(R.id.kernelChip);
         kernelChipText = findViewById(R.id.kernelChipText);
         cpuSpinner = findViewById(R.id.cpuSpinner);
+        fontSizeSpinner = findViewById(R.id.fontSizeSpinner);
 
         applyWindowInsetsPadding();
         deviceInfo.setText(buildDeviceSummary());
@@ -522,6 +532,24 @@ public class MainActivity extends Activity {
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
             }
+        });
+
+        String[] fontSizes = {getString(R.string.font_size_small), getString(R.string.font_size_default), getString(R.string.font_size_large)};
+        ArrayAdapter<String> fontAdapter = new ArrayAdapter<>(this, R.layout.spinner_item_right, fontSizes);
+        fontAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        fontSizeSpinner.setAdapter(fontAdapter);
+        float savedScale = getSharedPreferences(PREFS, MODE_PRIVATE).getFloat(PREF_FONT_SCALE, 1.0f);
+        fontSizeSpinner.setSelection(savedScale < 0.95f ? 0 : savedScale > 1.05f ? 2 : 1);
+        fontSizeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                float scale = position == 0 ? 0.9f : position == 2 ? 1.15f : 1.0f;
+                float current = getSharedPreferences(PREFS, MODE_PRIVATE).getFloat(PREF_FONT_SCALE, 1.0f);
+                if (Math.abs(current - scale) > 0.01f) {
+                    getSharedPreferences(PREFS, MODE_PRIVATE).edit().putFloat(PREF_FONT_SCALE, scale).apply();
+                    recreate();
+                }
+            }
+            @Override public void onNothingSelected(AdapterView<?> parent) { }
         });
     }
 

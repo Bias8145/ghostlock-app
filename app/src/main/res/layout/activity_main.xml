@@ -13,6 +13,7 @@
                 </LinearLayout>
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="@string/header_subtitle" android:textColor="@color/text_secondary" android:textSize="11sp"/>
             </LinearLayout>
+            <com.ghostlock.app.ThemeToggleButton android:layout_width="48dp" android:layout_height="48dp" android:background="?attr/selectableItemBackgroundBorderless" android:layout_marginEnd="2dp"/>
             <ImageButton android:id="@+id/advancedButton" android:layout_width="48dp" android:layout_height="48dp" android:background="?attr/selectableItemBackgroundBorderless" android:contentDescription="@string/action_advanced" android:padding="11dp" android:src="@drawable/ic_advanced" android:tint="@color/icon_tint"/>
         </LinearLayout>
         <com.ghostlock.app.RuntimeStatusView android:id="@+id/runtimeStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp"/>
@@ -30,10 +31,14 @@
                         <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/cpu_pair_label" android:textColor="@color/text_primary" android:textSize="13sp" android:textStyle="bold"/>
                         <Spinner android:id="@+id/cpuSpinner" android:layout_width="150dp" android:layout_height="match_parent" android:background="@android:color/transparent" android:popupBackground="@drawable/bg_spinner_popup" android:dropDownVerticalOffset="4dp"/>
                     </LinearLayout>
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="60dp" android:layout_marginTop="8dp" android:background="@drawable/bg_spinner" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="14dp" android:paddingEnd="6dp">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/font_size_label" android:textColor="@color/text_primary" android:textSize="13sp" android:textStyle="bold"/>
+                        <Spinner android:id="@+id/fontSizeSpinner" android:layout_width="150dp" android:layout_height="match_parent" android:background="@android:color/transparent" android:popupBackground="@drawable/bg_spinner_popup" android:dropDownVerticalOffset="4dp"/>
+                    </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
-        <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="520dp" android:layout_marginBottom="12dp" app:cardBackgroundColor="@color/log_bg" app:cardCornerRadius="20dp" app:cardElevation="0dp" app:strokeWidth="0dp">
+        <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="420dp" android:layout_marginBottom="12dp" app:cardBackgroundColor="@color/log_bg" app:cardCornerRadius="20dp" app:cardElevation="0dp" app:strokeWidth="0dp">
             <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="16dp">
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical"><TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/log_title" android:textColor="@color/log_title" android:textSize="14sp" android:textStyle="bold"/><TextView android:id="@+id/logStatus" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/status_ready" android:textColor="@color/log_secondary" android:textSize="10sp" android:textStyle="bold"/><com.google.android.material.button.MaterialButton android:id="@+id/copyButton" style="@style/Widget.Material3.Button.TextButton" android:layout_width="wrap_content" android:layout_height="40dp" android:minWidth="0dp" android:text="@string/action_copy_log" android:textAllCaps="false" android:textColor="@color/log_title" android:textSize="12sp" app:cornerRadius="12dp"/></LinearLayout>
                 <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="10dp" android:layout_marginBottom="10dp" android:background="@color/log_divider"/>
