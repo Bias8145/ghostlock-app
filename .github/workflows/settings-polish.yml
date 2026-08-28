@@ -1,0 +1,41 @@
+name: Settings Polish
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [Test]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: Test
+          fetch-depth: 0
+      - name: Add settings accessibility resources
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('app/src/main/res/values/strings.xml')
+          s=p.read_text()
+          additions={
+            'settings_app_scale_summary':'Scale the app UI without changing system font size',
+            'settings_theme_summary':'Light, Dark, or System theme',
+            'settings_cpu_summary':'Select the CPU profile used by GhostLock'
+          }
+          for name,val in additions.items():
+            if f'name="{name}"' not in s:
+              s=s.replace('</resources>',f'    <string name="{name}">{val}</string>\n</resources>')
+          p.write_text(s)
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/src/main/res/values/strings.xml
+          git diff --cached --quiet && exit 0
+          git commit -m "ui: polish settings summaries"
+          git push origin HEAD:Test
