@@ -1,8 +1,8 @@
 <resources>
-    <color name="bg">#FFFFFBF2</color>
+    <color name="bg">#FFF9F9F7</color>
     <color name="surface">#FFFFFCF7</color>
-    <color name="surface_container_low">#FFF8F0DE</color>
-    <color name="surface_container">#FFF1E6CC</color>
+    <color name="surface_container_low">#FFF1F1EE</color>
+    <color name="surface_container">#FFE8E8E3</color>
     <color name="text_primary">#FF211B10</color>
     <color name="text_secondary">#FF665D4D</color>
     <color name="icon_tint">#FF4A3B22</color>
