@@ -1,0 +1,75 @@
+name: Complete App Scale
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [Test]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: Test
+          fetch-depth: 0
+      - name: Replace font scaling with app density scaling
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          p = Path('app/src/main/java/com/ghostlock/app/MainActivity.java')
+          s = p.read_text()
+
+          s = s.replace('private static final String PREF_FONT_SCALE = "font_scale";',
+                        'private static final String PREF_APP_SCALE = "app_scale";\n'
+                        '    private static final String PREF_LEGACY_FONT_SCALE = "font_scale";')
+
+          pattern = re.compile(
+              r'    @Override\n'
+              r'    protected void attachBaseContext\(android\\.content\\.Context base\) \{.*?\n'
+              r'    \}\n', re.S)
+          replacement = '''    @Override
+    protected void attachBaseContext(android.content.Context base) {
+        android.content.SharedPreferences prefs = base.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        float scale = prefs.getFloat(PREF_APP_SCALE, Float.NaN);
+        if (Float.isNaN(scale)) {
+            scale = prefs.getFloat(PREF_LEGACY_FONT_SCALE, 1.0f);
+        }
+        if (!Float.isFinite(scale)) scale = 1.0f;
+        scale = Math.max(0.80f, Math.min(1.30f, scale));
+        Configuration configuration = new Configuration(base.getResources().getConfiguration());
+        int baseDensity = configuration.densityDpi;
+        configuration.densityDpi = Math.max(120, Math.round(baseDensity * scale));
+        super.attachBaseContext(base.createConfigurationContext(configuration));
+    }
+'''
+          s2, n = pattern.subn(replacement, s, count=1)
+          if n != 1:
+              raise SystemExit('attachBaseContext block not found; refusing unsafe rewrite')
+          if 'configuration.fontScale = scale;' in s2:
+              raise SystemExit('fontScale mutation remains; refusing commit')
+
+          # Keep the existing setting control but present it as application scale.
+          s2 = s2.replace('fontSizeSpinner', 'appScaleSpinner')
+          p.write_text(s2)
+
+          for rel in ['app/src/main/res/values/strings.xml']:
+              q = Path(rel)
+              if q.exists():
+                  text = q.read_text()
+                  text = re.sub(r'(?i)(<string[^>]*>)[^<]*font size[^<]*(</string>)', r'\1App Scale\2', text)
+                  q.write_text(text)
+
+          import subprocess
+          subprocess.run(['git','config','user.name','github-actions[bot]'], check=True)
+          subprocess.run(['git','config','user.email','41898282+github-actions[bot]@users.noreply.github.com'], check=True)
+          subprocess.run(['git','add','app/src/main/java/com/ghostlock/app/MainActivity.java','app/src/main/res/values/strings.xml'], check=True)
+          if subprocess.run(['git','diff','--cached','--quiet']).returncode == 0:
+              raise SystemExit(0)
+          subprocess.run(['git','commit','-m','feat: complete app scale without fontScale'], check=True)
+          subprocess.run(['git','push','origin','HEAD:Test'], check=True)
