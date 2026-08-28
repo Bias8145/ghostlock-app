@@ -6,10 +6,9 @@ import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.res.Configuration;
 import android.widget.ImageButton;
-import android.widget.PopupMenu;
 import androidx.core.content.ContextCompat;
 
-/** Compact Light/Dark/System theme control used in the main header. */
+/** Compact System/Light/Dark theme control kept in the Home header. */
 public class ThemeToggleButton extends ImageButton {
     private static final String PREFS = "ghostlock_prefs";
     private static final String PREF_THEME = "theme_mode";
@@ -27,29 +26,22 @@ public class ThemeToggleButton extends ImageButton {
         setMinimumWidth(dp(48));
         setMinimumHeight(dp(48));
         setPadding(dp(10), dp(10), dp(10), dp(10));
-        // Do not change the theme while the header is merely being constructed.
-        // The saved preference is applied by the Activity lifecycle, while this
-        // control only presents the explicit System/Light/Dark choice.
         updateIconState();
     }
 
     private void showThemeMenu() {
-        PopupMenu menu = new PopupMenu(getContext(), this);
-        menu.getMenu().add(0, SYSTEM, 0, "System");
-        menu.getMenu().add(0, LIGHT, 1, "Light");
-        menu.getMenu().add(0, DARK, 2, "Dark");
-        menu.getMenu().setGroupCheckable(0, true, true);
         Activity activity = findActivity(getContext());
         int current = activity == null ? SYSTEM
                 : activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getInt(PREF_THEME, SYSTEM);
         current = Math.max(SYSTEM, Math.min(DARK, current));
-        menu.getMenu().getItem(current).setChecked(true);
-        menu.setOnMenuItemClickListener(item -> {
-            item.setChecked(true);
-            setThemeMode(item.getItemId());
-            return true;
-        });
-        menu.show();
+        final int[] selected = {current};
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(getContext())
+                .setTitle("Theme")
+                .setSingleChoiceItems(new String[]{"System", "Light", "Dark"}, current,
+                        (dialog, which) -> selected[0] = which)
+                .setPositiveButton("Apply", (dialog, which) -> setThemeMode(selected[0]))
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     private void setThemeMode(int mode) {
@@ -61,8 +53,6 @@ public class ThemeToggleButton extends ImageButton {
         if (manager == null) return;
         manager.setApplicationNightMode(mode == DARK ? UiModeManager.MODE_NIGHT_YES
                 : mode == LIGHT ? UiModeManager.MODE_NIGHT_NO : UiModeManager.MODE_NIGHT_AUTO);
-        // Theme changes may recreate the Activity. MainActivity owns page state;
-        // this control never performs navigation itself.
         updateIconState();
     }
 
