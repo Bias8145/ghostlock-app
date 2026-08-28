@@ -7,6 +7,7 @@
     <color name="text_primary">#FFE4E3DD</color>
     <color name="text_secondary">#FFBFC1BA</color>
     <color name="icon_tint">#FFD6B66A</color>
+    <color name="nav_icon_tint">#FFF1F1EA</color>
     <color name="theme_icon_light">#FF4A3B22</color>
     <color name="theme_icon_dark">#FFD6B66A</color>
     <color name="accent">#FFD6B66A</color>
