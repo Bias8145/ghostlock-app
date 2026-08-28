@@ -7,9 +7,10 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageButton;
 
-/** Tools FAB that blurs the page behind the expanded floating actions. */
+/** Tools FAB that blurs the complete app surface while floating actions are expanded. */
 public class BlurToolsButton extends ImageButton {
     private final Handler handler = new Handler(Looper.getMainLooper());
     private boolean blurred;
@@ -26,13 +27,23 @@ public class BlurToolsButton extends ImageButton {
 
     private void applyBlur(boolean enabled) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return;
-        View log = getRootView().findViewById(R.id.logScroll);
-        View device = getRootView().findViewById(R.id.deviceInfo);
-        View status = getRootView().findViewById(R.id.runtimeStatus);
-        RenderEffect effect = enabled ? RenderEffect.createBlurEffect(8f, 8f, Shader.TileMode.CLAMP) : null;
-        if (log != null) log.setRenderEffect(effect);
-        if (device != null) device.setRenderEffect(effect);
-        if (status != null) status.setRenderEffect(effect);
+        View root = getRootView();
+        if (!(root instanceof ViewGroup)) return;
+        RenderEffect effect = enabled ? RenderEffect.createBlurEffect(9f, 9f, Shader.TileMode.CLAMP) : null;
+        ViewGroup group = (ViewGroup) root;
+        for (int i = 0; i < group.getChildCount(); i++) {
+            View child = group.getChildAt(i);
+            // Keep the floating action stack crisp; blur every other top-level surface,
+            // including the log, header, content, history/settings pages and navbar.
+            if (child.getId() == R.id.toolsFabMenu || child == this) continue;
+            child.setRenderEffect(effect);
+        }
         blurred = enabled;
+    }
+
+    @Override protected void onDetachedFromWindow() {
+        applyBlur(false);
+        handler.removeCallbacksAndMessages(null);
+        super.onDetachedFromWindow();
     }
 }
