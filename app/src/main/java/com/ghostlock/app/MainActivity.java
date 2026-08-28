@@ -13,6 +13,7 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
+import android.content.res.Configuration;
 import android.graphics.Insets;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
@@ -516,6 +517,12 @@ public class MainActivity extends Activity {
         otaButton.setOnClickListener(v -> promptParseUrl());
         parseButton.setOnClickListener(v -> parseOffsets());
         exportButton.setOnClickListener(v -> exportOffsets());
+        findViewById(R.id.navHome).setOnClickListener(v -> logScroll.smoothScrollTo(0, 0));
+        findViewById(R.id.navHistory).setOnClickListener(v -> logScroll.smoothScrollTo(0, logView.getBottom()));
+        findViewById(R.id.navSettings).setOnClickListener(v -> {
+            if (advancedPanel.getVisibility() != View.VISIBLE) animateShow(advancedPanel);
+            advancedPanel.post(() -> rootView.findViewById(R.id.contentScroll).smoothScrollTo(0, advancedPanel.getTop()));
+        });
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.spinner_item_right, cpuPairLabels);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
