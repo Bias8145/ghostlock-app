@@ -31,7 +31,7 @@ public class ToolActionButton extends ImageButton {
     }
 
     private void syncRow(boolean show) {
-        View parent = getParent();
+        android.view.ViewParent parent = getParent();
         if (!(parent instanceof ViewGroup)) return;
         ViewGroup row = (ViewGroup) parent;
         row.setVisibility(show ? View.VISIBLE : View.GONE);
@@ -46,7 +46,7 @@ public class ToolActionButton extends ImageButton {
     }
 
     private void styleLabel() {
-        View parent = getParent();
+        android.view.ViewParent parent = getParent();
         if (!(parent instanceof ViewGroup)) return;
         ViewGroup row = (ViewGroup) parent;
         for (int i = 0; i < row.getChildCount(); i++) {
