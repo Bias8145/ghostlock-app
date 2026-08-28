@@ -50,10 +50,12 @@
     <string name="action_copy_log">Copy log</string>
     <string name="tools_title">Tools</string>
     <string name="tools_subtitle">Utilities &amp; advanced actions</string>
-    <string name="font_size_label">Font size</string>
-    <string name="font_size_small">Small</string>
-    <string name="font_size_default">Default</string>
-    <string name="font_size_large">Large</string>
+    <string name="app_scale_label">App scale</string>
+    <string name="app_scale_small">85%</string>
+    <string name="app_scale_default">100%</string>
+    <string name="app_scale_large">115%</string>
+    <string name="theme_label">Theme</string>
+    <string name="theme_toggle">Switch theme</string>
     <string name="nav_home">Home</string>
     <string name="nav_history">History</string>
     <string name="nav_settings">Settings</string>
