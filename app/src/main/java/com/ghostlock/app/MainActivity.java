@@ -87,8 +87,9 @@ public class MainActivity extends Activity {
     @Override
     protected void attachBaseContext(android.content.Context base) {
         float scale = base.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getFloat(PREF_FONT_SCALE, 1.0f);
+        scale = Math.max(0.80f, Math.min(1.30f, scale));
         Configuration configuration = new Configuration(base.getResources().getConfiguration());
-        configuration.fontScale = scale;
+        configuration.densityDpi = Math.max(120, Math.round(configuration.densityDpi * scale));
         super.attachBaseContext(base.createConfigurationContext(configuration));
     }
     private static final String TAG = "GhostLockApp";
@@ -509,6 +510,7 @@ public class MainActivity extends Activity {
         fontSizeSpinner = findViewById(R.id.fontSizeSpinner);
 
         setupPages();
+        ThemeToggleButton headerThemeToggle = findViewById(R.id.headerThemeToggle);
         applyWindowInsetsPadding();
         deviceInfo.setText(buildDeviceSummary());
         buildCpuPairs();
@@ -666,9 +668,15 @@ public class MainActivity extends Activity {
         home.setIconResource(R.drawable.ic_nav_home);
         history.setIconResource(R.drawable.ic_nav_history);
         settings.setIconResource(R.drawable.ic_nav_settings);
-        home.setText("Home");
-        history.setText("History");
-        settings.setText("Settings");
+        home.setText("");
+        history.setText("");
+        settings.setText("");
+        home.setContentDescription("Home");
+        history.setContentDescription("History");
+        settings.setContentDescription("Settings");
+        home.setIconPadding(0);
+        history.setIconPadding(0);
+        settings.setIconPadding(0);
         home.setOnClickListener(v -> showPage(0));
         history.setOnClickListener(v -> showPage(1));
         settings.setOnClickListener(v -> showPage(2));
