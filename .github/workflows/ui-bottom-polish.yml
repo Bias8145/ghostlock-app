@@ -1,0 +1,62 @@
+name: UI Bottom Polish
+
+on:
+  push:
+    branches: [Test]
+    paths-ignore:
+      - .github/workflows/ui-bottom-polish.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: Test
+          fetch-depth: 0
+      - name: Patch bottom UI
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          layout = Path('app/src/main/res/layout/activity_main.xml')
+          s = layout.read_text()
+          old = '''<LinearLayout android:id="@+id/bottomNav" android:layout_width="match_parent" android:layout_height="72dp" android:background="@color/surface_container_low" android:gravity="center" android:orientation="horizontal" android:paddingStart="8dp" android:paddingEnd="8dp">'''
+          new = '''<LinearLayout android:id="@+id/bottomNav" android:layout_width="match_parent" android:layout_height="80dp" android:layout_marginStart="12dp" android:layout_marginEnd="12dp" android:layout_marginBottom="10dp" android:background="@drawable/bg_bottom_nav" android:elevation="8dp" android:gravity="center" android:orientation="horizontal" android:paddingStart="8dp" android:paddingEnd="8dp">'''
+          if old not in s:
+              raise SystemExit('bottomNav marker not found')
+          s = s.replace(old, new, 1)
+          layout.write_text(s)
+
+          java = Path('app/src/main/java/com/ghostlock/app/MainActivity.java')
+          s = java.read_text()
+          start = s.index('        ImageButton toolsFab = findViewById(R.id.toolsFab);')
+          end = s.index('        setupNavigation();', start)
+          replacement = '''        ImageButton toolsFab = findViewById(R.id.toolsFab);\n        View toolsMenu = findViewById(R.id.toolsFabMenu);\n        ImageButton toolImport = findViewById(R.id.toolImport);\n        ImageButton toolParseLink = findViewById(R.id.toolParseLink);\n        ImageButton toolParseBoot = findViewById(R.id.toolParseBoot);\n        ImageButton toolExport = findViewById(R.id.toolExport);\n        View[] toolItems = {toolImport, toolParseLink, toolParseBoot, toolExport};\n        toolsMenu.setVisibility(View.GONE);\n        toolsFab.setOnClickListener(v -> {\n            boolean opening = toolsMenu.getVisibility() != View.VISIBLE;\n            if (opening) {\n                toolsMenu.setVisibility(View.VISIBLE);\n                toolsFab.setImageResource(R.drawable.ic_close);\n                for (int i = 0; i < toolItems.length; i++) {\n                    View item = toolItems[i];\n                    item.setVisibility(View.VISIBLE);\n                    item.setAlpha(0f);\n                    item.setTranslationY(18f);\n                    item.animate().alpha(1f).translationY(0f).setDuration(140L + i * 25L).start();\n                }\n            } else {\n                toolsFab.setImageResource(R.drawable.ic_tools);\n                for (View item : toolItems) {\n                    item.animate().alpha(0f).translationY(18f).setDuration(100L).withEndAction(() -> item.setVisibility(View.GONE)).start();\n                }\n                toolsMenu.postDelayed(() -> toolsMenu.setVisibility(View.GONE), 120L);\n            }\n        });\n        toolImport.setOnClickListener(v -> importButton.performClick());\n        toolParseLink.setOnClickListener(v -> otaButton.performClick());\n        toolParseBoot.setOnClickListener(v -> parseButton.performClick());\n        toolExport.setOnClickListener(v -> exportButton.performClick());\n        otaButton.setVisibility(View.GONE);\n        parseButton.setVisibility(View.GONE);\n        exportButton.setVisibility(View.GONE);\n'''
+          s = s[:start] + replacement + s[end:]
+          java.write_text(s)
+          PY
+
+      - name: Add floating navbar drawable
+        run: |
+          cat > app/src/main/res/drawable/bg_bottom_nav.xml <<'EOF'
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+              <solid android:color="@color/surface_container_low" />
+              <corners android:radius="28dp" />
+              <stroke android:width="1dp" android:color="@color/outline_variant" />
+          </shape>
+          EOF
+
+      - name: Commit UI polish
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/src/main/res/layout/activity_main.xml app/src/main/java/com/ghostlock/app/MainActivity.java app/src/main/res/drawable/bg_bottom_nav.xml
+          git diff --cached --quiet && exit 0
+          git commit -m "ui: implement floating bottom navigation and tools menu"
+          git push origin HEAD:Test
