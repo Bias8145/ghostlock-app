@@ -41,6 +41,10 @@
         <item name="buttonBarPositiveButtonStyle">@style/Widget.GhostLock.DialogButton</item>
         <item name="buttonBarNegativeButtonStyle">@style/Widget.GhostLock.DialogButton</item>
         <item name="buttonBarNeutralButtonStyle">@style/Widget.GhostLock.DialogButton</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:backgroundDimAmount">0.42</item>
+        <item name="android:windowBlurBehindEnabled">true</item>
+        <item name="android:windowBlurBehindRadius">28dp</item>
     </style>
     <style name="ShapeAppearance.GhostLock.Dialog" parent="ShapeAppearance.Material3.Corner.Large"><item name="cornerSize">26dp</item></style>
     <style name="Widget.GhostLock.DialogButton" parent="Widget.Material3.Button.TextButton"><item name="android:textAllCaps">false</item><item name="cornerRadius">16dp</item><item name="android:minHeight">48dp</item></style>
