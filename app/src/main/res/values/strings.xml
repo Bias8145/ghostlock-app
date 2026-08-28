@@ -56,6 +56,10 @@
     <string name="app_scale_large">115%</string>
     <string name="theme_label">Theme</string>
     <string name="theme_toggle">Switch theme</string>
+    <string name="font_size_label">App scale</string>
+    <string name="font_size_small">85%</string>
+    <string name="font_size_default">100%</string>
+    <string name="font_size_large">115%</string>
     <string name="nav_home">Home</string>
     <string name="nav_history">History</string>
     <string name="nav_settings">Settings</string>
