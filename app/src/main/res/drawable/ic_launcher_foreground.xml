@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- GhostLock launcher mark: bright white silhouette for clear contrast on the warm icon background. -->
+<!-- Bright launcher foreground for clear contrast on the GhostLock background. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp"
-    android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
     <group android:scaleX="0.0585586" android:scaleY="0.0585586"
         android:translateX="28" android:translateY="31.4550">
         <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF"
@@ -14,7 +12,7 @@
             <path android:fillColor="#FFFFFFFF" android:pathData="M425.955,252.9248A39.9452,62.7532 0,1 1,425.955,378.4312A39.9452,62.7532 0,1 1,425.955,252.9248Z" />
         </group>
         <group android:rotation="-11" android:pivotX="596.955" android:pivotY="282.678">
-            <path android:fillColor="#FFFFFFFF" android:pathData="M596.955,219.9248A39.9452,62.7532 0,1 1,596.955,345.4312A39.9452,62.7532 0,1 1,596.955,345.4312Z" />
+            <path android:fillColor="#FFFFFFFF" android:pathData="M596.955,219.9248A39.9452,62.7532 0,1 1,596.955,345.4312A39.9452,62.7532 0,1 1,596.955,219.9248Z" />
         </group>
         <path android:fillColor="#FFFFFFFF" android:pathData="M169.692,528.378A30,30 0,1 1,169.692,588.378A30,30 0,1 1,169.692,528.378Z" />
         <path android:fillColor="#FFFFFFFF" android:pathData="M149.592,569.184C158.313,556.666 177.939,562.294 178.701,577.53L180.728,618.08C181.276,629.037 170.884,637.283 160.338,634.259L135.104,627.023C124.558,623.999 120.114,611.499 126.386,602.497L149.592,569.184Z" />
