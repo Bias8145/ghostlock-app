@@ -8,7 +8,6 @@ import android.graphics.Shader;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.os.Handler;
-import android.os.Looper;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -23,27 +22,30 @@ import com.google.android.material.button.MaterialButton;
 public class ConfirmRunButton extends MaterialButton {
     private boolean confirmedClick;
     private boolean arranged;
-    private final Handler handler = new Handler(Looper.getMainLooper());
-
+    private final Handler handler = new Handler();
     public ConfirmRunButton(Context context) { super(context); }
     public ConfirmRunButton(Context context, android.util.AttributeSet attrs) { super(context, attrs); }
     public ConfirmRunButton(Context context, android.util.AttributeSet attrs, int defStyleAttr) { super(context, attrs, defStyleAttr); }
 
-    @Override protected void onAttachedToWindow() {
-        super.onAttachedToWindow();
-        handler.post(this::finalizeUiLayout);
-    }
+    @Override protected void onAttachedToWindow() { super.onAttachedToWindow(); handler.post(this::finalizeUiLayout); }
 
     private void finalizeUiLayout() {
-        if (getRootView() == null) return;
-        View logScroll = getRootView().findViewById(R.id.logScroll);
-        View tools = getRootView().findViewById(R.id.toolsFabMenu);
-        View logCard = logScroll == null ? null : (View) logScroll.getParent();
-        if (logCard != null && logCard.getParent() instanceof View) {
-            View cardParent = (View) logCard.getParent();
-            ViewGroup.LayoutParams lp = logCard.getLayoutParams();
-            lp.height = dp(600);
-            logCard.setLayoutParams(lp);
+        View root = getRootView();
+        View logScroll = root.findViewById(R.id.logScroll);
+        View tools = root.findViewById(R.id.toolsFabMenu);
+        if (logScroll != null) {
+            View frame = (View) logScroll.getParent();
+            if (frame != null) {
+                View cardContent = (View) frame.getParent();
+                if (cardContent != null) {
+                    View card = (View) cardContent.getParent();
+                    if (card != null) {
+                        ViewGroup.LayoutParams lp = card.getLayoutParams();
+                        lp.height = dp(600);
+                        card.setLayoutParams(lp);
+                    }
+                }
+            }
         }
         if (!arranged && tools != null && tools.getParent() instanceof FrameLayout && getParent() instanceof ViewGroup) {
             FrameLayout frame = (FrameLayout) tools.getParent();
@@ -64,25 +66,13 @@ public class ConfirmRunButton extends MaterialButton {
             setElevation(dp(4));
             arranged = true;
         }
-        View theme = getRootView().findViewById(R.id.headerThemeToggle);
-        if (theme != null) {
-            ViewGroup.LayoutParams tlp = theme.getLayoutParams();
-            tlp.width = dp(58); tlp.height = dp(58);
-            theme.setLayoutParams(tlp);
-            theme.setTranslationY(-dp(2));
-        }
-        View bottomNav = getRootView().findViewById(R.id.bottomNav);
+        View theme = root.findViewById(R.id.headerThemeToggle);
+        if (theme != null) { ViewGroup.LayoutParams lp = theme.getLayoutParams(); lp.width = dp(58); lp.height = dp(58); theme.setLayoutParams(lp); theme.setTranslationY(-dp(2)); }
+        View bottomNav = root.findViewById(R.id.bottomNav);
         if (bottomNav instanceof ViewGroup) {
             bottomNav.setBackgroundResource(R.drawable.bg_bottom_nav);
             ViewGroup nav = (ViewGroup) bottomNav;
-            for (int i = 0; i < nav.getChildCount(); i++) {
-                View child = nav.getChildAt(i);
-                if (child instanceof MaterialButton) {
-                    MaterialButton b = (MaterialButton) child;
-                    b.setBackgroundTintList(ColorStateList.valueOf(android.graphics.Color.TRANSPARENT));
-                    b.setCornerRadius(0);
-                }
-            }
+            for (int i=0;i<nav.getChildCount();i++) if (nav.getChildAt(i) instanceof MaterialButton) { MaterialButton b=(MaterialButton)nav.getChildAt(i); b.setBackgroundTintList(ColorStateList.valueOf(android.graphics.Color.TRANSPARENT)); b.setCornerRadius(0); }
         }
         installToolsBlurHook();
         installClearHistory();
@@ -92,75 +82,28 @@ public class ConfirmRunButton extends MaterialButton {
         View toolsFab = getRootView().findViewById(R.id.toolsFab);
         if (toolsFab == null || toolsFab.getTag(R.id.toolsFab) != null) return;
         toolsFab.setTag(R.id.toolsFab, Boolean.TRUE);
-        toolsFab.setOnTouchListener((v, event) -> {
-            if (event.getAction() == MotionEvent.ACTION_UP && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                handler.postDelayed(() -> {
-                    View item = getRootView().findViewById(R.id.toolImport);
-                    boolean enabled = item != null && item.getVisibility() == View.VISIBLE;
-                    RenderEffect effect = enabled ? RenderEffect.createBlurEffect(8f, 8f, Shader.TileMode.CLAMP) : null;
-                    View log = getRootView().findViewById(R.id.logScroll);
-                    View device = getRootView().findViewById(R.id.deviceInfo);
-                    View status = getRootView().findViewById(R.id.runtimeStatus);
-                    if (log != null) log.setRenderEffect(effect);
-                    if (device != null) device.setRenderEffect(effect);
-                    if (status != null) status.setRenderEffect(effect);
-                }, 40L);
-            }
+        toolsFab.setOnTouchListener((v,e)->{
+            if(e.getAction()==MotionEvent.ACTION_UP && Build.VERSION.SDK_INT>=Build.VERSION_CODES.S) handler.postDelayed(()->{
+                View item=getRootView().findViewById(R.id.toolImport);
+                boolean enabled=item!=null && item.getVisibility()==View.VISIBLE;
+                RenderEffect effect=enabled?RenderEffect.createBlurEffect(8f,8f,Shader.TileMode.CLAMP):null;
+                View log=getRootView().findViewById(R.id.logScroll), device=getRootView().findViewById(R.id.deviceInfo), status=getRootView().findViewById(R.id.runtimeStatus);
+                if(log!=null)log.setRenderEffect(effect); if(device!=null)device.setRenderEffect(effect); if(status!=null)status.setRenderEffect(effect);
+            },40L);
             return false;
         });
     }
 
     private void installClearHistory() {
-        if (!(getRootView() instanceof ViewGroup)) return;
-        if (getRootView().findViewById(R.id.clearHistoryButton) != null) return;
-        View root = getRootView();
-        View bottomNav = root.findViewById(R.id.bottomNav);
-        if (!(root instanceof LinearLayout) || bottomNav == null) return;
-        HistoryClearButton clear = new HistoryClearButton(getContext());
-        clear.setId(R.id.clearHistoryButton);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-2, dp(48));
-        lp.gravity = Gravity.END;
-        lp.rightMargin = dp(20);
-        lp.topMargin = -dp(58);
-        lp.bottomMargin = dp(10);
-        clear.setLayoutParams(lp);
-        ((LinearLayout) root).addView(clear);
+        View root=getRootView(); if(!(root instanceof LinearLayout)||root.findViewById(R.id.clearHistoryButton)!=null)return;
+        HistoryClearButton clear=new HistoryClearButton(getContext()); clear.setId(R.id.clearHistoryButton);
+        LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-2,dp(48)); lp.gravity=Gravity.END; lp.rightMargin=dp(20); lp.topMargin=-dp(58); lp.bottomMargin=dp(10); clear.setLayoutParams(lp); ((LinearLayout)root).addView(clear);
     }
 
-    @Override public boolean performClick() {
-        if (confirmedClick) { confirmedClick = false; return super.performClick(); }
-        ManagerCompatibility.Result result = ManagerCompatibility.evaluate(getContext());
-        if (!result.canRun()) { showBlocked(result); return true; }
-        showConfirmation(result); return true;
-    }
-
-    private void showBlocked(ManagerCompatibility.Result result) {
-        Dialog dialog=createDialog(); LinearLayout box=box();
-        TextView title=text(20,true); title.setText(blockTitle(result)); box.addView(title,margin(-1,-2,0,0,0,7));
-        TextView message=text(13,false); message.setText(blockMessage(result)); message.setLineSpacing(0,1.08f); box.addView(message,margin(-1,-2,0,0,0,16));
-        if(result.state==ManagerCompatibility.State.MANAGER_REQUIRED){MaterialButton install=actionButton("Install supported manager",true);install.setOnClickListener(v->{dialog.dismiss();showManagerPicker();});box.addView(install,margin(-1,dp(54),0,0,0,14));}
-        MaterialButton close=actionButton("Close",false);close.setOnClickListener(v->dialog.dismiss());box.addView(close,margin(-1,dp(48),0,0,0,0));show(dialog,box);
-    }
-
-    private void showConfirmation(ManagerCompatibility.Result result) {
-        Dialog dialog=createDialog(); LinearLayout box=box();
-        TextView title=text(20,true);title.setText("Run GhostLock");box.addView(title,margin(-1,-2,0,0,0,4));
-        TextView subtitle=text(12,false);subtitle.setText("Execute kernel exploit & runtime");box.addView(subtitle,margin(-1,-2,0,0,0,16));
-        LinearLayout info=new LinearLayout(getContext());info.setOrientation(LinearLayout.VERTICAL);info.setBackground(round(color(R.color.surface_container_low),16));info.setPadding(dp(12),dp(10),dp(12),dp(10));
-        info.addView(infoRow("Kernel",result.kernelSupported?"Kernel supported":"Kernel unsupported",result.kernelSupported?R.color.status_success:R.color.status_error),new LinearLayout.LayoutParams(-1,dp(44)));
-        info.addView(infoRow("Manager",result.manager.name,R.color.text_primary),margin(-1,dp(44),0,7,0,0));
-        String identity=result.manager.identityVerified?"Verified":"Recognized";
-        info.addView(infoRow("Identity",identity,result.manager.identityVerified?R.color.status_success:R.color.accent),margin(-1,dp(44),0,7,0,0));
-        box.addView(info,margin(-1,-2,0,0,0,16));
-        TextView message=text(12,false);message.setText("This operation will modify runtime state on the current device.");message.setLineSpacing(0,1.08f);box.addView(message,margin(-1,-2,0,0,0,16));
-        LinearLayout actions=new LinearLayout(getContext());actions.setGravity(Gravity.END|Gravity.CENTER_VERTICAL);
-        MaterialButton cancel=actionButton("Cancel",false);cancel.setOnClickListener(v->dialog.dismiss());
-        MaterialButton run=actionButton("Run",true);run.setOnClickListener(v->{dialog.dismiss();confirmedClick=true;performClick();});
-        actions.addView(cancel,new LinearLayout.LayoutParams(-2,dp(48)));LinearLayout.LayoutParams rp=new LinearLayout.LayoutParams(-2,dp(48));rp.leftMargin=dp(8);actions.addView(run,rp);box.addView(actions,new LinearLayout.LayoutParams(-1,dp(52)));show(dialog,box);
-    }
-
+    @Override public boolean performClick() { if(confirmedClick){confirmedClick=false;return super.performClick();} ManagerCompatibility.Result result=ManagerCompatibility.evaluate(getContext()); if(!result.canRun()){showBlocked(result);return true;} showConfirmation(result);return true; }
+    private void showBlocked(ManagerCompatibility.Result result){Dialog dialog=createDialog();LinearLayout box=box();TextView title=text(20,true);title.setText(blockTitle(result));box.addView(title,margin(-1,-2,0,0,0,7));TextView message=text(13,false);message.setText(blockMessage(result));message.setLineSpacing(0,1.08f);box.addView(message,margin(-1,-2,0,0,0,16));if(result.state==ManagerCompatibility.State.MANAGER_REQUIRED){MaterialButton install=actionButton("Install supported manager",true);install.setOnClickListener(v->{dialog.dismiss();showManagerPicker();});box.addView(install,margin(-1,dp(54),0,0,0,14));}MaterialButton close=actionButton("Close",false);close.setOnClickListener(v->dialog.dismiss());box.addView(close,margin(-1,dp(48),0,0,0,0));show(dialog,box);}
+    private void showConfirmation(ManagerCompatibility.Result result){Dialog dialog=createDialog();LinearLayout box=box();TextView title=text(20,true);title.setText("Run GhostLock");box.addView(title,margin(-1,-2,0,0,0,4));TextView subtitle=text(12,false);subtitle.setText("Execute kernel exploit & runtime");box.addView(subtitle,margin(-1,-2,0,0,0,16));LinearLayout info=new LinearLayout(getContext());info.setOrientation(LinearLayout.VERTICAL);info.setBackground(round(color(R.color.surface_container_low),16));info.setPadding(dp(12),dp(10),dp(12),dp(10));info.addView(infoRow("Kernel",result.kernelSupported?"Kernel supported":"Kernel unsupported",result.kernelSupported?R.color.status_success:R.color.status_error),new LinearLayout.LayoutParams(-1,dp(44)));info.addView(infoRow("Manager",result.manager.name,R.color.text_primary),margin(-1,dp(44),0,7,0,0));String identity=result.manager.identityVerified?"Verified":"Recognized";info.addView(infoRow("Identity",identity,result.manager.identityVerified?R.color.status_success:R.color.accent),margin(-1,dp(44),0,7,0,0));box.addView(info,margin(-1,-2,0,0,0,16));TextView message=text(12,false);message.setText("This operation will modify runtime state on the current device.");message.setLineSpacing(0,1.08f);box.addView(message,margin(-1,-2,0,0,0,16));LinearLayout actions=new LinearLayout(getContext());actions.setGravity(Gravity.END|Gravity.CENTER_VERTICAL);MaterialButton cancel=actionButton("Cancel",false);cancel.setOnClickListener(v->dialog.dismiss());MaterialButton run=actionButton("Run",true);run.setOnClickListener(v->{dialog.dismiss();confirmedClick=true;performClick();});actions.addView(cancel,new LinearLayout.LayoutParams(-2,dp(48)));LinearLayout.LayoutParams rp=new LinearLayout.LayoutParams(-2,dp(48));rp.leftMargin=dp(8);actions.addView(run,rp);box.addView(actions,new LinearLayout.LayoutParams(-1,dp(52)));show(dialog,box);}
     private void showManagerPicker(){Dialog dialog=createDialog();LinearLayout box=box();TextView title=text(19,true);title.setText("Install supported manager");box.addView(title);TextView subtitle=text(12,false);subtitle.setText("Select a registered manager to continue.");box.addView(subtitle,margin(-1,-2,0,6,0,14));for(ManagerCompatibility.ManagerInfo manager:ManagerCompatibility.registeredManagers(getContext())){TextView row=text(14,true);row.setText(manager.name+(manager.installed?"  ·  Installed":"  ·  Not installed"));row.setGravity(Gravity.CENTER_VERTICAL);row.setPadding(dp(14),0,dp(14),0);row.setBackground(round(color(R.color.surface_container_low),16));row.setClickable(true);row.setFocusable(true);row.setOnClickListener(v->{dialog.dismiss();ManagerCompatibility.openInstaller(getContext(),manager);});box.addView(row,margin(-1,dp(54),0,0,0,9));}MaterialButton cancel=actionButton("Cancel",false);cancel.setOnClickListener(v->dialog.dismiss());box.addView(cancel,margin(-1,dp(48),0,4,0,0));show(dialog,box);}
-
     private LinearLayout infoRow(String label,String value,int colorRes){LinearLayout row=new LinearLayout(getContext());row.setGravity(Gravity.CENTER_VERTICAL);TextView labelView=text(12,true);labelView.setText(label);row.addView(labelView,new LinearLayout.LayoutParams(0,dp(44),1));TextView valueView=text(12,true);valueView.setText(value);valueView.setTextColor(color(colorRes));valueView.setGravity(Gravity.END|Gravity.CENTER_VERTICAL);valueView.setMaxLines(1);row.addView(valueView,new LinearLayout.LayoutParams(-2,dp(44)));return row;}
     private String blockTitle(ManagerCompatibility.Result result){switch(result.state){case MANAGER_REQUIRED:return "Manager required";case KERNEL_UNSUPPORTED_MANAGER_REQUIRED:return "Kernel and manager unavailable";case SPOOFED_MANAGER:return "Manager identity mismatch";case UNSUPPORTED_MANAGER:return "Unsupported manager";default:return "Kernel unsupported";}}
     private String blockMessage(ManagerCompatibility.Result result){switch(result.state){case MANAGER_REQUIRED:return "The kernel is supported, but a registered manager is not installed.";case KERNEL_UNSUPPORTED_MANAGER_REQUIRED:return "The current kernel is not supported and no manager is installed. Installing a manager will not make this kernel compatible.";case SPOOFED_MANAGER:return "The detected manager identity is not trusted. Check the package and signing certificate before running GhostLock.";case UNSUPPORTED_MANAGER:return "The installed manager is not registered with GhostLock.";default:return "The current kernel does not provide the capability required by GhostLock.";}}
