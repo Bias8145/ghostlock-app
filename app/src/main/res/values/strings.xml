@@ -68,4 +68,7 @@
     <string name="about_modder_title">About modder</string>
     <string name="about_modder_summary">VOLD_NAMESPACE (khaliq)</string>
     <string name="about_modder_message">GhostLock modification by VOLD_NAMESPACE (khaliq).\nOriginal project and developer credit are retained.</string>
+    <string name="settings_app_scale_summary">Scale the app UI without changing system font size</string>
+    <string name="settings_theme_summary">Light, Dark, or System theme</string>
+    <string name="settings_cpu_summary">Select the CPU profile used by GhostLock</string>
 </resources>
