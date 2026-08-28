@@ -6,6 +6,7 @@ import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.ContentValues;
@@ -122,6 +123,7 @@ public class MainActivity extends Activity {
     private final List<String> cpuPairLabels = new ArrayList<>();
     private final Map<View, ValueAnimator> viewAnimators = new HashMap<>();
     private TextView deviceInfo;
+    private View runtimeStatus;
     private TextView logView;
     private LinearLayout kernelChip;
     private TextView kernelChipText;
@@ -487,6 +489,7 @@ public class MainActivity extends Activity {
 
         rootView = findViewById(R.id.root);
         deviceInfo = findViewById(R.id.deviceInfo);
+        runtimeStatus = findViewById(R.id.runtimeStatus);
         logView = findViewById(R.id.logView);
         logScroll = findViewById(R.id.logScroll);
         runButton = findViewById(R.id.runButton);
@@ -524,7 +527,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.navSettings).setOnClickListener(v -> {
             setPanelBlur(false);
             if (advancedPanel.getVisibility() != View.VISIBLE) animateShow(advancedPanel);
-            advancedPanel.post(() -> rootView.findViewById(R.id.contentScroll).smoothScrollTo(0, advancedPanel.getTop()));
+            advancedPanel.post(() -> ((androidx.core.widget.NestedScrollView) rootView.findViewById(R.id.contentScroll)).smoothScrollTo(0, advancedPanel.getTop()));
         });
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.spinner_item_right, cpuPairLabels);
