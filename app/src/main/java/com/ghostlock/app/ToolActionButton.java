@@ -2,6 +2,7 @@ package com.ghostlock.app;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
@@ -16,7 +17,7 @@ public class ToolActionButton extends ImageButton {
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
-        if (super.getVisibility() != View.VISIBLE) {
+        if (getVisibility() != View.VISIBLE) {
             syncRow(false);
         } else {
             styleLabel();
@@ -30,35 +31,38 @@ public class ToolActionButton extends ImageButton {
     }
 
     private void syncRow(boolean show) {
-        if (!(getParent() instanceof ViewGroup)) return;
-        ViewGroup row = (ViewGroup) getParent();
+        View parent = getParent();
+        if (!(parent instanceof ViewGroup)) return;
+        ViewGroup row = (ViewGroup) parent;
         row.setVisibility(show ? View.VISIBLE : View.GONE);
         for (int i = 0; i < row.getChildCount(); i++) {
             View child = row.getChildAt(i);
             if (child instanceof TextView) {
-                child.setVisibility(show ? View.VISIBLE : View.GONE);
-                child.setBackgroundResource(R.drawable.bg_tool_label);
-                child.setPadding(dp(12), 0, dp(12), 0);
-                child.setGravity(android.view.Gravity.CENTER);
-                child.setSingleLine(true);
-                child.setElevation(dp(2));
+                TextView label = (TextView) child;
+                label.setVisibility(show ? View.VISIBLE : View.GONE);
+                styleLabel(label);
             }
         }
     }
 
     private void styleLabel() {
-        if (!(getParent() instanceof ViewGroup)) return;
-        ViewGroup row = (ViewGroup) getParent();
+        View parent = getParent();
+        if (!(parent instanceof ViewGroup)) return;
+        ViewGroup row = (ViewGroup) parent;
         for (int i = 0; i < row.getChildCount(); i++) {
             View child = row.getChildAt(i);
             if (child instanceof TextView) {
-                child.setBackgroundResource(R.drawable.bg_tool_label);
-                child.setPadding(dp(12), 0, dp(12), 0);
-                child.setGravity(android.view.Gravity.CENTER);
-                child.setSingleLine(true);
-                child.setElevation(dp(2));
+                styleLabel((TextView) child);
             }
         }
+    }
+
+    private void styleLabel(TextView label) {
+        label.setBackgroundResource(R.drawable.bg_tool_label);
+        label.setPadding(dp(12), 0, dp(12), 0);
+        label.setGravity(Gravity.CENTER);
+        label.setSingleLine(true);
+        label.setElevation(dp(2));
     }
 
     private int dp(int value) {
