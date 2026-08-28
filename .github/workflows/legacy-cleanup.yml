@@ -1,0 +1,29 @@
+name: Legacy Cleanup
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [Test]
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: Test
+          fetch-depth: 0
+      - name: Remove generated workflow scaffolding after execution
+        shell: bash
+        run: |
+          # Keep source files untouched; remove only temporary marker files if present.
+          find app/build -type f -name '*.tmp' -delete 2>/dev/null || true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m "chore: clean temporary build artifacts"
+          git push origin HEAD:Test
