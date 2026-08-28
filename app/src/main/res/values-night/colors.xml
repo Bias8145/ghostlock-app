@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg">#FF121412</color>
+    <color name="surface">#FF1B1D1A</color>
+    <color name="surface_container_low">#FF20221F</color>
+    <color name="surface_container">#FF2A2C28</color>
+    <color name="text_primary">#FFE4E3DD</color>
+    <color name="text_secondary">#FFBFC1BA</color>
+    <color name="icon_tint">#FFD6B66A</color>
+    <color name="theme_icon_light">#FF4A3B22</color>
+    <color name="theme_icon_dark">#FFD6B66A</color>
+    <color name="accent">#FFD6B66A</color>
+    <color name="primary">#FFD6B66A</color>
+    <color name="accent_pressed">#FFE7C982</color>
+    <color name="accent_disabled">#FF6B624F</color>
+    <color name="accent_container">#FF4D4125</color>
+    <color name="on_accent">#FF261F0C</color>
+    <color name="on_accent_container">#FFF3E2B7</color>
+    <color name="border">#FF8D8E87</color>
+    <color name="outline_variant">#FF454741</color>
+    <color name="divider">#FF353732</color>
+    <color name="status_success">#FFA8D59A</color>
+    <color name="status_success_bg">#FF294326</color>
+    <color name="status_error">#FFFFB4AB</color>
+    <color name="status_error_bg">#FF4A2522</color>
+    <color name="log_bg">#FF171916</color>
+    <color name="log_border">#FF454741</color>
+    <color name="log_divider">#668D8E87</color>
+    <color name="log_text">#FFD7D8D1</color>
+    <color name="log_title">#FFE4E3DD</color>
+    <color name="log_secondary">#FFBFC1BA</color>
+    <color name="launcher_icon_background">#FF4D4125</color>
+</resources>

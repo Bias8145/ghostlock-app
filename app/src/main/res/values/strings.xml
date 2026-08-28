@@ -44,6 +44,12 @@
     <string name="support_label">Support</string>
     <string name="cpu_pair_label">CPU cores</string>
     <string name="header_subtitle">Kernel exploit &amp; runtime control</string>
+    <string name="device_info_title">DEVICE INFO</string>
+    <string name="settings_advanced_title">SETTINGS &amp; ADVANCED</string>
+    <string name="status_ready">READY</string>
+    <string name="action_copy_log">Copy log</string>
+    <string name="tools_title">Tools</string>
+    <string name="tools_subtitle">Utilities &amp; advanced actions</string>
     <string name="about_modder_title">About modder</string>
     <string name="about_modder_summary">VOLD_NAMESPACE (khaliq)</string>
     <string name="about_modder_message">GhostLock modification by VOLD_NAMESPACE (khaliq).\nOriginal project and developer credit are retained.</string>
