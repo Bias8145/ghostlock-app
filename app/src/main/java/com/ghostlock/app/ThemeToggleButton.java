@@ -22,7 +22,7 @@ public class ThemeToggleButton extends ImageButton {
 
     private void init() {
         setOnClickListener(v -> toggleTheme());
-        setContentDescription("Toggle light and dark theme");
+        setContentDescription(getContext().getString(R.string.action_theme_toggle));
         setScaleType(ScaleType.CENTER_INSIDE);
         setMinimumWidth(dp(48));
         setMinimumHeight(dp(48));
@@ -65,7 +65,7 @@ public class ThemeToggleButton extends ImageButton {
         setAlpha(1f);
         setScaleType(ScaleType.CENTER_INSIDE);
         setPadding(dp(10), dp(10), dp(10), dp(10));
-        setContentDescription(dark ? "Switch to light theme" : "Switch to dark theme");
+        setContentDescription(getContext().getString(dark ? R.string.action_switch_light_theme : R.string.action_switch_dark_theme));
     }
 
     @Override protected void onConfigurationChanged(Configuration newConfig) {

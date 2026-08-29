@@ -4,6 +4,9 @@
     <string name="action_run">Run</string>
     <string name="action_running">Running…</string>
     <string name="action_advanced">Settings</string>
+    <string name="action_theme_toggle">Toggle light and dark theme</string>
+    <string name="action_switch_light_theme">Switch to light theme</string>
+    <string name="action_switch_dark_theme">Switch to dark theme</string>
     <string name="action_import_offsets">Import offsets.json</string>
     <string name="action_export_offsets">Export offsets.json</string>
     <string name="action_parse_ota">Parse OTA link</string>
