@@ -46,10 +46,18 @@ public class ThemeToggleButton extends ImageButton {
         int next = (getSavedMode(activity) + 1) % 3;
         UiModeManager manager = getModeManager(activity);
         if (manager == null) return;
-        activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putInt(PREF_THEME, next).apply();
+        // Persist first so recreation always restores the mode selected by the user.
+        boolean saved = activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .edit().putInt(PREF_THEME, next).commit();
+        if (!saved) return;
+
         int nightMode = next == SYSTEM ? UiModeManager.MODE_NIGHT_AUTO
                 : next == DARK ? UiModeManager.MODE_NIGHT_YES : UiModeManager.MODE_NIGHT_NO;
-        manager.setApplicationNightMode(nightMode);
+        if (manager.getNightMode() != nightMode) {
+            manager.setApplicationNightMode(nightMode);
+        }
+        updateIconState();
+        animate().rotationBy(360f).setDuration(420L).start();
         activity.recreate();
     }
 

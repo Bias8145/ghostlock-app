@@ -22,11 +22,11 @@
     <color name="status_success_bg">#FFDDEEDF</color>
     <color name="status_error">#FF9A5E68</color>
     <color name="status_error_bg">#FFF5DDE1</color>
-    <color name="log_bg">#FF292831</color>
-    <color name="log_border">#FF4D4855</color>
+    <color name="log_bg">#FFF0EBF4</color>
+    <color name="log_border">#FFD8CCDF</color>
     <color name="log_divider">#665F5968</color>
-    <color name="log_text">#FFF2EDF3</color>
-    <color name="log_title">#FFFFF9FF</color>
-    <color name="log_secondary">#FFC3B9C6</color>
+    <color name="log_text">#FF302A35</color>
+    <color name="log_title">#FF211D26</color>
+    <color name="log_secondary">#FF746879</color>
     <color name="launcher_icon_background">#FFF1DCEB</color>
 </resources>
