@@ -5,12 +5,12 @@
 ## Supported Devices
 
 | Kernel                                                 | Devices                                                          |
-| ------------------------------------------------------ |------------------------------------------------------------------|
+| ------------------------------------------------------ | ---------------------------------------------------------------- |
 | `6.1.118-android14-11-ga3b9c44908dd-ab13320413`        | Redmi Note 15 Pro+                                               |
 | `6.1.118-android14-11-gca0ef6d17716-ab13624819`        | Xiaomi 14                                                        |
 | `6.1.138-android14-11-g0c3d559bcd85-ab14529422`        | Xiaomi 14                                                        |
 | `6.1.145-android14-11-g09f1c0074ad7-ab14226177`        | Infinix Note 50s 5G                                              |
-| `6.1.145-android14-11-g74d1702dab4d-ab14669069`        | Vivo T4                                                          | 
+| `6.1.145-android14-11-g74d1702dab4d-ab14669069`        | vivo T4                                                          |
 | `6.1.145-android14-11-geaa643a2c0ee-ab14763719`        | Motorola Razr 50 Ultra / Motorola Razr+ 2024                     |
 | `6.1.162-android14-11-gce140c0e5bf5-ab15450923`        | Zenfone 11 Ultra                                                 |
 | `6.6.30-android15-8-g54dcbfbef792-ab12368803-4k`       | Red Magic Tablet 3 Pro                                           |
@@ -72,6 +72,10 @@ tools/extract_rs/target/release/ghostlock-extract.exe OTA.zip --format json --ou
 ```
 
 `--register` saves the table under `src/kernels/<uname-release>/offsets.h`; `--format c --out offsets.h` dumps a standalone header.
+
+### Preflight
+
+The extractor disassembles `remove_waiter()` before extracting offsets. Kernels with the fix are rejected with exit code `6`; only vulnerable kernels continue.
 
 ### On-device analysis
 
