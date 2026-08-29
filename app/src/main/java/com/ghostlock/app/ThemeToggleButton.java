@@ -6,9 +6,8 @@ import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.res.Configuration;
 import android.widget.ImageButton;
-import androidx.core.content.ContextCompat;
 
-/** Compact Light/Dark theme toggle used in the main header. */
+/** Header theme control cycling System, Light, and Dark modes. */
 public class ThemeToggleButton extends ImageButton {
     private static final String PREFS = "ghostlock_prefs";
     private static final String PREF_THEME = "theme_mode";
@@ -21,51 +20,55 @@ public class ThemeToggleButton extends ImageButton {
     public ThemeToggleButton(Context context, android.util.AttributeSet attrs, int defStyleAttr) { super(context, attrs, defStyleAttr); init(); }
 
     private void init() {
-        setOnClickListener(v -> toggleTheme());
-        setContentDescription(getContext().getString(R.string.action_theme_toggle));
+        setOnClickListener(v -> cycleThemeMode());
         setScaleType(ScaleType.CENTER_INSIDE);
         setMinimumWidth(dp(48));
         setMinimumHeight(dp(48));
         setPadding(dp(10), dp(10), dp(10), dp(10));
-        applySavedThemeIfNeeded();
+        applySavedTheme();
         updateIconState();
     }
 
-    private void applySavedThemeIfNeeded() {
+    private void applySavedTheme() {
         Activity activity = findActivity(getContext());
         if (activity == null) return;
-        int saved = activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getInt(PREF_THEME, SYSTEM);
-        if (saved == SYSTEM) return;
-        UiModeManager manager = (UiModeManager) activity.getSystemService(Context.UI_MODE_SERVICE);
+        int saved = getSavedMode(activity);
+        UiModeManager manager = getModeManager(activity);
         if (manager == null) return;
-        int desired = saved == DARK ? UiModeManager.MODE_NIGHT_YES : UiModeManager.MODE_NIGHT_NO;
+        int desired = saved == SYSTEM ? UiModeManager.MODE_NIGHT_AUTO
+                : saved == DARK ? UiModeManager.MODE_NIGHT_YES : UiModeManager.MODE_NIGHT_NO;
         if (manager.getNightMode() != desired) manager.setApplicationNightMode(desired);
     }
 
-    private void toggleTheme() {
+    private void cycleThemeMode() {
         Activity activity = findActivity(getContext());
         if (activity == null) return;
-        UiModeManager manager = (UiModeManager) activity.getSystemService(Context.UI_MODE_SERVICE);
+        int next = (getSavedMode(activity) + 1) % 3;
+        UiModeManager manager = getModeManager(activity);
         if (manager == null) return;
-        boolean dark = isDarkMode();
-        int next = dark ? LIGHT : DARK;
         activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putInt(PREF_THEME, next).apply();
-        manager.setApplicationNightMode(dark ? UiModeManager.MODE_NIGHT_NO : UiModeManager.MODE_NIGHT_YES);
+        int nightMode = next == SYSTEM ? UiModeManager.MODE_NIGHT_AUTO
+                : next == DARK ? UiModeManager.MODE_NIGHT_YES : UiModeManager.MODE_NIGHT_NO;
+        manager.setApplicationNightMode(nightMode);
         activity.recreate();
     }
 
-    private boolean isDarkMode() {
-        return (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+    private int getSavedMode(Activity activity) {
+        int mode = activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getInt(PREF_THEME, SYSTEM);
+        return mode >= SYSTEM && mode <= DARK ? mode : SYSTEM;
+    }
+
+    private static UiModeManager getModeManager(Activity activity) {
+        return (UiModeManager) activity.getSystemService(Context.UI_MODE_SERVICE);
     }
 
     private void updateIconState() {
-        boolean dark = isDarkMode();
-        setImageResource(dark ? R.drawable.ic_theme_moon : R.drawable.ic_theme_sun);
-        setColorFilter(ContextCompat.getColor(getContext(), dark ? R.color.theme_icon_dark : R.color.theme_icon_light));
-        setAlpha(1f);
-        setScaleType(ScaleType.CENTER_INSIDE);
-        setPadding(dp(10), dp(10), dp(10), dp(10));
-        setContentDescription(getContext().getString(dark ? R.string.action_switch_light_theme : R.string.action_switch_dark_theme));
+        Activity activity = findActivity(getContext());
+        int mode = activity == null ? SYSTEM : getSavedMode(activity);
+        setImageResource(mode == SYSTEM ? R.drawable.ic_theme : mode == DARK ? R.drawable.ic_theme_moon : R.drawable.ic_theme_sun);
+        setColorFilter(getResources().getColor(mode == DARK ? R.color.theme_icon_dark : R.color.theme_icon_light));
+        setContentDescription(getContext().getString(mode == SYSTEM ? R.string.action_theme_system
+                : mode == DARK ? R.string.action_theme_dark : R.string.action_theme_light));
     }
 
     @Override protected void onConfigurationChanged(Configuration newConfig) {
