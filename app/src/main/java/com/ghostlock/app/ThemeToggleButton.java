@@ -37,7 +37,10 @@ public class ThemeToggleButton extends ImageButton {
         if (manager == null) return;
         int desired = saved == SYSTEM ? UiModeManager.MODE_NIGHT_AUTO
                 : saved == DARK ? UiModeManager.MODE_NIGHT_YES : UiModeManager.MODE_NIGHT_NO;
-        if (manager.getNightMode() != desired) manager.setApplicationNightMode(desired);
+        // Apply only the persisted app mode; never infer a new preference from the system state.
+        if (manager.getNightMode() != desired) {
+            manager.setApplicationNightMode(desired);
+        }
     }
 
     private void cycleThemeMode() {
