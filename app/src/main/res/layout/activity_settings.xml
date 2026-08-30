@@ -1,126 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/bg"
-    android:fitsSystemWindows="true">
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fillViewport="true"
-        android:clipToPadding="false"
-        android:paddingStart="16dp"
-        android:paddingTop="4dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="28dp">
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginBottom="8dp"
-                android:gravity="center_vertical">
-                <ImageView
-                    android:layout_width="34dp"
-                    android:layout_height="34dp"
-                    android:padding="6dp"
-                    android:src="@drawable/ic_advanced"
-                    android:tint="@color/icon_tint" />
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="5dp"
-                    android:text="Settings"
-                    android:textColor="@color/text_primary"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/bg" android:fitsSystemWindows="true">
+    <ScrollView android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:clipToPadding="false" android:paddingStart="16dp" android:paddingTop="4dp" android:paddingEnd="16dp" android:paddingBottom="28dp">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginBottom="8dp" android:gravity="center_vertical">
+                <ImageView android:layout_width="34dp" android:layout_height="34dp" android:padding="6dp" android:src="@drawable/ic_advanced" android:tint="@color/icon_tint" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="5dp" android:text="Settings" android:textColor="@color/text_primary" android:textSize="20sp" android:textStyle="bold" />
             </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/settingsBackRow"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:layout_marginBottom="12dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-                <ImageButton
-                    android:id="@+id/backButton"
-                    android:layout_width="42dp"
-                    android:layout_height="42dp"
-                    android:background="@drawable/bg_tool_header"
-                    android:contentDescription="Back to Home"
-                    android:padding="9dp"
-                    android:src="@drawable/ic_chevron_down"
-                    android:rotation="90"
-                    android:tint="@color/icon_tint" />
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
-                    android:orientation="vertical">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Back to Home"
-                        android:textColor="@color/text_primary"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="1dp"
-                        android:text="Return to the main page"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="10sp" />
+            <LinearLayout android:id="@+id/settingsBackRow" android:layout_width="match_parent" android:layout_height="52dp" android:layout_marginBottom="12dp" android:clickable="true" android:focusable="true" android:gravity="center_vertical" android:orientation="horizontal">
+                <ImageButton android:id="@+id/backButton" android:layout_width="42dp" android:layout_height="42dp" android:background="@drawable/bg_tool_header" android:contentDescription="Back to Home" android:padding="9dp" android:src="@drawable/ic_chevron_down" android:rotation="90" android:tint="@color/icon_tint" />
+                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="10dp" android:orientation="vertical">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Back to Home" android:textColor="@color/text_primary" android:textSize="13sp" android:textStyle="bold" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="1dp" android:text="Return to the main page" android:textColor="@color/text_secondary" android:textSize="10sp" />
                 </LinearLayout>
             </LinearLayout>
-
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                app:cardBackgroundColor="@color/surface_container_low"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="0dp"
-                app:strokeWidth="0dp">
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+            <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp" app:cardBackgroundColor="@color/surface_container_low" app:cardCornerRadius="20dp" app:cardElevation="0dp" app:strokeWidth="0dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="CPU PAIR" android:textColor="@color/text_secondary" android:textSize="11sp" android:textStyle="bold" />
                     <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Select the CPU pair used by GhostLock." android:textColor="@color/text_secondary" android:textSize="12sp" />
                     <Spinner android:id="@+id/cpuSpinner" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="10dp" android:background="@drawable/bg_spinner" android:popupBackground="@drawable/bg_spinner_popup" android:paddingStart="14dp" android:paddingEnd="6dp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:layout_marginBottom="8dp"
-                android:text="DEVELOPER &amp; RESOURCES"
-                android:textColor="@color/text_secondary"
-                android:textSize="11sp"
-                android:textStyle="bold" />
-
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/anotherResourcePanel"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:clickable="true"
-                android:focusable="true"
-                app:cardBackgroundColor="@color/surface_container_low"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="0dp"
-                app:strokeWidth="0dp">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:layout_marginBottom="8dp" android:text="DEVELOPER &amp; RESOURCES" android:textColor="@color/text_secondary" android:textSize="11sp" android:textStyle="bold" />
+            <com.google.android.material.card.MaterialCardView android:id="@+id/anotherResourcePanel" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="8dp" android:clickable="true" android:focusable="true" app:cardBackgroundColor="@color/surface_container_low" app:cardCornerRadius="20dp" app:cardElevation="0dp" app:strokeWidth="0dp">
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
                     <LinearLayout android:layout_width="match_parent" android:layout_height="56dp" android:gravity="center_vertical" android:paddingStart="16dp" android:paddingEnd="12dp">
                         <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_telegram" android:tint="@color/icon_tint" />
@@ -130,83 +31,50 @@
                     <LinearLayout android:id="@+id/anotherResourceDetails" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="52dp" android:paddingEnd="16dp" android:paddingBottom="16dp" android:visibility="gone">
                         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Developer Mod" android:textColor="@color/text_primary" android:textSize="12sp" android:textStyle="bold" />
                         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Custom ROM &amp; Google Pixel resources for Pixel 3, 3 XL, 4, 4 XL, 4a, 4a 5G and 5." android:textColor="@color/text_secondary" android:textSize="11sp" />
-                        <TextView android:id="@+id/anotherResourceAction" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="Open Telegram  →" android:textColor="@color/icon_tint" android:textSize="12sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/anotherResourceAction" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="Open  →" android:textColor="@color/icon_tint" android:textSize="12sp" android:textStyle="bold" />
                     </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
-
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/telegramChannelPanel"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:clickable="true"
-                android:focusable="true"
-                app:cardBackgroundColor="@color/surface_container_low"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="0dp"
-                app:strokeWidth="0dp">
+            <com.google.android.material.card.MaterialCardView android:id="@+id/telegramChannelPanel" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="8dp" android:clickable="true" android:focusable="true" app:cardBackgroundColor="@color/surface_container_low" app:cardCornerRadius="20dp" app:cardElevation="0dp" app:strokeWidth="0dp">
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
                     <LinearLayout android:layout_width="match_parent" android:layout_height="56dp" android:gravity="center_vertical" android:paddingStart="16dp" android:paddingEnd="12dp">
                         <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_telegram" android:tint="@color/icon_tint" />
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="12dp" android:text="Telegram Channel" android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" />
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="12dp" android:text="Khaliq" android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" />
                         <ImageView android:id="@+id/telegramChannelChevron" android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_chevron_down" android:tint="@color/icon_tint" />
                     </LinearLayout>
                     <LinearLayout android:id="@+id/telegramChannelDetails" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="52dp" android:paddingEnd="16dp" android:paddingBottom="16dp" android:visibility="gone">
-                        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Developer Mod" android:textColor="@color/text_primary" android:textSize="12sp" android:textStyle="bold" />
-                        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="News, updates, releases and project information from the developer." android:textColor="@color/text_secondary" android:textSize="11sp" />
-                        <TextView android:id="@+id/telegramChannelAction" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="Open Telegram Channel  →" android:textColor="@color/icon_tint" android:textSize="12sp" android:textStyle="bold" />
+                        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Developer" android:textColor="@color/text_primary" android:textSize="12sp" android:textStyle="bold" />
+                        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Developer contact and project communication." android:textColor="@color/text_secondary" android:textSize="11sp" />
+                        <TextView android:id="@+id/telegramChannelAction" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="Open  →" android:textColor="@color/icon_tint" android:textSize="12sp" android:textStyle="bold" />
                     </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
-
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/developerGithubPanel"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:clickable="true"
-                android:focusable="true"
-                app:cardBackgroundColor="@color/surface_container_low"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="0dp"
-                app:strokeWidth="0dp">
+            <com.google.android.material.card.MaterialCardView android:id="@+id/developerGithubPanel" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="8dp" android:clickable="true" android:focusable="true" app:cardBackgroundColor="@color/surface_container_low" app:cardCornerRadius="20dp" app:cardElevation="0dp" app:strokeWidth="0dp">
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
                     <LinearLayout android:layout_width="match_parent" android:layout_height="56dp" android:gravity="center_vertical" android:paddingStart="16dp" android:paddingEnd="12dp">
                         <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_github" android:tint="@color/icon_tint" />
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="12dp" android:text="Developer GitHub" android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" />
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="12dp" android:text="Bias8145" android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" />
                         <ImageView android:id="@+id/developerGithubChevron" android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_chevron_down" android:tint="@color/icon_tint" />
                     </LinearLayout>
                     <LinearLayout android:id="@+id/developerGithubDetails" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="52dp" android:paddingEnd="16dp" android:paddingBottom="16dp" android:visibility="gone">
                         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Developer Mod" android:textColor="@color/text_primary" android:textSize="12sp" android:textStyle="bold" />
                         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Source code, development, fixes and Android projects from the developer." android:textColor="@color/text_secondary" android:textSize="11sp" />
-                        <TextView android:id="@+id/developerGithubAction" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="Open GitHub  →" android:textColor="@color/icon_tint" android:textSize="12sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/developerGithubAction" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="Open  →" android:textColor="@color/icon_tint" android:textSize="12sp" android:textStyle="bold" />
                     </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
-
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/originalSourcePanel"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                android:clickable="true"
-                android:focusable="true"
-                app:cardBackgroundColor="@color/surface_container_low"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="0dp"
-                app:strokeWidth="0dp">
+            <com.google.android.material.card.MaterialCardView android:id="@+id/originalSourcePanel" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp" android:clickable="true" android:focusable="true" app:cardBackgroundColor="@color/surface_container_low" app:cardCornerRadius="20dp" app:cardElevation="0dp" app:strokeWidth="0dp">
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
                     <LinearLayout android:layout_width="match_parent" android:layout_height="56dp" android:gravity="center_vertical" android:paddingStart="16dp" android:paddingEnd="12dp">
                         <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_github" android:tint="@color/icon_tint" />
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="12dp" android:text="Original Source" android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" />
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="12dp" android:text="Original GhostLock" android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" />
                         <ImageView android:id="@+id/originalSourceChevron" android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_chevron_down" android:tint="@color/icon_tint" />
                     </LinearLayout>
                     <LinearLayout android:id="@+id/originalSourceDetails" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="52dp" android:paddingEnd="16dp" android:paddingBottom="16dp" android:visibility="gone">
                         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Original GhostLock Project" android:textColor="@color/text_primary" android:textSize="12sp" android:textStyle="bold" />
                         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="GhostLock was originally created by YuKongA. This version is independently adapted and developed by Bias8145 for the specific needs of the Motorola G67 Power 5G, including device and kernel compatibility." android:textColor="@color/text_secondary" android:textSize="11sp" />
                         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="Special thanks to YuKongA for the original GhostLock project and the foundation used as a reference for this development." android:textColor="@color/text_secondary" android:textSize="11sp" />
-                        <TextView android:id="@+id/originalSourceAction" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="View Original Source  →" android:textColor="@color/icon_tint" android:textSize="12sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/originalSourceAction" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="View Source  →" android:textColor="@color/icon_tint" android:textSize="12sp" android:textStyle="bold" />
                     </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
