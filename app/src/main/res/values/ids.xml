@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Compatibility ID for MainActivity's legacy advanced-panel reference.
-         SettingsButton now opens the dedicated SettingsActivity directly. -->
-    <item name="advancedPanel" type="id" />
+    <!-- Legacy MainActivity reference. Alias it to the existing visible LinearLayout
+         so the old code remains non-null while the dedicated Settings screen owns
+         the actual Settings button behavior. -->
+    <item name="advancedPanel" type="id">@id/kernelChip</item>
 </resources>
