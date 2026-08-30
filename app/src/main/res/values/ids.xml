@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Compatibility ID for MainActivity's legacy advanced-panel reference.
+         SettingsButton now opens the dedicated SettingsActivity directly. -->
+    <item name="advancedPanel" type="id" />
+</resources>
