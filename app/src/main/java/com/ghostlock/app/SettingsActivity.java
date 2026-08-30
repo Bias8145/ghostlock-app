@@ -1,8 +1,13 @@
 package com.ghostlock.app;
 
 import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
 import java.io.BufferedReader;
 import java.io.File;
@@ -40,6 +45,41 @@ public class SettingsActivity extends Activity {
             }
             @Override public void onNothingSelected(android.widget.AdapterView<?> parent) { }
         });
+        setupResourcePanel(R.id.anotherResourcePanel, R.id.anotherResourceDetails, R.id.anotherResourceChevron, R.id.anotherResourceAction, "https://t.me/anocroooot");
+        setupResourcePanel(R.id.telegramChannelPanel, R.id.telegramChannelDetails, R.id.telegramChannelChevron, R.id.telegramChannelAction, "https://t.me/anocroooot");
+        setupResourcePanel(R.id.developerGithubPanel, R.id.developerGithubDetails, R.id.developerGithubChevron, R.id.developerGithubAction, "https://github.com/Bias8145/ghostlock-app");
+        setupResourcePanel(R.id.originalSourcePanel, R.id.originalSourceDetails, R.id.originalSourceChevron, R.id.originalSourceAction, "https://github.com/YuKongA/ghostlock-app");
+    }
+
+    private void setupResourcePanel(int panelId, int detailsId, int chevronId, int actionId, String url) {
+        View panel = findViewById(panelId);
+        View details = findViewById(detailsId);
+        ImageView chevron = findViewById(chevronId);
+        View action = findViewById(actionId);
+        panel.setOnClickListener(v -> {
+            boolean expand = details.getVisibility() != View.VISIBLE;
+            collapseAllResourcePanels(panelId);
+            details.setVisibility(expand ? View.VISIBLE : View.GONE);
+            chevron.setRotation(expand ? 180f : 0f);
+        });
+        action.setOnClickListener(v -> openUrl(url));
+    }
+
+    private void collapseAllResourcePanels(int exceptId) {
+        int[] panels = {R.id.anotherResourcePanel, R.id.telegramChannelPanel, R.id.developerGithubPanel, R.id.originalSourcePanel};
+        int[] details = {R.id.anotherResourceDetails, R.id.telegramChannelDetails, R.id.developerGithubDetails, R.id.originalSourceDetails};
+        int[] chevrons = {R.id.anotherResourceChevron, R.id.telegramChannelChevron, R.id.developerGithubChevron, R.id.originalSourceChevron};
+        for (int i = 0; i < panels.length; i++) {
+            if (panels[i] == exceptId) continue;
+            findViewById(details[i]).setVisibility(View.GONE);
+            findViewById(chevrons[i]).setRotation(0f);
+        }
+    }
+
+    private void openUrl(String url) {
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+        } catch (Exception ignored) { }
     }
 
     private void goHome() {
