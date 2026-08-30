@@ -5,6 +5,7 @@ import android.app.UiModeManager;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.res.Configuration;
+import android.content.res.ColorStateList;
 import android.widget.ImageButton;
 
 /** Header theme control cycling System, Light, and Dark modes. */
@@ -37,7 +38,7 @@ public class ThemeToggleButton extends ImageButton {
         if (manager == null) return;
         int desired = saved == SYSTEM ? UiModeManager.MODE_NIGHT_AUTO
                 : saved == DARK ? UiModeManager.MODE_NIGHT_YES : UiModeManager.MODE_NIGHT_NO;
-        // Apply only the persisted app mode; never infer a new preference from the system state.
+        // Persisted preference is authoritative; SYSTEM deliberately follows the OS.
         if (manager.getNightMode() != desired) {
             manager.setApplicationNightMode(desired);
         }
@@ -49,7 +50,6 @@ public class ThemeToggleButton extends ImageButton {
         int next = (getSavedMode(activity) + 1) % 3;
         UiModeManager manager = getModeManager(activity);
         if (manager == null) return;
-        // Persist first so recreation always restores the mode selected by the user.
         boolean saved = activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
                 .edit().putInt(PREF_THEME, next).commit();
         if (!saved) return;
@@ -59,13 +59,12 @@ public class ThemeToggleButton extends ImageButton {
         if (manager.getNightMode() != nightMode) {
             manager.setApplicationNightMode(nightMode);
         }
-        updateIconState();
         animate().rotationBy(360f).setDuration(420L).start();
         activity.recreate();
     }
 
     private int getSavedMode(Activity activity) {
-        int mode = activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getInt(PREF_THEME, SYSTEM);
+        int mode = activity.getSharedPreferences(PREFS, MODE_PRIVATE).getInt(PREF_THEME, SYSTEM);
         return mode >= SYSTEM && mode <= DARK ? mode : SYSTEM;
     }
 
@@ -76,8 +75,11 @@ public class ThemeToggleButton extends ImageButton {
     private void updateIconState() {
         Activity activity = findActivity(getContext());
         int mode = activity == null ? SYSTEM : getSavedMode(activity);
+        boolean dark = (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK)
+                == Configuration.UI_MODE_NIGHT_YES;
         setImageResource(mode == SYSTEM ? R.drawable.ic_theme : mode == DARK ? R.drawable.ic_theme_moon : R.drawable.ic_theme_sun);
-        setColorFilter(getResources().getColor(mode == DARK ? R.color.theme_icon_dark : R.color.theme_icon_light));
+        int tint = dark ? R.color.theme_icon_dark : R.color.theme_icon_light;
+        setImageTintList(ColorStateList.valueOf(getResources().getColor(tint)));
         setContentDescription(getContext().getString(mode == SYSTEM ? R.string.action_theme_system
                 : mode == DARK ? R.string.action_theme_dark : R.string.action_theme_light));
     }
