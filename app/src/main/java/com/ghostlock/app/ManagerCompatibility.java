@@ -30,7 +30,8 @@ public final class ManagerCompatibility {
         public final State state;
         public final ManagerInfo manager;
         Result(boolean k, State s, ManagerInfo m) { kernelSupported=k; state=s; manager=m; }
-        public boolean canRun() { return state == State.READY; }
+        /** A recognized manager remains usable even when its APK signature differs from the expected one. */
+        public boolean canRun() { return state == State.READY || state == State.SPOOFED_MANAGER; }
     }
 
     private static final class Registered {
@@ -77,8 +78,8 @@ public final class ManagerCompatibility {
             while ((line = reader.readLine()) != null) {
                 int p = line.indexOf("\"release\"");
                 if (p < 0) continue;
-                int first = line.indexOf('"', p + 9);
-                int second = first < 0 ? -1 : line.indexOf('"', first + 1);
+                int first = line.indexOf('\"', p + 9);
+                int second = first < 0 ? -1 : line.indexOf('\"', first + 1);
                 if (first >= 0 && second > first && version.equals(line.substring(first + 1, second))) return true;
             }
         } catch (Throwable ignored) {}
