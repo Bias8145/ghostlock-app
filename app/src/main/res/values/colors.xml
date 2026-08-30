@@ -25,7 +25,7 @@
     <color name="status_error_bg">#FFF5DDE1</color>
     <color name="log_bg">#FFF4EFE3</color>
     <color name="log_border">#00000000</color>
-    <color name="log_divider">#00000000</color>
+    <color name="log_divider">#FFE0D8C8</color>
     <color name="log_text">#FF302C25</color>
     <color name="log_title">#FF28241C</color>
     <color name="log_secondary">#FF756E61</color>
