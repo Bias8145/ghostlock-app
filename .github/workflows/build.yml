@@ -8,6 +8,7 @@ on:
       - main
       - ui/material3-redesign
       - redesign
+      - test
   pull_request:
     branches:
       - main
@@ -79,12 +80,12 @@ jobs:
           export KEY_PASSWORD="${{ secrets.KEY_PASSWORD }}"
           ./gradlew :app:assembleRelease --no-daemon
       - name: Rename Release APK
-        run: mv app/build/outputs/apk/release/*.apk GhostLock-release.apk
+        run: mv app/build/outputs/apk/release/*.apk "GhostLock App V2.apk"
       - name: Upload Release APK
         uses: actions/upload-artifact@v7
         with:
-          name: GhostLock-release
-          path: GhostLock-release.apk
+          name: GhostLock-App-V2
+          path: "GhostLock App V2.apk"
           archive: false
   post_telegram:
     needs: [build-apk]
