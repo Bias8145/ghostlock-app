@@ -1,0 +1,44 @@
+<resources>
+    <style name="Theme.GhostLock" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:windowBackground">@color/bg</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@color/bg</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="colorPrimary">@color/accent</item>
+        <item name="colorOnPrimary">@color/on_accent</item>
+        <item name="colorPrimaryContainer">@color/accent_container</item>
+        <item name="colorOnPrimaryContainer">@color/on_accent_container</item>
+        <item name="colorSecondary">@color/accent</item>
+        <item name="colorOnSecondary">@color/on_accent</item>
+        <item name="colorSecondaryContainer">@color/accent_container</item>
+        <item name="colorOnSecondaryContainer">@color/on_accent_container</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorSurfaceVariant">@color/surface_container_low</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorOnSurfaceVariant">@color/text_secondary</item>
+        <item name="colorOutline">@color/border</item>
+        <item name="colorOutlineVariant">@color/outline_variant</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.GhostLock.AlertDialog</item>
+        <item name="android:alertDialogTheme">@style/ThemeOverlay.GhostLock.AlertDialog</item>
+    </style>
+
+    <style name="ThemeOverlay.GhostLock.AlertDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorSurface">@color/surface_container</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorOnSurfaceVariant">@color/text_secondary</item>
+        <item name="colorPrimary">@color/accent</item>
+        <item name="colorOnPrimary">@color/on_accent</item>
+        <item name="colorSecondaryContainer">@color/accent_container</item>
+        <item name="colorOnSecondaryContainer">@color/on_accent_container</item>
+        <item name="colorOutline">@color/border</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.GhostLock.Dialog</item>
+        <item name="buttonBarPositiveButtonStyle">@style/Widget.GhostLock.DialogButton</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Widget.GhostLock.DialogButton</item>
+        <item name="buttonBarNeutralButtonStyle">@style/Widget.GhostLock.DialogButton</item>
+    </style>
+</resources>
