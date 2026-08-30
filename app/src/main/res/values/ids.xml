@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- Compatibility ID for MainActivity's legacy advanced-panel reference. -->
-    <item name="advancedPanel" type="id" />
-</resources>
