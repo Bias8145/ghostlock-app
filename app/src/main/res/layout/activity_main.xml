@@ -59,7 +59,7 @@
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <LinearLayout android:id="@+id/advancedPanel" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_gravity="top|center_horizontal" android:layout_marginStart="20dp" android:layout_marginTop="96dp" android:layout_marginEnd="20dp" android:background="@drawable/bg_spinner_popup" android:elevation="8dp" android:orientation="vertical" android:padding="14dp" android:visibility="gone">
+    <LinearLayout android:id="@+id/advancedPanel" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_gravity="center" android:layout_marginStart="24dp" android:layout_marginEnd="24dp" android:background="@drawable/bg_spinner_popup" android:elevation="12dp" android:orientation="vertical" android:padding="14dp" android:visibility="gone">
         <com.ghostlock.app.CollapsibleToolsLayout android:layout_width="match_parent" android:layout_height="wrap_content">
             <LinearLayout android:layout_width="match_parent" android:layout_height="56dp" android:background="@drawable/bg_tool_header" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="10dp" android:paddingEnd="6dp">
                 <ImageView android:layout_width="36dp" android:layout_height="36dp" android:padding="7dp" android:src="@drawable/ic_advanced" android:tint="@color/icon_tint"/>
