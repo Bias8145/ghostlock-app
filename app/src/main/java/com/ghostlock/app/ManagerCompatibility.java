@@ -30,8 +30,8 @@ public final class ManagerCompatibility {
         public final State state;
         public final ManagerInfo manager;
         Result(boolean k, State s, ManagerInfo m) { kernelSupported=k; state=s; manager=m; }
-        /** A recognized manager remains usable even when its APK signature differs from the expected one. */
-        public boolean canRun() { return state == State.READY || state == State.SPOOFED_MANAGER; }
+        /** Recognized managers remain usable when their APK signature differs; spoofed is a warning state. */
+        public boolean canRun() { return state == State.READY || (state == State.SPOOFED_MANAGER && manager.recognized); }
     }
 
     private static final class Registered {
@@ -54,11 +54,11 @@ public final class ManagerCompatibility {
         State state;
         if (!kernel) {
             if (!manager.installed) state = State.KERNEL_UNSUPPORTED_MANAGER_REQUIRED;
-            else if (manager.spoofed) state = State.SPOOFED_MANAGER;
+            else if (manager.recognized && manager.spoofed) state = State.SPOOFED_MANAGER;
             else if (!manager.recognized) state = State.UNSUPPORTED_MANAGER;
             else state = State.KERNEL_UNSUPPORTED;
         } else if (!manager.installed) state = State.MANAGER_REQUIRED;
-        else if (manager.spoofed) state = State.SPOOFED_MANAGER;
+        else if (manager.recognized && manager.spoofed) state = State.SPOOFED_MANAGER;
         else if (!manager.recognized) state = State.UNSUPPORTED_MANAGER;
         else state = State.READY;
         return new Result(kernel, state, manager);
@@ -103,7 +103,9 @@ public final class ManagerCompatibility {
                 String libDir = app.nativeLibraryDir == null ? "" : app.nativeLibraryDir;
                 if (new java.io.File(libDir, "libksud.so").isFile()) {
                     CharSequence label = app.loadLabel(pm);
-                    return new ManagerInfo(app.packageName, label == null ? app.packageName : label.toString(), "", true, false, false, true);
+                    // A library match is only a diagnostic fallback. It is not a recognized manager
+                    // and must never be treated as a spoofed/approved manager.
+                    return new ManagerInfo(app.packageName, label == null ? app.packageName : label.toString(), "", true, false, false, false);
                 }
             }
         } catch (Throwable ignored) {}
