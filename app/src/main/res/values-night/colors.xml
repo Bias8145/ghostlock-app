@@ -15,6 +15,7 @@
     <color name="accent_container">#FF574A2F</color>
     <color name="on_accent">#FF3B3017</color>
     <color name="on_accent_container">#FFF8E9B7</color>
+    <color name="run_text">#FF29261F</color>
     <color name="border">#00000000</color>
     <color name="outline_variant">#00000000</color>
     <color name="divider">#00000000</color>
