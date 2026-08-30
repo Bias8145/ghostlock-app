@@ -8,7 +8,7 @@ import android.content.res.Configuration;
 import android.content.res.ColorStateList;
 import android.widget.ImageButton;
 
-/** Theme control with guarded System/Light/Dark resolution. */
+/** Theme control with a single guarded transition path for System/Light/Dark. */
 public class ThemeToggleButton extends ImageButton {
     private static final String PREFS = "ghostlock_prefs";
     private static final String PREF_THEME = "theme_mode";
@@ -26,61 +26,57 @@ public class ThemeToggleButton extends ImageButton {
         setMinimumWidth(dp(48));
         setMinimumHeight(dp(48));
         setPadding(dp(10), dp(10), dp(10), dp(10));
-        applySavedTheme();
+        syncThemeFromPreference();
         updateIconState();
     }
 
-    private void applySavedTheme() {
+    /** Apply the persisted selection without guessing the system's light/dark state. */
+    private void syncThemeFromPreference() {
         Activity activity = findActivity(getContext());
         if (activity == null) return;
-        applyMode(activity, getSavedMode(activity));
+        int mode = getSavedMode(activity);
+        UiModeManager manager = getModeManager(activity);
+        if (manager == null) return;
+        int desired = resolveNightMode(mode);
+        if (manager.getNightMode() != desired) manager.setApplicationNightMode(desired);
     }
 
     private void cycleThemeMode() {
         Activity activity = findActivity(getContext());
         if (activity == null) return;
-
         int current = getSavedMode(activity);
         int next = (current + 1) % 3;
         if (!isValidMode(next)) next = SYSTEM;
-
-        UiModeManager manager = getModeManager(activity);
-        if (manager == null) return;
-
-        int desired = resolveNightMode(next);
-        // Guard: don't persist or recreate until the target system mode is valid.
-        if (desired != UiModeManager.MODE_NIGHT_AUTO
-                && desired != UiModeManager.MODE_NIGHT_YES
-                && desired != UiModeManager.MODE_NIGHT_NO) {
-            return;
-        }
-
-        if (!applyMode(activity, next)) return;
-
+        if (!applyThemeGuarded(activity, next)) return;
         animate().rotationBy(360f).setDuration(420L).start();
-        if (next != current) activity.recreate();
+        activity.recreate();
     }
 
-    private boolean applyMode(Activity activity, int mode) {
+    /**
+     * Validate the requested mode, apply it through UiModeManager, verify the
+     * manager accepted it, then persist it. Preference is never committed first.
+     */
+    private boolean applyThemeGuarded(Activity activity, int mode) {
         if (!isValidMode(mode)) return false;
         UiModeManager manager = getModeManager(activity);
         if (manager == null) return false;
 
         int desired = resolveNightMode(mode);
-        if (manager.getNightMode() != desired) {
-            manager.setApplicationNightMode(desired);
+        if (desired != UiModeManager.MODE_NIGHT_AUTO
+                && desired != UiModeManager.MODE_NIGHT_YES
+                && desired != UiModeManager.MODE_NIGHT_NO) return false;
+
+        if (manager.getNightMode() != desired) manager.setApplicationNightMode(desired);
+        if (manager.getNightMode() != desired) return false;
+
+        // For SYSTEM, the selection is valid even while Android is resolving
+        // the current light/dark configuration. Never infer a mode prematurely.
+        if (mode != SYSTEM && resolveConfigurationNightMode(activity.getResources().getConfiguration()) == -1) {
+            return false;
         }
 
-        // Persist only after the requested mode has been accepted by the manager.
-        boolean committed = activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        return activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
                 .edit().putInt(PREF_THEME, mode).commit();
-        if (!committed) return false;
-
-        // For SYSTEM, resolve the actual light/dark state from Configuration; never guess.
-        int resolved = resolveConfigurationNightMode(activity.getResources().getConfiguration());
-        if (resolved == -1) return false;
-        return mode == SYSTEM || (mode == DARK && resolved == UiModeManager.MODE_NIGHT_YES)
-                || (mode == LIGHT && resolved == UiModeManager.MODE_NIGHT_NO);
     }
 
     private int getSavedMode(Activity activity) {
@@ -89,15 +85,14 @@ public class ThemeToggleButton extends ImageButton {
         return isValidMode(mode) ? mode : SYSTEM;
     }
 
-    private static boolean isValidMode(int mode) {
-        return mode >= SYSTEM && mode <= DARK;
-    }
+    private static boolean isValidMode(int mode) { return mode >= SYSTEM && mode <= DARK; }
 
     private static int resolveNightMode(int mode) {
         return mode == SYSTEM ? UiModeManager.MODE_NIGHT_AUTO
                 : mode == DARK ? UiModeManager.MODE_NIGHT_YES : UiModeManager.MODE_NIGHT_NO;
     }
 
+    /** Returns YES/NO only when Android explicitly reports one; -1 means unknown. */
     private static int resolveConfigurationNightMode(Configuration configuration) {
         int mask = configuration.uiMode & Configuration.UI_MODE_NIGHT_MASK;
         if (mask == Configuration.UI_MODE_NIGHT_YES) return UiModeManager.MODE_NIGHT_YES;
@@ -109,6 +104,7 @@ public class ThemeToggleButton extends ImageButton {
         return (UiModeManager) activity.getSystemService(Context.UI_MODE_SERVICE);
     }
 
+    /** Resolve the icon from persisted selection + the actual Configuration. */
     private void updateIconState() {
         Activity activity = findActivity(getContext());
         int mode = activity == null ? SYSTEM : getSavedMode(activity);
@@ -125,7 +121,7 @@ public class ThemeToggleButton extends ImageButton {
 
     @Override protected void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        // Re-inspect the system result instead of assuming the previous state.
+        // System mode is resolved from the new configuration, never from a cached boolean.
         if (resolveConfigurationNightMode(newConfig) != -1) updateIconState();
     }
 
