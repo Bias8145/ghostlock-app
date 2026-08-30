@@ -19,23 +19,24 @@
             android:orientation="vertical">
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
+                android:layout_height="64dp"
                 android:layout_marginBottom="16dp"
                 android:gravity="center_vertical">
                 <ImageButton
                     android:id="@+id/backButton"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="Back"
-                    android:padding="12dp"
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
+                    android:background="@drawable/bg_tool_header"
+                    android:contentDescription="Back to Home"
+                    android:padding="13dp"
                     android:src="@drawable/ic_chevron_down"
                     android:rotation="90"
                     android:tint="@color/icon_tint" />
                 <ImageView
-                    android:layout_width="38dp"
-                    android:layout_height="38dp"
-                    android:padding="7dp"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:layout_marginStart="10dp"
+                    android:padding="8dp"
                     android:src="@drawable/ic_advanced"
                     android:tint="@color/icon_tint" />
                 <TextView
@@ -61,29 +62,9 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:padding="16dp">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="CPU PAIR"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="Select the CPU pair used by GhostLock."
-                        android:textColor="@color/text_secondary"
-                        android:textSize="12sp" />
-                    <Spinner
-                        android:id="@+id/cpuSpinner"
-                        android:layout_width="match_parent"
-                        android:layout_height="56dp"
-                        android:layout_marginTop="10dp"
-                        android:background="@drawable/bg_spinner"
-                        android:popupBackground="@drawable/bg_spinner_popup"
-                        android:paddingStart="14dp"
-                        android:paddingEnd="6dp" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="CPU PAIR" android:textColor="@color/text_secondary" android:textSize="11sp" android:textStyle="bold" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Select the CPU pair used by GhostLock." android:textColor="@color/text_secondary" android:textSize="12sp" />
+                    <Spinner android:id="@+id/cpuSpinner" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="10dp" android:background="@drawable/bg_spinner" android:popupBackground="@drawable/bg_spinner_popup" android:paddingStart="14dp" android:paddingEnd="6dp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
