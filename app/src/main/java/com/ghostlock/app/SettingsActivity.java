@@ -22,8 +22,9 @@ import java.util.TreeMap;
 public class SettingsActivity extends Activity {
     private static final String PREFS = "ghostlock_prefs";
     private static final String PREF_CPU_PAIR = "cpu_pair";
-    private static final String TELEGRAM_URL = "https://t.me/anocroooot";
-    private static final String GITHUB_URL = "https://github.com/Bias8145/ghostlock-app";
+    private static final String DEVELOPER_TELEGRAM_URL = "https://t.me/VOLD_NAMESPACE";
+    private static final String CUSTOM_ROM_CHANNEL_URL = "https://t.me/anocroooot";
+    private static final String DEVELOPER_GITHUB_URL = "https://github.com/Bias8145";
     private static final String ORIGINAL_URL = "https://github.com/YuKongA/ghostlock-app";
     private Spinner cpuSpinner;
     private final List<int[]> cpuPairs = new ArrayList<>();
@@ -51,9 +52,9 @@ public class SettingsActivity extends Activity {
     }
 
     private void setupResourcePanels() {
-        setupResourcePanel(R.id.anotherResourcePanel, R.id.anotherResourceDetails, R.id.anotherResourceChevron, R.id.anotherResourceAction, TELEGRAM_URL);
-        setupResourcePanel(R.id.telegramChannelPanel, R.id.telegramChannelDetails, R.id.telegramChannelChevron, R.id.telegramChannelAction, TELEGRAM_URL);
-        setupResourcePanel(R.id.developerGithubPanel, R.id.developerGithubDetails, R.id.developerGithubChevron, R.id.developerGithubAction, GITHUB_URL);
+        setupResourcePanel(R.id.anotherResourcePanel, R.id.anotherResourceDetails, R.id.anotherResourceChevron, R.id.anotherResourceAction, CUSTOM_ROM_CHANNEL_URL);
+        setupResourcePanel(R.id.telegramChannelPanel, R.id.telegramChannelDetails, R.id.telegramChannelChevron, R.id.telegramChannelAction, DEVELOPER_TELEGRAM_URL);
+        setupResourcePanel(R.id.developerGithubPanel, R.id.developerGithubDetails, R.id.developerGithubChevron, R.id.developerGithubAction, DEVELOPER_GITHUB_URL);
         setupResourcePanel(R.id.originalSourcePanel, R.id.originalSourceDetails, R.id.originalSourceChevron, R.id.originalSourceAction, ORIGINAL_URL);
     }
 
