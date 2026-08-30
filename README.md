@@ -1,70 +1,60 @@
 # GhostLock App V2
 
-A compact Android frontend for GhostLock kernel tooling, independently adapted by **Bias8145** for the **Motorola moto g67 power 5G (portov)**.
+GhostLock App V2 is an Android frontend for GhostLock kernel tooling. This version is independently adapted and developed by **Bias8145**, primarily for the **Motorola moto g67 power 5G (portov)**.
 
-## Features
+## What it does
 
-- Exact kernel identification and offset matching by `uname -r`.
-- KernelSU and ReSukiSU manager integration.
-- CPU Pair selection from Settings.
-- Boot image and OTA offset extraction.
-- `offsets.json` import without rebuilding the APK.
-- Runtime status, execution logs, and log copying.
-- Adaptive light/dark theme.
-- Compact expandable Developer & Resources panels.
+- Detects the running kernel using exact `uname -r` matching.
+- Loads kernel-specific GhostLock offsets.
+- Integrates with supported root managers, including KernelSU and ReSukiSU.
+- Provides CPU Pair configuration through Settings.
+- Parses `boot.img`, `boot.img + xbl_config.img`, OTA ZIPs, and supported HTTP(S) sources.
+- Imports `offsets.json` without rebuilding the APK.
+- Provides runtime status, execution logs, and log copying.
+- Supports adaptive light/dark themes.
 
 ## Motorola moto g67 power 5G
 
-V2 is specifically adapted for the Motorola moto g67 power 5G (`portov`).
+V2 includes a kernel-specific entry for `portov`:
 
-- Kernel: `6.6.118-android15-8-gbf8cd367de7a-ab15314822-4k`
-- Build: `W1VTS36H.22-20-3-2-3`
-- Security patch: `2026-07-01`
-- Status: **Experimental / device verification required**
+`6.6.118-android15-8-gbf8cd367de7a-ab15314822-4k`
 
-The kernel-specific offset entry is included. Do not substitute offsets from another kernel build.
+Build: `W1VTS36H.22-20-3-2-3`  
+Security patch: `2026-07-01`  
+Status: **Experimental — device verification required**
+
+The offsets are tied to this exact kernel release. Do not use offsets from a different kernel build.
 
 ## Interface
 
-**Home** — runtime status, device information, Tools, Run, and logs.
+**Home** provides runtime status, device information, Tools, Run, and logs.
 
-**Settings** — CPU Pair and Developer & Resources.
+**Settings** contains CPU Pair configuration and the Developer & Resources section. Resource panels remain compact until expanded and provide independent links for developer resources and attribution.
 
-Developer & Resources provides independent expandable panels for:
+## Offset Extraction
 
-- **Another Resource** — Google Pixel custom ROM and Android resources.
-- **Telegram Channel** — developer mod news, releases, and updates.
-- **Developer GitHub** — source code and Android development projects.
-- **Original Source** — attribution and thanks to the original GhostLock project.
-
-## Offset Tools
-
-`tools/extract_rs` supports `boot.img`, optional `xbl_config.img`, complete OTA ZIPs, and HTTP(S) image/OTA sources. It can recover kernel symbols and derive GhostLock offsets.
+The Rust extractor is located in `tools/extract_rs` and can register kernel-specific offsets under `src/kernels/<uname-release>/offsets.h`.
 
 ```bash
 cargo build --release --manifest-path tools/extract_rs/Cargo.toml
-
 tools/extract_rs/target/release/ghostlock-extract boot.img --register
-
 tools/extract_rs/target/release/ghostlock-extract OTA.zip --format json --out offsets.json
 ```
 
-`--register` stores the kernel entry under `src/kernels/<uname-release>/offsets.h`.
-
-Compatible `offsets.json` files can also be imported directly from the app, allowing new kernel entries without rebuilding the APK.
+Compatible `offsets.json` files can also be imported directly from the application.
 
 ## Build
 
-The Android application is built with Gradle and automated through GitHub Actions. V2 release artifacts are published as **GhostLock App V2**.
+The Android app is built with Gradle through GitHub Actions. V2 release artifacts are named **GhostLock App V2**.
 
 ## Credits
 
-GhostLock was originally created by **YuKongA**.
+Original project: **YuKongA / GhostLock App**
 
-This version is an independent adaptation and continued development by **Bias8145**, created specifically for the Motorola moto g67 power 5G and its device/kernel requirements.
+This V2 branch is an independent adaptation and continued development by **Bias8145**, created to address the specific requirements of the Motorola moto g67 power 5G and its kernel environment.
 
-Special thanks to YuKongA for the original GhostLock project and the foundation used as a reference for this adaptation.
+Special thanks to YuKongA for the original GhostLock project and its foundation.
 
 ## License
 
-Licensed under the Apache License 2.0. See [LICENSE](LICENSE).
+Apache License 2.0. See [LICENSE](LICENSE).
