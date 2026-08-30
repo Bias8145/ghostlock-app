@@ -45,13 +45,13 @@ Compatible `offsets.json` files can also be imported directly from the applicati
 
 ## Build
 
-The Android app is built with Gradle through GitHub Actions. V2 release artifacts are named **GhostLock App**.
+The Android app is built with Gradle through GitHub Actions. Release artifacts are named **GhostLock App**.
 
 ## Credits
 
 Original project: **YuKongA / GhostLock App**
 
-This V2 branch is an independent adaptation and continued development by **Bias8145**, created to address the specific requirements of the Motorola moto g67 power 5G and its kernel environment.
+This branch is an independent adaptation and continued development by **Bias8145**, created to address the specific requirements of the Motorola moto g67 power 5G and its kernel environment.
 
 Special thanks to YuKongA for the original GhostLock project and its foundation.
 
