@@ -12,6 +12,7 @@
         <item name="android:textColorPrimary">@color/text_primary</item>
         <item name="android:textColorSecondary">@color/text_secondary</item>
         <item name="android:colorAccent">@color/accent</item>
+        <item name="android:spinnerDropDownItemStyle">@style/Widget.GhostLock.SpinnerDropDownItem</item>
         <item name="colorPrimary">@color/accent</item>
         <item name="colorOnPrimary">@color/on_accent</item>
         <item name="colorPrimaryContainer">@color/accent_container</item>
@@ -28,6 +29,10 @@
         <item name="colorOutlineVariant">@color/outline_variant</item>
         <item name="materialAlertDialogTheme">@style/ThemeOverlay.GhostLock.AlertDialog</item>
         <item name="android:alertDialogTheme">@style/ThemeOverlay.GhostLock.AlertDialog</item>
+    </style>
+    <style name="Widget.GhostLock.SpinnerDropDownItem">
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textSize">14sp</item>
     </style>
     <style name="ThemeOverlay.GhostLock.AlertDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
         <item name="colorSurface">@color/surface_container</item>
