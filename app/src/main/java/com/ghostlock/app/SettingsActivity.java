@@ -25,7 +25,7 @@ public class SettingsActivity extends Activity {
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
-        findViewById(R.id.backButton).setOnClickListener(v -> finish());
+        findViewById(R.id.backButton).setOnClickListener(v -> goHome());
         cpuSpinner = findViewById(R.id.cpuSpinner);
         buildCpuPairs();
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.spinner_item_right, cpuPairLabels);
@@ -40,6 +40,14 @@ public class SettingsActivity extends Activity {
             }
             @Override public void onNothingSelected(android.widget.AdapterView<?> parent) { }
         });
+    }
+
+    private void goHome() {
+        finish();
+    }
+
+    @Override public void onBackPressed() {
+        goHome();
     }
 
     private void buildCpuPairs() {
