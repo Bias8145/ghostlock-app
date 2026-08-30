@@ -38,7 +38,6 @@ public class ThemeToggleButton extends ImageButton {
         if (manager == null) return;
         int desired = saved == SYSTEM ? UiModeManager.MODE_NIGHT_AUTO
                 : saved == DARK ? UiModeManager.MODE_NIGHT_YES : UiModeManager.MODE_NIGHT_NO;
-        // Persisted preference is authoritative; SYSTEM deliberately follows the OS.
         if (manager.getNightMode() != desired) {
             manager.setApplicationNightMode(desired);
         }
@@ -64,7 +63,7 @@ public class ThemeToggleButton extends ImageButton {
     }
 
     private int getSavedMode(Activity activity) {
-        int mode = activity.getSharedPreferences(PREFS, MODE_PRIVATE).getInt(PREF_THEME, SYSTEM);
+        int mode = activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getInt(PREF_THEME, SYSTEM);
         return mode >= SYSTEM && mode <= DARK ? mode : SYSTEM;
     }
 
