@@ -145,7 +145,7 @@ android {
 
     defaultConfig {
         applicationId "com.ghostlock.app"
-        minSdk 35
+        minSdk 34
         targetSdk 37
         versionCode gitVersionCode
         versionName appVersionName
@@ -186,5 +186,5 @@ base { archivesName = "${appName}-v${appVersionName}(${gitVersionCode})" }
 dependencies {
     implementation 'com.google.android.material:material:1.13.0'
     testImplementation 'junit:junit:4.13.2'
-    testImplementation 'org.json:json:20240303'
+    testImplementation 'org.json:json:20260814'
 }
