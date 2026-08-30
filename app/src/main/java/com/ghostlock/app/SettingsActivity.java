@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.Spinner;
 import java.io.BufferedReader;
 import java.io.File;
@@ -23,6 +22,9 @@ import java.util.TreeMap;
 public class SettingsActivity extends Activity {
     private static final String PREFS = "ghostlock_prefs";
     private static final String PREF_CPU_PAIR = "cpu_pair";
+    private static final String TELEGRAM_URL = "https://t.me/anocroooot";
+    private static final String GITHUB_URL = "https://github.com/Bias8145/ghostlock-app";
+    private static final String ORIGINAL_URL = "https://github.com/YuKongA/ghostlock-app";
     private Spinner cpuSpinner;
     private final List<int[]> cpuPairs = new ArrayList<>();
     private final List<String> cpuPairLabels = new ArrayList<>();
@@ -45,10 +47,14 @@ public class SettingsActivity extends Activity {
             }
             @Override public void onNothingSelected(android.widget.AdapterView<?> parent) { }
         });
-        setupResourcePanel(R.id.anotherResourcePanel, R.id.anotherResourceDetails, R.id.anotherResourceChevron, R.id.anotherResourceAction, "https://t.me/anocroooot");
-        setupResourcePanel(R.id.telegramChannelPanel, R.id.telegramChannelDetails, R.id.telegramChannelChevron, R.id.telegramChannelAction, "https://t.me/anocroooot");
-        setupResourcePanel(R.id.developerGithubPanel, R.id.developerGithubDetails, R.id.developerGithubChevron, R.id.developerGithubAction, "https://github.com/Bias8145/ghostlock-app");
-        setupResourcePanel(R.id.originalSourcePanel, R.id.originalSourceDetails, R.id.originalSourceChevron, R.id.originalSourceAction, "https://github.com/YuKongA/ghostlock-app");
+        setupResourcePanels();
+    }
+
+    private void setupResourcePanels() {
+        setupResourcePanel(R.id.anotherResourcePanel, R.id.anotherResourceDetails, R.id.anotherResourceChevron, R.id.anotherResourceAction, TELEGRAM_URL);
+        setupResourcePanel(R.id.telegramChannelPanel, R.id.telegramChannelDetails, R.id.telegramChannelChevron, R.id.telegramChannelAction, TELEGRAM_URL);
+        setupResourcePanel(R.id.developerGithubPanel, R.id.developerGithubDetails, R.id.developerGithubChevron, R.id.developerGithubAction, GITHUB_URL);
+        setupResourcePanel(R.id.originalSourcePanel, R.id.originalSourceDetails, R.id.originalSourceChevron, R.id.originalSourceAction, ORIGINAL_URL);
     }
 
     private void setupResourcePanel(int panelId, int detailsId, int chevronId, int actionId, String url) {
@@ -77,18 +83,12 @@ public class SettingsActivity extends Activity {
     }
 
     private void openUrl(String url) {
-        try {
-            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
-        } catch (Exception ignored) { }
+        try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); }
+        catch (Exception ignored) { }
     }
 
-    private void goHome() {
-        finish();
-    }
-
-    @Override public void onBackPressed() {
-        goHome();
-    }
+    private void goHome() { finish(); }
+    @Override public void onBackPressed() { goHome(); }
 
     private void buildCpuPairs() {
         List<Integer> online = parseCpuList(readSysFile("/sys/devices/system/cpu/online"));
