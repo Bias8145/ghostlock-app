@@ -110,7 +110,9 @@ public class SettingsActivity extends Activity {
             row.setGravity(Gravity.CENTER_VERTICAL);
             row.setMinimumHeight(dp(46));
             row.setPadding(dp(12), 0, dp(10), 0);
-            row.setBackgroundResource(R.drawable.bg_spinner);
+            // Do not reuse the Spinner background here: bg_spinner contains a
+            // dropdown arrow, which is inappropriate for individual choices.
+            row.setBackground(null);
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(46));
             lp.setMargins(0, dp(3), 0, dp(3));
             row.setLayoutParams(lp);
