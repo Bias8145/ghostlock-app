@@ -1,71 +1,61 @@
 package com.ghostlock.app;
 
 import android.app.Activity;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.ArrayAdapter;
-import android.widget.ImageButton;
 import android.widget.Spinner;
-
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class SettingsActivity extends Activity {
     private static final String PREFS = "ghostlock_prefs";
     private static final String PREF_CPU_PAIR = "cpu_pair";
-    private static final String EXTRA_LABELS = "cpu_labels";
-    private static final String EXTRA_PAIRS = "cpu_pairs";
     private Spinner cpuSpinner;
+    private final List<int[]> cpuPairs = new ArrayList<>();
+    private final List<String> cpuPairLabels = new ArrayList<>();
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
-
-        ImageButton backButton = findViewById(R.id.backButton);
+        findViewById(R.id.backButton).setOnClickListener(v -> finish());
         cpuSpinner = findViewById(R.id.cpuSpinner);
-        backButton.setOnClickListener(v -> finish());
-
-        String[] labels = getIntent().getStringArrayExtra(EXTRA_LABELS);
-        int[] flatPairs = getIntent().getIntArrayExtra(EXTRA_PAIRS);
-        if (labels == null || flatPairs == null || flatPairs.length < labels.length * 2) {
-            labels = new String[]{"0,1"};
-            flatPairs = new int[]{0, 1};
-        }
-
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.spinner_item_right, labels);
+        buildCpuPairs();
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.spinner_item_right, cpuPairLabels);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         cpuSpinner.setAdapter(adapter);
-
-        int selected = findSavedPair(flatPairs);
-        cpuSpinner.setSelection(selected);
-        final int[] pairs = flatPairs;
+        restoreCpuPair();
         cpuSpinner.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
             @Override public void onItemSelected(android.widget.AdapterView<?> parent, android.view.View view, int position, long id) {
-                if (position * 2 + 1 >= pairs.length) return;
-                int a = pairs[position * 2];
-                int b = pairs[position * 2 + 1];
-                getSharedPreferences(PREFS, MODE_PRIVATE).edit().putString(PREF_CPU_PAIR, a + "," + b).apply();
+                if (position < 0 || position >= cpuPairs.size()) return;
+                int[] pair = cpuPairs.get(position);
+                getSharedPreferences(PREFS, MODE_PRIVATE).edit().putString(PREF_CPU_PAIR, pair[0] + "," + pair[1]).apply();
             }
             @Override public void onNothingSelected(android.widget.AdapterView<?> parent) { }
         });
     }
 
-    private int findSavedPair(int[] pairs) {
-        String saved = getSharedPreferences(PREFS, MODE_PRIVATE).getString(PREF_CPU_PAIR, null);
-        if (saved == null || saved.equals("auto")) return 0;
-        String[] parts = saved.split(",");
-        if (parts.length != 2) return 0;
-        try {
-            int a = Integer.parseInt(parts[0].trim());
-            int b = Integer.parseInt(parts[1].trim());
-            for (int i = 0; i + 1 < pairs.length; i += 2) {
-                if (pairs[i] == a && pairs[i + 1] == b) return i / 2;
-            }
-        } catch (NumberFormatException ignored) { }
-        return 0;
+    private void buildCpuPairs() {
+        List<Integer> online = parseCpuList(readSysFile("/sys/devices/system/cpu/online"));
+        Map<Long,List<Integer>> byFreq = new TreeMap<>(Collections.reverseOrder());
+        for (int cpu : online) { long freq=readMaxFreq(cpu); if(freq>0) byFreq.computeIfAbsent(freq,k->new ArrayList<>()).add(cpu); }
+        for (Map.Entry<Long,List<Integer>> e:byFreq.entrySet()) {
+            List<Integer> cluster=e.getValue(); Collections.sort(cluster); String suffix=" · "+formatFreq(e.getKey());
+            for(int i=0;i+1<cluster.size();i+=2){int a=cluster.get(i),b=cluster.get(i+1);cpuPairs.add(new int[]{a,b});cpuPairLabels.add(a+","+b+suffix);}
+        }
+        boolean safe=false; for(int[] p:cpuPairs)if(p[0]==0&&p[1]==1){safe=true;break;}
+        if(!safe){cpuPairs.add(new int[]{0,1});long f=readMaxFreq(0);cpuPairLabels.add("0,1"+(f>0?" · "+formatFreq(f):""));}
     }
-
-    public static String EXTRA_LABELS() { return EXTRA_LABELS; }
-    public static String EXTRA_PAIRS() { return EXTRA_PAIRS; }
+    private void restoreCpuPair(){String saved=getSharedPreferences(PREFS,MODE_PRIVATE).getString(PREF_CPU_PAIR,null);if(saved==null||saved.equals("auto")){cpuSpinner.setSelection(0);return;}String[] p=saved.split(",");if(p.length!=2){cpuSpinner.setSelection(0);return;}try{int a=Integer.parseInt(p[0].trim()),b=Integer.parseInt(p[1].trim());for(int i=0;i<cpuPairs.size();i++){int[] pair=cpuPairs.get(i);if(pair[0]==a&&pair[1]==b){cpuSpinner.setSelection(i);return;}}}catch(NumberFormatException ignored){}cpuSpinner.setSelection(0);}
+    private static String readSysFile(String path){File f=new File(path);if(!f.isFile())return"";try(BufferedReader r=new BufferedReader(new FileReader(f))){String s=r.readLine();return s==null?"":s.trim();}catch(IOException ignored){return"";}}
+    private static List<Integer> parseCpuList(String s){List<Integer> out=new ArrayList<>();if(s==null||s.isEmpty())return out;for(String part:s.split(",")){String[] r=part.split("-");try{int lo=Integer.parseInt(r[0].trim()),hi=r.length>1?Integer.parseInt(r[1].trim()):lo;for(int c=lo;c<=hi;c++)out.add(c);}catch(NumberFormatException ignored){}}return out;}
+    private static long readMaxFreq(int cpu){String s=readSysFile("/sys/devices/system/cpu/cpu"+cpu+"/cpufreq/cpuinfo_max_freq");try{return s.isEmpty()?-1:Long.parseLong(s);}catch(NumberFormatException ignored){return-1;}}
+    private static String formatFreq(long khz){if(khz>=1_000_000L)return String.format(Locale.ROOT,"%.2f GHz",khz/1_000_000.0);return String.format(Locale.ROOT,"%.0f MHz",khz/1000.0);}
 }
