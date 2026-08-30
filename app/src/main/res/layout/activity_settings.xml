@@ -3,14 +3,15 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg">
+    android:background="@color/bg"
+    android:fitsSystemWindows="true">
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fillViewport="true"
         android:clipToPadding="false"
         android:paddingStart="16dp"
-        android:paddingTop="8dp"
+        android:paddingTop="4dp"
         android:paddingEnd="16dp"
         android:paddingBottom="28dp">
         <LinearLayout
@@ -19,31 +20,31 @@
             android:orientation="vertical">
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:layout_marginBottom="12dp"
+                android:layout_height="48dp"
+                android:layout_marginBottom="10dp"
                 android:gravity="center_vertical">
                 <ImageButton
                     android:id="@+id/backButton"
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
                     android:background="@drawable/bg_tool_header"
                     android:contentDescription="Back to Home"
-                    android:padding="10dp"
+                    android:padding="9dp"
                     android:src="@drawable/ic_chevron_down"
                     android:rotation="90"
                     android:tint="@color/icon_tint" />
                 <ImageView
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:layout_marginStart="8dp"
-                    android:padding="7dp"
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:layout_marginStart="7dp"
+                    android:padding="6dp"
                     android:src="@drawable/ic_advanced"
                     android:tint="@color/icon_tint" />
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_marginStart="6dp"
+                    android:layout_marginStart="5dp"
                     android:text="Settings"
                     android:textColor="@color/text_primary"
                     android:textSize="20sp"
