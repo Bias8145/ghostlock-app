@@ -1,6 +1,6 @@
 # GhostLock App
 
-GhostLock App V2 is an Android frontend for GhostLock kernel tooling. This version is independently adapted and developed by **Bias8145**, primarily for the **Motorola moto g67 power 5G (portov)**.
+GhostLock App is an Android frontend for GhostLock kernel tooling. This version is independently adapted and developed by **Bias8145**, primarily for the **Motorola moto g67 power 5G (portov)**.
 
 ## What it does
 
@@ -45,7 +45,7 @@ Compatible `offsets.json` files can also be imported directly from the applicati
 
 ## Build
 
-The Android app is built with Gradle through GitHub Actions. V2 release artifacts are named **GhostLock App V2**.
+The Android app is built with Gradle through GitHub Actions. V2 release artifacts are named **GhostLock App**.
 
 ## Credits
 
