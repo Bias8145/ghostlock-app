@@ -30,6 +30,12 @@
         <item name="materialAlertDialogTheme">@style/ThemeOverlay.GhostLock.AlertDialog</item>
         <item name="android:alertDialogTheme">@style/ThemeOverlay.GhostLock.AlertDialog</item>
     </style>
+    <style name="Widget.GhostLock" parent="Widget.Material3.Button">
+        <item name="android:textAllCaps">false</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:elevation">0dp</item>
+        <item name="strokeWidth">0dp</item>
+    </style>
     <style name="Widget.GhostLock.SpinnerDropDownItem">
         <item name="android:textColor">@color/text_primary</item>
         <item name="android:textSize">14sp</item>
