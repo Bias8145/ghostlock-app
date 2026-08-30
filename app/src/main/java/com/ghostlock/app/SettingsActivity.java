@@ -2,12 +2,16 @@ package com.ghostlock.app;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
-import android.widget.ArrayAdapter;
+import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
+import android.widget.TextView;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -29,6 +33,8 @@ public class SettingsActivity extends Activity {
     private Spinner cpuSpinner;
     private final List<int[]> cpuPairs = new ArrayList<>();
     private final List<String> cpuPairLabels = new ArrayList<>();
+    private LinearLayout cpuPairOptions;
+    private ImageView cpuPairChevron;
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,19 +42,132 @@ public class SettingsActivity extends Activity {
         findViewById(R.id.backButton).setOnClickListener(v -> goHome());
         cpuSpinner = findViewById(R.id.cpuSpinner);
         buildCpuPairs();
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.spinner_item_right, cpuPairLabels);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        cpuSpinner.setAdapter(adapter);
         restoreCpuPair();
-        cpuSpinner.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
-            @Override public void onItemSelected(android.widget.AdapterView<?> parent, android.view.View view, int position, long id) {
-                if (position < 0 || position >= cpuPairs.size()) return;
-                int[] pair = cpuPairs.get(position);
-                getSharedPreferences(PREFS, MODE_PRIVATE).edit().putString(PREF_CPU_PAIR, pair[0] + "," + pair[1]).apply();
-            }
-            @Override public void onNothingSelected(android.widget.AdapterView<?> parent) { }
-        });
+        setupCpuPairPanel();
         setupResourcePanels();
+    }
+
+    private void setupCpuPairPanel() {
+        ViewGroup cardContent = (ViewGroup) cpuSpinner.getParent();
+        if (cardContent == null || cardContent.getChildCount() < 3) return;
+        cpuSpinner.setVisibility(View.GONE);
+
+        View titleView = cardContent.getChildAt(0);
+        View descriptionView = cardContent.getChildAt(1);
+        cardContent.removeView(titleView);
+        cardContent.removeView(descriptionView);
+
+        LinearLayout header = new LinearLayout(this);
+        header.setOrientation(LinearLayout.HORIZONTAL);
+        header.setGravity(Gravity.CENTER_VERTICAL);
+        header.setPadding(dp(0), dp(0), dp(0), dp(2));
+
+        LinearLayout textColumn = new LinearLayout(this);
+        textColumn.setOrientation(LinearLayout.VERTICAL);
+        textColumn.setGravity(Gravity.CENTER_VERTICAL);
+        textColumn.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        textColumn.addView(titleView, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        textColumn.addView(descriptionView, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        cpuPairChevron = new ImageView(this);
+        cpuPairChevron.setImageResource(R.drawable.ic_chevron_down);
+        cpuPairChevron.setColorFilter(getResources().getColor(R.color.icon_tint));
+        LinearLayout.LayoutParams chevronLp = new LinearLayout.LayoutParams(dp(20), dp(20));
+        chevronLp.setMargins(dp(8), 0, dp(4), 0);
+        cpuPairChevron.setLayoutParams(chevronLp);
+
+        header.addView(textColumn);
+        header.addView(cpuPairChevron);
+        header.setClickable(true);
+        header.setFocusable(true);
+        header.setOnClickListener(v -> toggleCpuPairPanel());
+        cardContent.addView(header, 0);
+
+        cpuPairOptions = new LinearLayout(this);
+        cpuPairOptions.setOrientation(LinearLayout.VERTICAL);
+        cpuPairOptions.setVisibility(View.GONE);
+        cpuPairOptions.setPadding(dp(0), dp(2), dp(0), dp(8));
+        cardContent.addView(cpuPairOptions, 1);
+        rebuildCpuPairOptions();
+        updateCpuPairSummary(getSelectedCpuPairLabel());
+    }
+
+    private void toggleCpuPairPanel() {
+        boolean expand = cpuPairOptions.getVisibility() != View.VISIBLE;
+        cpuPairOptions.setVisibility(expand ? View.VISIBLE : View.GONE);
+        if (cpuPairChevron != null) cpuPairChevron.setRotation(expand ? 180f : 0f);
+    }
+
+    private void rebuildCpuPairOptions() {
+        if (cpuPairOptions == null) return;
+        cpuPairOptions.removeAllViews();
+        String selected = getSharedPreferences(PREFS, MODE_PRIVATE).getString(PREF_CPU_PAIR, null);
+        for (int i = 0; i < cpuPairs.size(); i++) {
+            final int position = i;
+            int[] pair = cpuPairs.get(i);
+            boolean active = selected != null && selected.equals(pair[0] + "," + pair[1]);
+            LinearLayout row = new LinearLayout(this);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setMinimumHeight(dp(46));
+            row.setPadding(dp(12), 0, dp(10), 0);
+            row.setBackgroundResource(R.drawable.bg_spinner);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(46));
+            lp.setMargins(0, dp(3), 0, dp(3));
+            row.setLayoutParams(lp);
+
+            TextView label = new TextView(this);
+            label.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+            label.setText(cpuPairLabels.get(i));
+            label.setTextColor(getResources().getColor(active ? R.color.text_primary : R.color.text_secondary));
+            label.setTextSize(12);
+            if (active) label.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+            row.addView(label);
+
+            if (active) {
+                TextView check = new TextView(this);
+                check.setText("✓");
+                check.setTextColor(getResources().getColor(R.color.icon_tint));
+                check.setTextSize(16);
+                check.setGravity(Gravity.CENTER);
+                row.addView(check, new LinearLayout.LayoutParams(dp(24), dp(24)));
+            }
+            row.setOnClickListener(v -> selectCpuPair(position));
+            cpuPairOptions.addView(row);
+        }
+    }
+
+    private void selectCpuPair(int position) {
+        if (position < 0 || position >= cpuPairs.size()) return;
+        int[] pair = cpuPairs.get(position);
+        getSharedPreferences(PREFS, MODE_PRIVATE).edit().putString(PREF_CPU_PAIR, pair[0] + "," + pair[1]).apply();
+        rebuildCpuPairOptions();
+        updateCpuPairSummary(cpuPairLabels.get(position));
+        cpuPairOptions.setVisibility(View.GONE);
+        if (cpuPairChevron != null) cpuPairChevron.setRotation(0f);
+    }
+
+    private String getSelectedCpuPairLabel() {
+        String saved = getSharedPreferences(PREFS, MODE_PRIVATE).getString(PREF_CPU_PAIR, null);
+        if (saved != null) {
+            for (int i = 0; i < cpuPairs.size(); i++) {
+                int[] pair = cpuPairs.get(i);
+                if (saved.equals(pair[0] + "," + pair[1])) return cpuPairLabels.get(i);
+            }
+        }
+        return cpuPairLabels.isEmpty() ? "No CPU pair detected" : cpuPairLabels.get(0);
+    }
+
+    private void updateCpuPairSummary(String value) {
+        ViewGroup cardContent = (ViewGroup) cpuSpinner.getParent();
+        if (cardContent == null || cardContent.getChildCount() == 0) return;
+        View header = cardContent.getChildAt(0);
+        if (!(header instanceof ViewGroup)) return;
+        View textColumn = ((ViewGroup) header).getChildAt(0);
+        if (!(textColumn instanceof ViewGroup) || ((ViewGroup) textColumn).getChildCount() < 2) return;
+        View description = ((ViewGroup) textColumn).getChildAt(1);
+        if (description instanceof TextView) {
+            ((TextView) description).setText("Selected: " + value + "\nTap to change the CPU pair.");
+        }
     }
 
     private void setupResourcePanels() {
@@ -102,7 +221,9 @@ public class SettingsActivity extends Activity {
         boolean safe=false; for(int[] p:cpuPairs)if(p[0]==0&&p[1]==1){safe=true;break;}
         if(!safe){cpuPairs.add(new int[]{0,1});long f=readMaxFreq(0);cpuPairLabels.add("0,1"+(f>0?" · "+formatFreq(f):""));}
     }
-    private void restoreCpuPair(){String saved=getSharedPreferences(PREFS,MODE_PRIVATE).getString(PREF_CPU_PAIR,null);if(saved==null||saved.equals("auto")){cpuSpinner.setSelection(0);return;}String[] p=saved.split(",");if(p.length!=2){cpuSpinner.setSelection(0);return;}try{int a=Integer.parseInt(p[0].trim()),b=Integer.parseInt(p[1].trim());for(int i=0;i<cpuPairs.size();i++){int[] pair=cpuPairs.get(i);if(pair[0]==a&&pair[1]==b){cpuSpinner.setSelection(i);return;}}}catch(NumberFormatException ignored){}cpuSpinner.setSelection(0);}
+    private void restoreCpuPair(){String saved=getSharedPreferences(PREFS,MODE_PRIVATE).getString(PREF_CPU_PAIR,null);if(saved==null||saved.equals("auto")){setDefaultCpuPair();return;}String[] p=saved.split(",");if(p.length!=2){setDefaultCpuPair();return;}try{int a=Integer.parseInt(p[0].trim()),b=Integer.parseInt(p[1].trim());for(int i=0;i<cpuPairs.size();i++){int[] pair=cpuPairs.get(i);if(pair[0]==a&&pair[1]==b){return;}}}catch(NumberFormatException ignored){}setDefaultCpuPair();}
+    private void setDefaultCpuPair(){if(cpuPairs.isEmpty())return;int[] pair=cpuPairs.get(0);getSharedPreferences(PREFS,MODE_PRIVATE).edit().putString(PREF_CPU_PAIR,pair[0]+","+pair[1]).apply();}
+    private int dp(int value){return Math.round(value*getResources().getDisplayMetrics().density);}
     private static String readSysFile(String path){File f=new File(path);if(!f.isFile())return"";try(BufferedReader r=new BufferedReader(new FileReader(f))){String s=r.readLine();return s==null?"":s.trim();}catch(IOException ignored){return"";}}
     private static List<Integer> parseCpuList(String s){List<Integer> out=new ArrayList<>();if(s==null||s.isEmpty())return out;for(String part:s.split(",")){String[] r=part.split("-");try{int lo=Integer.parseInt(r[0].trim()),hi=r.length>1?Integer.parseInt(r[1].trim()):lo;for(int c=lo;c<=hi;c++)out.add(c);}catch(NumberFormatException ignored){}}return out;}
     private static long readMaxFreq(int cpu){String s=readSysFile("/sys/devices/system/cpu/cpu"+cpu+"/cpufreq/cpuinfo_max_freq");try{return s.isEmpty()?-1:Long.parseLong(s);}catch(NumberFormatException ignored){return-1;}}
