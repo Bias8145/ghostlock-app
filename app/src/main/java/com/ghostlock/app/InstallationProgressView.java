@@ -5,6 +5,7 @@ import android.graphics.Typeface;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
+import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -14,12 +15,15 @@ import java.util.Locale;
 
 /**
  * Compact installation status summary driven directly by the live log.
- * No timers or decorative progress animation are used.
+ * Uses subtle state transitions only; there are no timers or fake progress values.
  */
 public final class InstallationProgressView extends LinearLayout {
+    private final TextView statusIcon;
     private final TextView statusTitle;
     private final TextView statusDetail;
     private int lastRunMarker = -1;
+    private String lastTitle = "";
+    private String lastDetail = "";
 
     public InstallationProgressView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -43,22 +47,37 @@ public final class InstallationProgressView extends LinearLayout {
         card.setStrokeWidth(0);
 
         LinearLayout body = new LinearLayout(context);
-        body.setOrientation(VERTICAL);
+        body.setOrientation(HORIZONTAL);
+        body.setGravity(android.view.Gravity.CENTER_VERTICAL);
         body.setPadding(dp(16), dp(12), dp(16), dp(12));
+
+        statusIcon = new TextView(context);
+        statusIcon.setTextColor(context.getColor(R.color.text_secondary));
+        statusIcon.setTextSize(14);
+        statusIcon.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        statusIcon.setGravity(android.view.Gravity.CENTER);
+        LayoutParams iconParams = new LayoutParams(dp(24), dp(24));
+        iconParams.rightMargin = dp(10);
+        body.addView(statusIcon, iconParams);
+
+        LinearLayout text = new LinearLayout(context);
+        text.setOrientation(VERTICAL);
+        text.setGravity(android.view.Gravity.CENTER_VERTICAL);
 
         statusTitle = new TextView(context);
         statusTitle.setTextColor(context.getColor(R.color.text_primary));
         statusTitle.setTextSize(14);
         statusTitle.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        body.addView(statusTitle);
+        text.addView(statusTitle);
 
         statusDetail = new TextView(context);
         statusDetail.setTextColor(context.getColor(R.color.text_secondary));
         statusDetail.setTextSize(12);
         LayoutParams detailParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         detailParams.topMargin = dp(3);
-        body.addView(statusDetail, detailParams);
+        text.addView(statusDetail, detailParams);
 
+        body.addView(text, new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
         card.addView(body);
         LayoutParams cardParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         cardParams.bottomMargin = dp(12);
@@ -106,11 +125,11 @@ public final class InstallationProgressView extends LinearLayout {
         }
 
         if (latest.contains("exit code=0")) {
-            setStatus("Installation completed", "GhostLock executed successfully. Exit code: 0");
+            setStatus("Installation completed", "GhostLock executed successfully. Exit code: 0", "✓");
             return;
         }
         if (containsAny(latest, "error:", "failed", "unsupported", "exit code=137", "exit code=-1")) {
-            setStatus("Installation failed", latest);
+            setStatus("Installation failed", latest, "×");
             return;
         }
 
@@ -118,31 +137,52 @@ public final class InstallationProgressView extends LinearLayout {
         String detail = latest.isEmpty() ? "Waiting for installation output..." : latest;
         if (containsAny(latest, "binary ready", "ksud ready")) {
             title = "Checking manager";
-            detail = latest;
         } else if (containsAny(latest, "kernel", "uname", "supported kernel")) {
             title = "Checking kernel";
-            detail = latest;
         } else if (containsAny(latest, "offset", "pselect", "kallsyms", "phys", "init_task", "security_hook")) {
             title = "Resolving kernel offsets";
-            detail = latest;
         } else if (containsAny(latest, "running ghostlock", "preparing", "prepare")) {
             title = "Executing GhostLock";
-            detail = latest;
         } else if (containsAny(latest, "execution", "exit code=")) {
             title = "Verifying result";
-            detail = latest;
         }
-        setStatus(title, detail);
+        setStatus(title, detail, "●");
     }
 
-    private void setStatus(String title, String detail) {
+    private void setStatus(String title, String detail, String icon) {
+        boolean changed = !title.equals(lastTitle) || !icon.equals(statusIcon.getText().toString());
         statusTitle.setText(title);
         statusDetail.setText(detail);
+        statusIcon.setText(icon);
+
+        if (changed && isAttachedToWindow()) {
+            animateState();
+        }
+        lastTitle = title;
+        lastDetail = detail;
+    }
+
+    private void animateState() {
+        statusIcon.animate().cancel();
+        statusTitle.animate().cancel();
+        statusDetail.animate().cancel();
+
+        statusIcon.setAlpha(0.35f);
+        statusIcon.setScaleX(0.82f);
+        statusIcon.setScaleY(0.82f);
+        statusTitle.setAlpha(0.55f);
+        statusDetail.setAlpha(0.55f);
+
+        statusIcon.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(180).start();
+        statusTitle.animate().alpha(1f).setDuration(180).start();
+        statusDetail.animate().alpha(1f).setDuration(220).start();
     }
 
     public void resetStatus() {
         lastRunMarker = -1;
-        setStatus("Ready to run", "Run GhostLock to begin installation.");
+        lastTitle = "";
+        lastDetail = "";
+        setStatus("Ready to run", "Run GhostLock to begin installation.", "○");
     }
 
     private static boolean containsAny(String value, String... needles) {
