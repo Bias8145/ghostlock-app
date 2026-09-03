@@ -59,7 +59,7 @@ public final class InstallationProgressView extends LinearLayout {
         MaterialCardView card = new MaterialCardView(context);
         card.setCardBackgroundColor(context.getColor(R.color.surface_container_low));
         card.setCardElevation(0);
-        card.setRadius(dp(18));
+        card.setRadius(dp(20));
         card.setStrokeWidth(0);
 
         LinearLayout body = new LinearLayout(context);
@@ -76,13 +76,13 @@ public final class InstallationProgressView extends LinearLayout {
         statusDetail.setTextColor(context.getColor(R.color.text_secondary));
         statusDetail.setTextSize(12);
         LayoutParams detailParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        detailParams.topMargin = dp(3);
+        detailParams.topMargin = dp(4);
         body.addView(statusDetail, detailParams);
 
         card.addView(body);
         LayoutParams cardParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         cardParams.topMargin = dp(10);
-        cardParams.bottomMargin = dp(14);
+        cardParams.bottomMargin = dp(12);
         addView(card, cardParams);
         updateText();
     }
