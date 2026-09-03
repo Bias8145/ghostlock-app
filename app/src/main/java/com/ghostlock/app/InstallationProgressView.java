@@ -1,5 +1,8 @@
 package com.ghostlock.app;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Typeface;
 import android.text.Editable;
@@ -21,6 +24,7 @@ public final class InstallationProgressView extends LinearLayout {
     private final TextView statusIcon;
     private final TextView statusTitle;
     private final TextView statusDetail;
+    private ValueAnimator breathingAnimator;
     private int lastRunMarker = -1;
     private String lastTitle = "";
     private String lastDetail = "";
@@ -90,6 +94,11 @@ public final class InstallationProgressView extends LinearLayout {
         post(this::bindLog);
     }
 
+    @Override protected void onDetachedFromWindow() {
+        stopBreathing();
+        super.onDetachedFromWindow();
+    }
+
     private void bindLog() {
         TextView log = getRootView().findViewById(R.id.logView);
         if (log == null) return;
@@ -150,19 +159,27 @@ public final class InstallationProgressView extends LinearLayout {
     }
 
     private void setStatus(String title, String detail, String icon) {
-        boolean changed = !title.equals(lastTitle) || !icon.equals(statusIcon.getText().toString());
+        boolean iconChanged = !icon.equals(statusIcon.getText().toString());
         statusTitle.setText(title);
         statusDetail.setText(detail);
         statusIcon.setText(icon);
 
-        if (changed && isAttachedToWindow()) {
+        if (iconChanged && isAttachedToWindow()) {
             animateState();
         }
+
+        if ("●".equals(icon)) {
+            startBreathing();
+        } else {
+            stopBreathing();
+        }
+
         lastTitle = title;
         lastDetail = detail;
     }
 
     private void animateState() {
+        stopBreathing();
         statusIcon.animate().cancel();
         statusTitle.animate().cancel();
         statusDetail.animate().cancel();
@@ -173,12 +190,49 @@ public final class InstallationProgressView extends LinearLayout {
         statusTitle.setAlpha(0.55f);
         statusDetail.setAlpha(0.55f);
 
-        statusIcon.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(180).start();
+        statusIcon.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(180)
+                .setListener(new AnimatorListenerAdapter() {
+                    @Override public void onAnimationEnd(Animator animation) {
+                        if ("●".equals(statusIcon.getText().toString())) {
+                            startBreathing();
+                        }
+                    }
+                }).start();
         statusTitle.animate().alpha(1f).setDuration(180).start();
         statusDetail.animate().alpha(1f).setDuration(220).start();
     }
 
+    private void startBreathing() {
+        if (!isAttachedToWindow() || breathingAnimator != null && breathingAnimator.isRunning()) {
+            return;
+        }
+        breathingAnimator = ValueAnimator.ofFloat(1.0f, 1.10f, 1.0f);
+        breathingAnimator.setDuration(1100);
+        breathingAnimator.setRepeatCount(ValueAnimator.INFINITE);
+        breathingAnimator.setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator());
+        breathingAnimator.addUpdateListener(animation -> {
+            if (!"●".equals(statusIcon.getText().toString())) {
+                stopBreathing();
+                return;
+            }
+            float scale = (Float) animation.getAnimatedValue();
+            statusIcon.setScaleX(scale);
+            statusIcon.setScaleY(scale);
+        });
+        breathingAnimator.start();
+    }
+
+    private void stopBreathing() {
+        if (breathingAnimator != null) {
+            breathingAnimator.cancel();
+            breathingAnimator = null;
+        }
+        statusIcon.setScaleX(1f);
+        statusIcon.setScaleY(1f);
+    }
+
     public void resetStatus() {
+        stopBreathing();
         lastRunMarker = -1;
         lastTitle = "";
         lastDetail = "";
