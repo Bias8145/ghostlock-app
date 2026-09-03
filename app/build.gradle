@@ -3,7 +3,7 @@ plugins {
 }
 
 def appName = 'GhostLock'
-def appVersionName = '1.0'
+def appVersionName = '2.1.2'
 
 def signingProps = new Properties()
 def signingPropsFile = rootProject.file('local.properties')
