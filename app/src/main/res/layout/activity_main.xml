@@ -8,7 +8,6 @@
     android:clipToPadding="false"
     android:fitsSystemWindows="true">
 
-    <!-- Legacy MainActivity targets kept non-rendering while SettingsActivity owns the visible settings UI. -->
     <LinearLayout
         android:id="@+id/advancedPanel"
         android:layout_width="0dp"
@@ -43,13 +42,11 @@
                 android:layout_height="48dp"
                 android:layout_marginBottom="8dp"
                 android:gravity="center_vertical">
-
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:orientation="vertical">
-
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -81,7 +78,6 @@
                                 android:textStyle="bold" />
                         </LinearLayout>
                     </LinearLayout>
-
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -90,7 +86,6 @@
                         android:textColor="@color/text_secondary"
                         android:textSize="11sp" />
                 </LinearLayout>
-
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -241,7 +236,6 @@
                         android:visibility="gone"
                         app:cornerRadius="18dp" />
                 </com.ghostlock.app.CollapsibleToolsLayout>
-
                 <com.ghostlock.app.ConfirmRunButton
                     android:id="@+id/runButton"
                     android:layout_width="0dp"
@@ -298,7 +292,7 @@
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/copyButton"
                             style="@style/Widget.Material3.Button.TonalButton"
-                            android:layout_width="116dp"
+                            android:layout_width="100dp"
                             android:layout_height="40dp"
                             android:minWidth="0dp"
                             android:insetTop="0dp"
@@ -309,6 +303,24 @@
                             android:textColor="@color/log_title"
                             android:textSize="12sp"
                             android:contentDescription="Copy log"
+                            app:backgroundTint="@color/surface_container"
+                            app:cornerRadius="13dp"
+                            app:strokeWidth="0dp" />
+                        <com.ghostlock.app.ClearLogButton
+                            android:id="@+id/clearLogButton"
+                            style="@style/Widget.Material3.Button.TonalButton"
+                            android:layout_width="100dp"
+                            android:layout_height="40dp"
+                            android:layout_marginStart="6dp"
+                            android:minWidth="0dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:gravity="center"
+                            android:text="Clear log"
+                            android:textAllCaps="false"
+                            android:textColor="@color/log_title"
+                            android:textSize="12sp"
+                            android:contentDescription="Clear log"
                             app:backgroundTint="@color/surface_container"
                             app:cornerRadius="13dp"
                             app:strokeWidth="0dp" />
