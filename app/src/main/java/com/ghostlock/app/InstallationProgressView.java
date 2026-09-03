@@ -40,6 +40,7 @@ public final class InstallationProgressView extends LinearLayout {
     private int stage;
     private boolean failed;
     private boolean started;
+    private int lastRunMarker = -1;
     private long stageStartedAt;
     private long runToken;
     private ValueAnimator dotsAnimator;
@@ -125,14 +126,14 @@ public final class InstallationProgressView extends LinearLayout {
             return;
         }
 
-        // Only consume the current run. This makes a second Run start at stage 0
-        // even when the previous run remains visible in the live log.
-        String currentRun = s.substring(startMarker);
-        if (!started || currentRun.indexOf("==== start ====") == 0 && !hasCurrentRunState(currentRun)) {
+        // A new start marker always means a new installation run. Previous log
+        // output remains visible, but progress state never carries into it.
+        if (startMarker != lastRunMarker) {
+            lastRunMarker = startMarker;
             beginRun();
         }
-        if (!started) return;
 
+        String currentRun = s.substring(startMarker);
         String[] lines = currentRun.split("\\n");
         int requestedStage = 0;
         String latest = "";
@@ -160,10 +161,6 @@ public final class InstallationProgressView extends LinearLayout {
         }
     }
 
-    private boolean hasCurrentRunState(String currentRun) {
-        return currentRun.length() > "==== start ====".length();
-    }
-
     private void beginRun() {
         runToken++;
         handler.removeCallbacksAndMessages(null);
@@ -177,13 +174,12 @@ public final class InstallationProgressView extends LinearLayout {
     }
 
     private void resetIdle() {
-        if (started) {
-            runToken++;
-            handler.removeCallbacksAndMessages(null);
-        }
+        runToken++;
+        handler.removeCallbacksAndMessages(null);
         started = false;
         failed = false;
         stage = 0;
+        lastRunMarker = -1;
         stopAnimation();
         strip.invalidate();
         updateText();
@@ -204,14 +200,24 @@ public final class InstallationProgressView extends LinearLayout {
         long delay = Math.max(0L, MIN_STAGE_DURATION_MS - elapsed);
         long token = runToken;
         handler.removeCallbacksAndMessages(null);
-        handler.postDelayed(() -> {
-            if (token != runToken || !started) return;
-            stage = Math.min(stage + 1, requestedStage);
-            stageStartedAt = System.currentTimeMillis();
-            strip.invalidate();
+        handler.postDelayed(() -> advanceStage(requestedStage, active, token), delay);
+    }
+
+    private void advanceStage(int target, boolean active, long token) {
+        if (token != runToken || !started || failed) return;
+        if (stage >= target) {
+            if (!active) stopAnimation();
             updateText();
-            if (active) startAnimation();
-        }, delay);
+            return;
+        }
+        stage++;
+        stageStartedAt = System.currentTimeMillis();
+        strip.invalidate();
+        updateText();
+        if (active) startAnimation(); else stopAnimation();
+        if (stage < target) {
+            handler.postDelayed(() -> advanceStage(target, active, token), MIN_STAGE_DURATION_MS);
+        }
     }
 
     private void setProgress(int newStage, boolean active, boolean error) {
