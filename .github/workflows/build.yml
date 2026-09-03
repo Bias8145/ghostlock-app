@@ -6,6 +6,7 @@ on:
       - "**.md"
     branches:
       - main
+      - ghostlock-v2.1.2
       - ui/material3-redesign
       - redesign
       - test
@@ -23,7 +24,7 @@ env:
 
 jobs:
   build-apk:
-    name: Build APK
+    name: Build APK v2.1.2
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -69,7 +70,7 @@ jobs:
         run: rustup toolchain link ondk "${{ runner.temp }}/ondk/toolchains/rust"
       - name: Decode Android signing key
         run: echo ${{ secrets.SIGNING_KEY }} | base64 -d > keystore.jks
-      - name: Build Release APK
+      - name: Build Release APK v2.1.2
         run: |
           export ONDK_HOME="${{ runner.temp }}/ondk"
           export ANDROID_NDK_HOME="$ONDK_HOME"
@@ -80,12 +81,12 @@ jobs:
           export KEY_PASSWORD="${{ secrets.KEY_PASSWORD }}"
           ./gradlew :app:assembleRelease --no-daemon
       - name: Rename Release APK
-        run: mv app/build/outputs/apk/release/*.apk "GhostLock App V2.apk"
+        run: mv app/build/outputs/apk/release/*.apk "GhostLock App V2.1.2.apk"
       - name: Upload Release APK
         uses: actions/upload-artifact@v7
         with:
-          name: GhostLock-App-V2
-          path: "GhostLock App V2.apk"
+          name: GhostLock-App-V2.1.2
+          path: "GhostLock App V2.1.2.apk"
           archive: false
   post_telegram:
     needs: [build-apk]
