@@ -56,6 +56,9 @@
         <item name="buttonBarPositiveButtonStyle">@style/Widget.GhostLock.DialogButton</item>
         <item name="buttonBarNegativeButtonStyle">@style/Widget.GhostLock.DialogButton</item>
         <item name="buttonBarNeutralButtonStyle">@style/Widget.GhostLock.DialogButton</item>
+        <item name="android:windowBackground">@drawable/bg_ghostlock_dialog</item>
+        <item name="android:windowMinWidthMajor">86%</item>
+        <item name="android:windowMinWidthMinor">86%</item>
     </style>
 
     <style name="ShapeAppearance.GhostLock.Dialog" parent="ShapeAppearance.Material3.Corner.Large">
