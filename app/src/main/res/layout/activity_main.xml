@@ -150,7 +150,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
+                android:layout_marginBottom="20dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
                 <com.ghostlock.app.CollapsibleToolsLayout
@@ -258,7 +258,7 @@
                 android:id="@+id/installationProgress"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="2dp" />
+                android:layout_marginBottom="16dp" />
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/logPanel"
