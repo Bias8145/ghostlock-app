@@ -6,6 +6,8 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Typeface;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
@@ -20,6 +22,7 @@ import java.util.Locale;
 /** Compact installation progress driven by the existing live log. */
 public final class InstallationProgressView extends LinearLayout {
     private static final int STAGES = 6;
+    private static final long MIN_STAGE_DURATION_MS = 650L;
     private static final String[] ACTIVE = {
             "Detecting device", "Checking manager", "Checking kernel",
             "Resolving kernel offsets", "Executing GhostLock", "Verifying result"
@@ -33,9 +36,13 @@ public final class InstallationProgressView extends LinearLayout {
     private final ProgressStrip strip;
     private final TextView statusTitle;
     private final TextView statusDetail;
+    private final Handler handler = new Handler(Looper.getMainLooper());
     private int stage;
     private boolean failed;
     private boolean started;
+    private int lastRunMarker = -1;
+    private long stageStartedAt;
+    private long runToken;
     private ValueAnimator dotsAnimator;
 
     public InstallationProgressView(Context context, AttributeSet attrs) {
@@ -94,6 +101,7 @@ public final class InstallationProgressView extends LinearLayout {
 
     @Override protected void onDetachedFromWindow() {
         stopAnimation();
+        handler.removeCallbacksAndMessages(null);
         super.onDetachedFromWindow();
     }
 
@@ -112,32 +120,69 @@ public final class InstallationProgressView extends LinearLayout {
 
     private void updateFromLog(String log) {
         String s = log.toLowerCase(Locale.ROOT);
-        if (s.contains("==== start ====")) started = true;
-        if (!started) {
-            setProgress(0, false, false);
+        int startMarker = s.lastIndexOf("==== start ====");
+        if (startMarker < 0) {
+            resetIdle();
             return;
         }
 
-        String[] lines = s.split("\\n");
+        // A new start marker always means a new installation run. Previous log
+        // output remains visible, but progress state never carries into it.
+        if (startMarker != lastRunMarker) {
+            lastRunMarker = startMarker;
+            beginRun();
+        }
+
+        String currentRun = s.substring(startMarker);
+        String[] lines = currentRun.split("\\n");
+        int requestedStage = 0;
         String latest = "";
         for (int i = lines.length - 1; i >= 0; i--) {
             if (!lines[i].trim().isEmpty()) { latest = lines[i].trim(); break; }
         }
 
-        int next = stage;
-        if (containsAny(latest, "binary ready", "ksud ready")) next = Math.max(next, latest.contains("ksud ready") ? 1 : 0);
-        if (containsAny(latest, "kernel", "uname", "supported kernel")) next = Math.max(next, 2);
-        if (containsAny(latest, "offset", "pselect", "kallsyms", "phys", "init_task", "security_hook")) next = Math.max(next, 3);
-        if (containsAny(latest, "running ghostlock", "preparing", "prepare")) next = Math.max(next, 4);
-        if (containsAny(latest, "exit code=", "execution")) next = Math.max(next, 5);
+        for (String line : lines) {
+            String entry = line.trim();
+            if (containsAny(entry, "binary ready", "ksud ready")) requestedStage = Math.max(requestedStage, 1);
+            if (containsAny(entry, "kernel", "uname", "supported kernel")) requestedStage = Math.max(requestedStage, 2);
+            if (containsAny(entry, "offset", "pselect", "kallsyms", "phys", "init_task", "security_hook")) requestedStage = Math.max(requestedStage, 3);
+            if (containsAny(entry, "running ghostlock", "preparing", "prepare")) requestedStage = Math.max(requestedStage, 4);
+            if (containsAny(entry, "exit code=", "execution")) requestedStage = Math.max(requestedStage, 5);
+        }
 
         boolean error = containsAny(latest, "error:", "failed", "unsupported", "exit code=137", "exit code=-1");
         boolean success = latest.contains("exit code=0");
         if (success) {
-            setProgress(5, false, false);
+            requestStage(5, false, false);
+        } else if (error) {
+            setProgress(Math.min(requestedStage, 5), false, true);
         } else {
-            setProgress(Math.min(next, 5), true, error);
+            requestStage(Math.min(requestedStage, 5), true, false);
         }
+    }
+
+    private void beginRun() {
+        runToken++;
+        handler.removeCallbacksAndMessages(null);
+        started = true;
+        failed = false;
+        stage = 0;
+        stageStartedAt = System.currentTimeMillis();
+        strip.invalidate();
+        updateText();
+        startAnimation();
+    }
+
+    private void resetIdle() {
+        runToken++;
+        handler.removeCallbacksAndMessages(null);
+        started = false;
+        failed = false;
+        stage = 0;
+        lastRunMarker = -1;
+        stopAnimation();
+        strip.invalidate();
+        updateText();
     }
 
     private static boolean containsAny(String value, String... needles) {
@@ -145,9 +190,42 @@ public final class InstallationProgressView extends LinearLayout {
         return false;
     }
 
+    private void requestStage(int requestedStage, boolean active, boolean error) {
+        if (requestedStage <= stage || error) {
+            setProgress(stage, active, error);
+            return;
+        }
+
+        long elapsed = System.currentTimeMillis() - stageStartedAt;
+        long delay = Math.max(0L, MIN_STAGE_DURATION_MS - elapsed);
+        long token = runToken;
+        handler.removeCallbacksAndMessages(null);
+        handler.postDelayed(() -> advanceStage(requestedStage, active, token), delay);
+    }
+
+    private void advanceStage(int target, boolean active, long token) {
+        if (token != runToken || !started || failed) return;
+        if (stage >= target) {
+            if (!active) stopAnimation();
+            updateText();
+            return;
+        }
+        stage++;
+        stageStartedAt = System.currentTimeMillis();
+        strip.invalidate();
+        updateText();
+        if (active) startAnimation(); else stopAnimation();
+        if (stage < target) {
+            handler.postDelayed(() -> advanceStage(target, active, token), MIN_STAGE_DURATION_MS);
+        }
+    }
+
     private void setProgress(int newStage, boolean active, boolean error) {
         stage = Math.max(0, Math.min(STAGES - 1, newStage));
         failed = error;
+        if (error) {
+            handler.removeCallbacksAndMessages(null);
+        }
         strip.invalidate();
         updateText();
         if (active && !error) startAnimation(); else stopAnimation();
@@ -157,13 +235,17 @@ public final class InstallationProgressView extends LinearLayout {
         if (failed) {
             statusTitle.setText("Installation failed");
             statusDetail.setText(stage == 2 ? "The detected kernel is not supported." : "GhostLock exited with an error.");
-        } else if (started && stage == STAGES - 1) {
+        } else if (started && stage == STAGES - 1 && !dotsAnimatorRunning()) {
             statusTitle.setText("Installation completed");
             statusDetail.setText("GhostLock executed successfully.");
         } else {
             statusTitle.setText(ACTIVE[stage]);
             statusDetail.setText(DETAIL[stage]);
         }
+    }
+
+    private boolean dotsAnimatorRunning() {
+        return dotsAnimator != null && dotsAnimator.isRunning();
     }
 
     private void startAnimation() {
@@ -212,7 +294,7 @@ public final class InstallationProgressView extends LinearLayout {
             }
             for (int i = 0; i < STAGES; i++) {
                 float x = start + step * i;
-                if (i < stage || (i == stage && stage == STAGES - 1 && started && !failed)) drawCheck(canvas, x, y);
+                if (i < stage || (i == stage && stage == STAGES - 1 && started && !failed && !dotsAnimatorRunning())) drawCheck(canvas, x, y);
                 else if (i == stage && failed) drawCross(canvas, x, y);
                 else if (i == stage && started) drawActive(canvas, x, y);
                 else drawPending(canvas, x, y);
