@@ -11,8 +11,6 @@ import android.util.AttributeSet;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.google.android.material.card.MaterialCardView;
-
 import java.util.Locale;
 
 /**
@@ -40,24 +38,17 @@ public final class InstallationProgressView extends LinearLayout {
         heading.setTextSize(11);
         heading.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         LayoutParams headingParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        headingParams.bottomMargin = dp(8);
+        headingParams.bottomMargin = dp(7);
         addView(heading, headingParams);
-
-        MaterialCardView card = new MaterialCardView(context);
-        card.setCardBackgroundColor(context.getColor(R.color.surface_container_low));
-        card.setCardElevation(0);
-        card.setRadius(dp(20));
-        card.setStrokeWidth(0);
 
         LinearLayout body = new LinearLayout(context);
         body.setOrientation(HORIZONTAL);
         body.setGravity(android.view.Gravity.CENTER_VERTICAL);
-        body.setPadding(dp(16), dp(12), dp(16), dp(12));
+        body.setPadding(0, dp(2), 0, dp(2));
 
         statusIcon = new TextView(context);
         statusIcon.setTextColor(context.getColor(R.color.text_secondary));
-        // Optical sizing: the glyphs need to visually match the 14sp status title,
-        // not merely use the same numeric size.
+        // Optical sizing: balance the glyph visually against the 14sp status title.
         statusIcon.setTextSize(18);
         statusIcon.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         statusIcon.setGravity(android.view.Gravity.CENTER);
@@ -83,10 +74,7 @@ public final class InstallationProgressView extends LinearLayout {
         text.addView(statusDetail, detailParams);
 
         body.addView(text, new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
-        card.addView(body);
-        LayoutParams cardParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        cardParams.bottomMargin = dp(12);
-        addView(card, cardParams);
+        addView(body, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
         resetStatus();
     }
 
