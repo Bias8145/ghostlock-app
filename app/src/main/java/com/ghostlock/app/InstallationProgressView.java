@@ -1,17 +1,10 @@
 package com.ghostlock.app;
 
-import android.animation.ValueAnimator;
 import android.content.Context;
-import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.graphics.Path;
 import android.graphics.Typeface;
-import android.os.Handler;
-import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
-import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -19,31 +12,14 @@ import com.google.android.material.card.MaterialCardView;
 
 import java.util.Locale;
 
-/** Compact installation progress driven by the existing live log. */
+/**
+ * Compact installation status summary driven directly by the live log.
+ * No timers or decorative progress animation are used.
+ */
 public final class InstallationProgressView extends LinearLayout {
-    private static final int STAGES = 6;
-    private static final long MIN_STAGE_DURATION_MS = 650L;
-    private static final String[] ACTIVE = {
-            "Detecting device", "Checking manager", "Checking kernel",
-            "Resolving kernel offsets", "Executing GhostLock", "Verifying result"
-    };
-    private static final String[] DETAIL = {
-            "Checking device and environment...", "Detecting a compatible manager...",
-            "Detecting and validating kernel...", "Validating offsets for the detected kernel...",
-            "Running GhostLock...", "Checking the final execution result..."
-    };
-
-    private final ProgressStrip strip;
     private final TextView statusTitle;
     private final TextView statusDetail;
-    private final Handler handler = new Handler(Looper.getMainLooper());
-    private int stage;
-    private boolean failed;
-    private boolean started;
     private int lastRunMarker = -1;
-    private long stageStartedAt;
-    private long runToken;
-    private ValueAnimator dotsAnimator;
 
     public InstallationProgressView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -57,11 +33,8 @@ public final class InstallationProgressView extends LinearLayout {
         heading.setTextSize(11);
         heading.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         LayoutParams headingParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        headingParams.bottomMargin = dp(12);
+        headingParams.bottomMargin = dp(8);
         addView(heading, headingParams);
-
-        strip = new ProgressStrip(context);
-        addView(strip, new LayoutParams(LayoutParams.MATCH_PARENT, dp(24)));
 
         MaterialCardView card = new MaterialCardView(context);
         card.setCardBackgroundColor(context.getColor(R.color.surface_container_low));
@@ -83,26 +56,19 @@ public final class InstallationProgressView extends LinearLayout {
         statusDetail.setTextColor(context.getColor(R.color.text_secondary));
         statusDetail.setTextSize(12);
         LayoutParams detailParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        detailParams.topMargin = dp(4);
+        detailParams.topMargin = dp(3);
         body.addView(statusDetail, detailParams);
 
         card.addView(body);
         LayoutParams cardParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        cardParams.topMargin = dp(10);
         cardParams.bottomMargin = dp(12);
         addView(card, cardParams);
-        updateText();
+        resetStatus();
     }
 
     @Override protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         post(this::bindLog);
-    }
-
-    @Override protected void onDetachedFromWindow() {
-        stopAnimation();
-        handler.removeCallbacksAndMessages(null);
-        super.onDetachedFromWindow();
     }
 
     private void bindLog() {
@@ -122,233 +88,71 @@ public final class InstallationProgressView extends LinearLayout {
         String s = log.toLowerCase(Locale.ROOT);
         int startMarker = s.lastIndexOf("==== start ====");
         if (startMarker < 0) {
-            resetIdle();
+            resetStatus();
             return;
         }
-
-        // A new start marker always means a new installation run. Previous log
-        // output remains visible, but progress state never carries into it.
         if (startMarker != lastRunMarker) {
             lastRunMarker = startMarker;
-            beginRun();
         }
 
         String currentRun = s.substring(startMarker);
         String[] lines = currentRun.split("\\n");
-        int requestedStage = 0;
         String latest = "";
         for (int i = lines.length - 1; i >= 0; i--) {
-            if (!lines[i].trim().isEmpty()) { latest = lines[i].trim(); break; }
+            if (!lines[i].trim().isEmpty()) {
+                latest = lines[i].trim();
+                break;
+            }
         }
 
-        for (String line : lines) {
-            String entry = line.trim();
-            if (containsAny(entry, "binary ready", "ksud ready")) requestedStage = Math.max(requestedStage, 1);
-            if (containsAny(entry, "kernel", "uname", "supported kernel")) requestedStage = Math.max(requestedStage, 2);
-            if (containsAny(entry, "offset", "pselect", "kallsyms", "phys", "init_task", "security_hook")) requestedStage = Math.max(requestedStage, 3);
-            if (containsAny(entry, "running ghostlock", "preparing", "prepare")) requestedStage = Math.max(requestedStage, 4);
-            if (containsAny(entry, "exit code=", "execution")) requestedStage = Math.max(requestedStage, 5);
+        if (latest.contains("exit code=0")) {
+            setStatus("Installation completed", "GhostLock executed successfully. Exit code: 0");
+            return;
+        }
+        if (containsAny(latest, "error:", "failed", "unsupported", "exit code=137", "exit code=-1")) {
+            setStatus("Installation failed", latest);
+            return;
         }
 
-        boolean error = containsAny(latest, "error:", "failed", "unsupported", "exit code=137", "exit code=-1");
-        boolean success = latest.contains("exit code=0");
-        if (success) {
-            requestStage(5, false, false);
-        } else if (error) {
-            setProgress(Math.min(requestedStage, 5), false, true);
-        } else {
-            requestStage(Math.min(requestedStage, 5), true, false);
+        String title = "Running installation";
+        String detail = latest.isEmpty() ? "Waiting for installation output..." : latest;
+        if (containsAny(latest, "binary ready", "ksud ready")) {
+            title = "Checking manager";
+            detail = latest;
+        } else if (containsAny(latest, "kernel", "uname", "supported kernel")) {
+            title = "Checking kernel";
+            detail = latest;
+        } else if (containsAny(latest, "offset", "pselect", "kallsyms", "phys", "init_task", "security_hook")) {
+            title = "Resolving kernel offsets";
+            detail = latest;
+        } else if (containsAny(latest, "running ghostlock", "preparing", "prepare")) {
+            title = "Executing GhostLock";
+            detail = latest;
+        } else if (containsAny(latest, "execution", "exit code=")) {
+            title = "Verifying result";
+            detail = latest;
         }
+        setStatus(title, detail);
     }
 
-    private void beginRun() {
-        runToken++;
-        handler.removeCallbacksAndMessages(null);
-        started = true;
-        failed = false;
-        stage = 0;
-        stageStartedAt = System.currentTimeMillis();
-        strip.invalidate();
-        updateText();
-        startAnimation();
+    private void setStatus(String title, String detail) {
+        statusTitle.setText(title);
+        statusDetail.setText(detail);
     }
 
-    private void resetIdle() {
-        runToken++;
-        handler.removeCallbacksAndMessages(null);
-        started = false;
-        failed = false;
-        stage = 0;
+    public void resetStatus() {
         lastRunMarker = -1;
-        stopAnimation();
-        strip.invalidate();
-        updateText();
+        setStatus("Ready to run", "Run GhostLock to begin installation.");
     }
 
     private static boolean containsAny(String value, String... needles) {
-        for (String needle : needles) if (value.contains(needle)) return true;
+        for (String needle : needles) {
+            if (value.contains(needle)) return true;
+        }
         return false;
     }
 
-    private void requestStage(int requestedStage, boolean active, boolean error) {
-        if (requestedStage <= stage || error) {
-            setProgress(stage, active, error);
-            return;
-        }
-
-        long elapsed = System.currentTimeMillis() - stageStartedAt;
-        long delay = Math.max(0L, MIN_STAGE_DURATION_MS - elapsed);
-        long token = runToken;
-        handler.removeCallbacksAndMessages(null);
-        handler.postDelayed(() -> advanceStage(requestedStage, active, token), delay);
-    }
-
-    private void advanceStage(int target, boolean active, long token) {
-        if (token != runToken || !started || failed) return;
-        if (stage >= target) {
-            if (!active) stopAnimation();
-            updateText();
-            return;
-        }
-        stage++;
-        stageStartedAt = System.currentTimeMillis();
-        strip.invalidate();
-        updateText();
-        if (active) startAnimation(); else stopAnimation();
-        if (stage < target) {
-            handler.postDelayed(() -> advanceStage(target, active, token), MIN_STAGE_DURATION_MS);
-        }
-    }
-
-    private void setProgress(int newStage, boolean active, boolean error) {
-        stage = Math.max(0, Math.min(STAGES - 1, newStage));
-        failed = error;
-        if (error) {
-            handler.removeCallbacksAndMessages(null);
-        }
-        strip.invalidate();
-        updateText();
-        if (active && !error) startAnimation(); else stopAnimation();
-    }
-
-    private void updateText() {
-        if (failed) {
-            statusTitle.setText("Installation failed");
-            statusDetail.setText(stage == 2 ? "The detected kernel is not supported." : "GhostLock exited with an error.");
-        } else if (started && stage == STAGES - 1 && !dotsAnimatorRunning()) {
-            statusTitle.setText("Installation completed");
-            statusDetail.setText("GhostLock executed successfully.");
-        } else {
-            statusTitle.setText(ACTIVE[stage]);
-            statusDetail.setText(DETAIL[stage]);
-        }
-    }
-
-    private boolean dotsAnimatorRunning() {
-        return dotsAnimator != null && dotsAnimator.isRunning();
-    }
-
-    private void startAnimation() {
-        if (dotsAnimator != null && dotsAnimator.isRunning()) return;
-        dotsAnimator = ValueAnimator.ofFloat(0f, 1f);
-        dotsAnimator.setDuration(900);
-        dotsAnimator.setRepeatCount(ValueAnimator.INFINITE);
-        dotsAnimator.addUpdateListener(a -> strip.setPhase((float) a.getAnimatedValue()));
-        dotsAnimator.start();
-    }
-
-    private void stopAnimation() {
-        if (dotsAnimator != null) {
-            dotsAnimator.cancel();
-            dotsAnimator = null;
-        }
-        strip.setPhase(0f);
-    }
-
-    private int dp(float value) { return Math.round(value * getResources().getDisplayMetrics().density); }
-
-    private final class ProgressStrip extends View {
-        private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        private final Paint icon = new Paint(Paint.ANTI_ALIAS_FLAG);
-        private float phase;
-
-        ProgressStrip(Context context) {
-            super(context);
-            icon.setStyle(Paint.Style.STROKE);
-            icon.setStrokeWidth(dp(1.8f));
-            icon.setStrokeCap(Paint.Cap.ROUND);
-        }
-
-        void setPhase(float value) { phase = value; invalidate(); }
-
-        @Override protected void onDraw(Canvas canvas) {
-            float y = getHeight() / 2f;
-            float start = dp(8);
-            float end = getWidth() - dp(8);
-            float step = (end - start) / (STAGES - 1);
-
-            for (int i = 0; i < STAGES - 1; i++) {
-                float x1 = start + step * i + dp(10);
-                float x2 = start + step * (i + 1) - dp(10);
-                drawDots(canvas, x1, x2, y, i < stage, i == stage && started && !failed);
-            }
-            for (int i = 0; i < STAGES; i++) {
-                float x = start + step * i;
-                if (i < stage || (i == stage && stage == STAGES - 1 && started && !failed && !dotsAnimatorRunning())) drawCheck(canvas, x, y);
-                else if (i == stage && failed) drawCross(canvas, x, y);
-                else if (i == stage && started) drawActive(canvas, x, y);
-                else drawPending(canvas, x, y);
-            }
-        }
-
-        private void drawDots(Canvas c, float x1, float x2, float y, boolean completed, boolean active) {
-            int count = Math.max(2, Math.round((x2 - x1) / dp(7)));
-            int base = getResources().getColor(completed ? R.color.accent : R.color.text_secondary, getContext().getTheme());
-            for (int i = 0; i < count; i++) {
-                float t = i / (float)(count - 1);
-                float alpha = completed ? 1f : 0.28f;
-                if (active) {
-                    float wave = (t - phase + 1f) % 1f;
-                    alpha = 0.22f + 0.78f * (1f - wave);
-                }
-                paint.setStyle(Paint.Style.FILL);
-                paint.setColor(base);
-                paint.setAlpha(Math.round(alpha * 255));
-                c.drawCircle(x1 + (x2 - x1) * t, y, dp(1.45f), paint);
-            }
-        }
-
-        private void drawPending(Canvas c, float x, float y) {
-            icon.setColor(getResources().getColor(R.color.text_secondary, getContext().getTheme()));
-            icon.setAlpha(130);
-            c.drawCircle(x, y, dp(5), icon);
-        }
-
-        private void drawActive(Canvas c, float x, float y) {
-            icon.setColor(getResources().getColor(R.color.accent, getContext().getTheme()));
-            icon.setAlpha(255);
-            c.drawCircle(x, y, dp(5), icon);
-            paint.setStyle(Paint.Style.FILL);
-            paint.setColor(getResources().getColor(R.color.accent, getContext().getTheme()));
-            paint.setAlpha(55);
-            c.drawCircle(x, y, dp(8), paint);
-        }
-
-        private void drawCheck(Canvas c, float x, float y) {
-            icon.setColor(getResources().getColor(R.color.status_success, getContext().getTheme()));
-            icon.setAlpha(255);
-            Path p = new Path();
-            p.moveTo(x - dp(3), y);
-            p.lineTo(x - dp(1), y + dp(2));
-            p.lineTo(x + dp(3.5f), y - dp(3));
-            c.drawPath(p, icon);
-        }
-
-        private void drawCross(Canvas c, float x, float y) {
-            icon.setColor(getResources().getColor(R.color.status_error, getContext().getTheme()));
-            icon.setAlpha(255);
-            c.drawLine(x - dp(3), y - dp(3), x + dp(3), y + dp(3), icon);
-            c.drawLine(x + dp(3), y - dp(3), x - dp(3), y + dp(3), icon);
-        }
+    private int dp(float value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
     }
 }
