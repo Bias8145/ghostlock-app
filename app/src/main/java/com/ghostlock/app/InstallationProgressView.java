@@ -8,7 +8,6 @@ import android.graphics.Typeface;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
-import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -57,7 +56,9 @@ public final class InstallationProgressView extends LinearLayout {
 
         statusIcon = new TextView(context);
         statusIcon.setTextColor(context.getColor(R.color.text_secondary));
-        statusIcon.setTextSize(14);
+        // Optical sizing: the glyphs need to visually match the 14sp status title,
+        // not merely use the same numeric size.
+        statusIcon.setTextSize(18);
         statusIcon.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         statusIcon.setGravity(android.view.Gravity.CENTER);
         LayoutParams iconParams = new LayoutParams(dp(24), dp(24));
@@ -206,8 +207,8 @@ public final class InstallationProgressView extends LinearLayout {
         if (!isAttachedToWindow() || breathingAnimator != null && breathingAnimator.isRunning()) {
             return;
         }
-        breathingAnimator = ValueAnimator.ofFloat(1.0f, 1.10f, 1.0f);
-        breathingAnimator.setDuration(1100);
+        breathingAnimator = ValueAnimator.ofFloat(1.0f, 1.08f, 1.0f);
+        breathingAnimator.setDuration(1200);
         breathingAnimator.setRepeatCount(ValueAnimator.INFINITE);
         breathingAnimator.setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator());
         breathingAnimator.addUpdateListener(animation -> {
