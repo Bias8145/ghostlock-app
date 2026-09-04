@@ -3,7 +3,7 @@ plugins {
 }
 
 def appName = 'GhostLock'
-def appVersionName = '2.1.2'
+def appVersionName = '2.1.3'
 
 def signingProps = new Properties()
 def signingPropsFile = rootProject.file('local.properties')
@@ -11,7 +11,7 @@ if (signingPropsFile.isFile()) {
     signingPropsFile.withInputStream { signingProps.load(it) }
 }
 def keystorePath = System.getenv('KEYSTORE_PATH') ?: signingProps.getProperty('KEYSTORE_PATH')
-def keystorePwd = System.getenv('KEYSTORE_PASS') ?: signingProps.getProperty('KEYSTORE_PASS')
+def keystorePwd = System.getenv('KEYSTORE_PASS') ?: signingProps.getProperty('KEY_STORE_PASSWORD') ?: signingProps.getProperty('KEYSTORE_PASS')
 def alias = System.getenv('KEY_ALIAS') ?: signingProps.getProperty('KEY_ALIAS')
 def keyPwd = System.getenv('KEY_PASSWORD') ?: signingProps.getProperty('KEY_PASSWORD')
 def isPrBuild = System.getenv('GITHUB_EVENT_NAME') == 'pull_request' || (System.getenv('GITHUB_REF') ?: '').startsWith('refs/pull/')
