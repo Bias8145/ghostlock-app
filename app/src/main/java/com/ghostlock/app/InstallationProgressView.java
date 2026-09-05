@@ -6,7 +6,6 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
 import android.view.Gravity;
-import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -44,10 +43,10 @@ public final class InstallationProgressView extends LinearLayout {
         LinearLayout heading = new LinearLayout(context);
         heading.setGravity(Gravity.CENTER_VERTICAL);
 
-        TextView title = text("INSTALLATION", 17, R.color.text_secondary, Typeface.BOLD);
+        TextView title = text("INSTALLATION", 14, R.color.text_secondary, Typeface.BOLD);
         heading.addView(title, new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
 
-        overallStatus = text("Ready", 16, R.color.text_secondary, Typeface.BOLD);
+        overallStatus = text("Ready", 13, R.color.text_secondary, Typeface.BOLD);
         overallStatus.setGravity(Gravity.CENTER_VERTICAL);
         heading.addView(overallStatus, new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
         addView(heading, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
@@ -55,7 +54,7 @@ public final class InstallationProgressView extends LinearLayout {
         steps = new LinearLayout(context);
         steps.setOrientation(VERTICAL);
         LayoutParams stepsParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        stepsParams.topMargin = dp(14);
+        stepsParams.topMargin = dp(10);
         addView(steps, stepsParams);
 
         resetStatus();
@@ -213,7 +212,7 @@ public final class InstallationProgressView extends LinearLayout {
             MaterialCardView card = new MaterialCardView(getContext());
             card.setCardBackgroundColor(getContext().getColor(R.color.surface_container_low));
             card.setCardElevation(0f);
-            card.setRadius(dp(17));
+            card.setRadius(dp(15));
             card.setStrokeWidth(dp(1));
             card.setStrokeColor(getContext().getColor(
                     step.state == STATE_RUNNING ? R.color.accent : R.color.divider));
@@ -221,46 +220,46 @@ public final class InstallationProgressView extends LinearLayout {
             LinearLayout row = new LinearLayout(getContext());
             row.setOrientation(HORIZONTAL);
             row.setGravity(Gravity.TOP | Gravity.CENTER_VERTICAL);
-            row.setPadding(dp(14), dp(13), dp(14), dp(13));
+            row.setPadding(dp(12), dp(10), dp(12), dp(10));
 
-            TextView marker = text(marker(step.state), 28, markerColor(step.state), Typeface.BOLD);
+            TextView marker = text(marker(step.state), 22, markerColor(step.state), Typeface.BOLD);
             marker.setGravity(Gravity.CENTER);
-            row.addView(marker, new LayoutParams(dp(38), dp(38)));
+            row.addView(marker, new LayoutParams(dp(32), dp(32)));
 
             LinearLayout body = new LinearLayout(getContext());
             body.setOrientation(VERTICAL);
             LayoutParams bodyParams = new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f);
-            bodyParams.leftMargin = dp(12);
+            bodyParams.leftMargin = dp(10);
             row.addView(body, bodyParams);
 
-            TextView name = text(step.name, 18, step.state == STATE_RUNNING ? R.color.accent : R.color.text_primary, Typeface.BOLD);
+            TextView name = text(step.name, 15, step.state == STATE_RUNNING ? R.color.accent : R.color.text_primary, Typeface.BOLD);
             body.addView(name);
 
-            TextView detail = text(step.detail, 15, R.color.text_secondary, Typeface.NORMAL);
+            TextView detail = text(step.detail, 12, R.color.text_secondary, Typeface.NORMAL);
             LayoutParams detailParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-            detailParams.topMargin = dp(5);
+            detailParams.topMargin = dp(3);
             body.addView(detail, detailParams);
 
             if (step.state == STATE_RUNNING && latest != null && !latest.isEmpty()) {
-                TextView live = text(latest, 14, R.color.text_secondary, Typeface.NORMAL);
-                live.setMaxLines(4);
+                TextView live = text(latest, 11, R.color.text_secondary, Typeface.NORMAL);
+                live.setMaxLines(3);
                 LayoutParams liveParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-                liveParams.topMargin = dp(8);
+                liveParams.topMargin = dp(5);
                 body.addView(live, liveParams);
             }
 
             card.addView(row, new MaterialCardView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
             LayoutParams cardParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-            cardParams.bottomMargin = dp(i == state.size() - 1 ? 4 : 9);
+            cardParams.bottomMargin = dp(i == state.size() - 1 ? 3 : 7);
             steps.addView(card, cardParams);
 
             if (animate) {
                 card.setAlpha(0f);
-                card.setTranslationY(dp(7));
+                card.setTranslationY(dp(5));
                 card.animate()
                         .alpha(1f)
                         .translationY(0f)
-                        .setStartDelay(Math.min(i * 24L, 96L))
+                        .setStartDelay(Math.min(i * 20L, 80L))
                         .setDuration(ROW_ANIMATION_MS)
                         .setInterpolator(new DecelerateInterpolator())
                         .start();
