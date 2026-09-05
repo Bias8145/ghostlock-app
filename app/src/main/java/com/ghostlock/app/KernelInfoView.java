@@ -5,8 +5,8 @@ import android.graphics.Typeface;
 import android.os.Build;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
-import android.text.style.AbsoluteSizeSpan;
 import android.text.style.ForegroundColorSpan;
+import android.text.style.RelativeSizeSpan;
 import android.text.style.StyleSpan;
 import android.text.style.TabStopSpan;
 import android.text.style.TypefaceSpan;
@@ -16,15 +16,13 @@ import android.widget.TextView;
 import java.util.Locale;
 
 public class KernelInfoView extends TextView {
-    private static final float SECTION_TEXT_SP = 13f;
-    private static final float IDENTITY_TEXT_SP = 15f;
-    private static final float LABEL_TEXT_SP = 12f;
-    private static final float VALUE_TEXT_SP = 12f;
-    private static final float DETAIL_TEXT_SP = 12f;
-    private static final float KERNEL_TEXT_SP = 11f;
-    private static final int LABEL_COLUMN_DP = 112;
-
-    private CharSequence snapshotText = "";
+    private static final float SECTION_SCALE = 0.95f;
+    private static final float IDENTITY_SCALE = 1.05f;
+    private static final float LABEL_SCALE = 0.86f;
+    private static final float VALUE_SCALE = 0.86f;
+    private static final float DETAIL_SCALE = 0.86f;
+    private static final float KERNEL_SCALE = 0.80f;
+    private static final int LABEL_COLUMN_DP = 92;
 
     public KernelInfoView(Context context) { super(context); init(); }
     public KernelInfoView(Context context, AttributeSet attrs) { super(context, attrs); init(); }
@@ -33,22 +31,18 @@ public class KernelInfoView extends TextView {
     private void init() {
         setClickable(false);
         setFocusable(false);
-        setIncludeFontPadding(true);
+        setIncludeFontPadding(false);
         setMaxLines(Integer.MAX_VALUE);
         setEllipsize(null);
-        setLineSpacing(dp(2), 1.0f);
+        setLineSpacing(0, 1.0f);
     }
 
     @Override
     public void setText(CharSequence text, BufferType type) {
-        snapshotText = buildSnapshot();
-        super.setText(snapshotText, BufferType.SPANNABLE);
+        super.setText(buildSnapshot(), BufferType.SPANNABLE);
     }
 
     private CharSequence buildSnapshot() {
-        // The incoming legacy summary is deliberately ignored. It may contain
-        // "Kernel version:" and other labels intended for the old compact view.
-        // The snapshot is now the single source of truth for Device Info.
         String deviceName = valid(Build.MODEL);
         String codename = propertyOrFallback("ro.product.device", Build.DEVICE);
         String build = propertyOrFallback("ro.build.display.id", Build.DISPLAY);
@@ -63,14 +57,14 @@ public class KernelInfoView extends TextView {
         out.append("\n\n");
 
         appendSection(out, "PLATFORM");
-        appendRow(out, "Android", android, false);
-        appendRow(out, "SoC", formatSoc(soc), false);
-        appendRow(out, "Architecture", abi, false);
-        appendRow(out, "Page Size", pageSize, false);
+        appendRow(out, "Android", android);
+        appendRow(out, "SoC", formatSoc(soc));
+        appendRow(out, "Architecture", abi);
+        appendRow(out, "Page Size", pageSize);
         out.append('\n');
 
         appendSection(out, "BUILD");
-        appendValue(out, build, DETAIL_TEXT_SP, false, false);
+        appendValue(out, build, DETAIL_SCALE, false, false);
         out.append("\n\n");
 
         appendSection(out, "KERNEL");
@@ -81,12 +75,12 @@ public class KernelInfoView extends TextView {
     private void appendIdentity(SpannableStringBuilder out, String deviceName, String codename) {
         String name = deviceName == null ? "unknown" : deviceName.trim();
         String code = codename == null ? "unknown" : codename.trim();
-        appendValue(out, name, IDENTITY_TEXT_SP, false, false);
+        appendValue(out, name, IDENTITY_SCALE, false, false);
         if (!code.isEmpty() && !"unknown".equalsIgnoreCase(code)) {
             out.append(" ");
             int start = out.length();
             out.append(code);
-            out.setSpan(new AbsoluteSizeSpan((int) IDENTITY_TEXT_SP, true), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            out.setSpan(new RelativeSizeSpan(IDENTITY_SCALE), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             out.setSpan(new StyleSpan(Typeface.BOLD), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             out.setSpan(new ForegroundColorSpan(colorAccent()), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
@@ -96,16 +90,16 @@ public class KernelInfoView extends TextView {
         int start = out.length();
         out.append(title);
         out.setSpan(new StyleSpan(Typeface.BOLD), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        out.setSpan(new AbsoluteSizeSpan((int) SECTION_TEXT_SP, true), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        out.setSpan(new RelativeSizeSpan(SECTION_SCALE), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         out.setSpan(new ForegroundColorSpan(colorSecondary()), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         out.append('\n');
     }
 
-    private void appendRow(SpannableStringBuilder out, String label, String value, boolean emphasizeValue) {
+    private void appendRow(SpannableStringBuilder out, String label, String value) {
         int lineStart = out.length();
-        appendValue(out, label, LABEL_TEXT_SP, false, true);
+        appendValue(out, label, LABEL_SCALE, false, true);
         out.append('\t');
-        appendValue(out, value, VALUE_TEXT_SP, emphasizeValue, false);
+        appendValue(out, value, VALUE_SCALE, false, false);
         out.append('\n');
         out.setSpan(new TabStopSpan.Standard(dp(LABEL_COLUMN_DP)), lineStart, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
     }
@@ -113,15 +107,15 @@ public class KernelInfoView extends TextView {
     private void appendKernelValue(SpannableStringBuilder out, String value) {
         int start = out.length();
         out.append(value == null ? "unknown" : value);
-        out.setSpan(new AbsoluteSizeSpan((int) KERNEL_TEXT_SP, true), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        out.setSpan(new RelativeSizeSpan(KERNEL_SCALE), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         out.setSpan(new TypefaceSpan(Typeface.MONOSPACE), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         out.setSpan(new ForegroundColorSpan(colorPrimary()), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
     }
 
-    private void appendValue(SpannableStringBuilder out, String value, float sizeSp, boolean bold, boolean secondary) {
+    private void appendValue(SpannableStringBuilder out, String value, float scale, boolean bold, boolean secondary) {
         int start = out.length();
         out.append(value == null ? "unknown" : value);
-        out.setSpan(new AbsoluteSizeSpan((int) sizeSp, true), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        out.setSpan(new RelativeSizeSpan(scale), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         if (bold) out.setSpan(new StyleSpan(Typeface.BOLD), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         out.setSpan(new ForegroundColorSpan(secondary ? colorSecondary() : colorPrimary()), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
     }
