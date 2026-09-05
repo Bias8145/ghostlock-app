@@ -259,7 +259,7 @@ public final class InstallationProgressView extends LinearLayout {
 
             card.addView(row, new MaterialCardView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
             LayoutParams cardParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-            cardParams.bottomMargin = dp(i == state.size() - 1 ? 4 : 8);
+            cardParams.bottomMargin = dp(i == state.size() - 1 ? 4 : 6);
             steps.addView(card, cardParams);
 
             if (step.state == STATE_RUNNING) animateWaiting(icon);
