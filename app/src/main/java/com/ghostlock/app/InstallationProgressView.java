@@ -178,13 +178,23 @@ public final class InstallationProgressView extends LinearLayout {
             row.setGravity(Gravity.CENTER_VERTICAL);
             row.setPadding(dp(12), dp(11), dp(12), dp(11));
 
+            LinearLayout iconSlot = new LinearLayout(getContext());
+            iconSlot.setGravity(Gravity.CENTER);
+            iconSlot.setClipChildren(false);
+            iconSlot.setClipToPadding(false);
+            LayoutParams iconSlotParams = new LayoutParams(dp(32), dp(32));
+
             TextView icon = new TextView(getContext());
             icon.setGravity(Gravity.CENTER);
             icon.setIncludeFontPadding(false);
             icon.setContentDescription(step.name);
             icon.setAlpha(step.state == STATE_PENDING ? 0.34f : 1f);
-            icon.setCompoundDrawablesWithIntrinsicBounds(createStepIcon(step, 21), null, null, null);
-            row.addView(icon, new LayoutParams(dp(32), dp(32)));
+            Drawable iconDrawable = createStepIcon(step, 21);
+            icon.setCompoundDrawables(null, null, null, null);
+            icon.setCompoundDrawablePadding(0);
+            icon.setBackground(iconDrawable);
+            iconSlot.addView(icon, new LayoutParams(dp(32), dp(32)));
+            row.addView(iconSlot, iconSlotParams);
 
             LinearLayout body = new LinearLayout(getContext());
             body.setOrientation(VERTICAL);
