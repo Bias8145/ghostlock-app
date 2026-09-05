@@ -11,38 +11,26 @@ import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.mikepenz.iconics.IconicsDrawable;
 
-/**
- * Compact three-page navigation for Home, Logs and Settings.
- * Keeps Home and Logs in the same Activity so Run/progress/log state is preserved.
- */
+/** Compact three-page navigation for Home, Logs and Settings. */
 public class GhostLockBottomNavigation extends LinearLayout {
     private static final int PAGE_HOME = 0;
     private static final int PAGE_LOGS = 1;
     private static final int PAGE_SETTINGS = 2;
+    private static final int SETTINGS_REQUEST = 4107;
 
     private final Item[] items = new Item[3];
     private int selectedPage = PAGE_HOME;
 
-    public GhostLockBottomNavigation(Context context) {
-        super(context);
-        init();
-    }
-
-    public GhostLockBottomNavigation(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        init();
-    }
-
-    public GhostLockBottomNavigation(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        init();
-    }
+    public GhostLockBottomNavigation(Context context) { super(context); init(); }
+    public GhostLockBottomNavigation(Context context, AttributeSet attrs) { super(context, attrs); init(); }
+    public GhostLockBottomNavigation(Context context, AttributeSet attrs, int defStyleAttr) { super(context, attrs, defStyleAttr); init(); }
 
     private void init() {
         setOrientation(HORIZONTAL);
@@ -58,6 +46,7 @@ public class GhostLockBottomNavigation extends LinearLayout {
         items[PAGE_HOME] = addItem("faw-home", "Home", PAGE_HOME);
         items[PAGE_LOGS] = addItem("faw-list-alt", "Logs", PAGE_LOGS);
         items[PAGE_SETTINGS] = addItem("faw-cog", "Settings", PAGE_SETTINGS);
+        selectedPage = getContext() instanceof SettingsActivity ? PAGE_SETTINGS : PAGE_HOME;
         updateSelection();
 
         if (Build.VERSION.SDK_INT >= 33 && getContext() instanceof Activity) {
@@ -65,7 +54,9 @@ public class GhostLockBottomNavigation extends LinearLayout {
             activity.getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
                     android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT,
                     () -> {
-                        if (selectedPage == PAGE_LOGS) {
+                        if (activity instanceof SettingsActivity) {
+                            activity.finish();
+                        } else if (selectedPage == PAGE_LOGS) {
                             showHome();
                         } else {
                             activity.finish();
@@ -86,8 +77,7 @@ public class GhostLockBottomNavigation extends LinearLayout {
         item.setContentDescription(label);
 
         ImageView icon = new ImageView(getContext());
-        LayoutParams iconParams = new LayoutParams(dp(22), dp(22));
-        icon.setLayoutParams(iconParams);
+        icon.setLayoutParams(new LayoutParams(dp(22), dp(22)));
         icon.setScaleType(ImageView.ScaleType.CENTER);
         icon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
         item.addView(icon);
@@ -111,10 +101,24 @@ public class GhostLockBottomNavigation extends LinearLayout {
     }
 
     private void selectPage(int page) {
+        Activity activity = getContext() instanceof Activity ? (Activity) getContext() : null;
+
+        if (activity instanceof SettingsActivity) {
+            if (page == PAGE_SETTINGS) return;
+            if (page == PAGE_HOME) {
+                activity.finish();
+                return;
+            }
+            Intent result = new Intent();
+            result.putExtra("navigate_to", "logs");
+            activity.setResult(Activity.RESULT_OK, result);
+            activity.finish();
+            return;
+        }
+
         if (page == PAGE_SETTINGS) {
-            Context context = getContext();
-            if (context instanceof Activity) {
-                context.startActivity(new Intent(context, SettingsActivity.class));
+            if (activity != null) {
+                activity.startActivityForResult(new Intent(activity, SettingsActivity.class), SETTINGS_REQUEST);
             }
             return;
         }
@@ -128,18 +132,34 @@ public class GhostLockBottomNavigation extends LinearLayout {
         }
 
         if (page == PAGE_HOME) {
-            homeBody.setVisibility(VISIBLE);
-            logPanel.setVisibility(GONE);
+            transition(homeBody, logPanel, false);
         } else {
-            homeBody.setVisibility(GONE);
-            logPanel.setVisibility(VISIBLE);
+            transition(logPanel, homeBody, true);
         }
         updateSelection();
     }
 
-    /** Return from Logs to the Home page without recreating the Activity. */
+    private void transition(View show, View hide, boolean enteringLogs) {
+        if (show.getVisibility() == VISIBLE && hide.getVisibility() == GONE) return;
+        hide.animate().cancel();
+        show.animate().cancel();
+        show.setVisibility(VISIBLE);
+        show.setAlpha(0f);
+        show.setTranslationX(enteringLogs ? dp(18) : -dp(18));
+        hide.animate().alpha(0f).setDuration(140).setInterpolator(new DecelerateInterpolator()).withEndAction(() -> {
+            hide.setVisibility(GONE);
+            hide.setAlpha(1f);
+            hide.setTranslationX(0f);
+        }).start();
+        show.animate().alpha(1f).translationX(0f).setDuration(180).setInterpolator(new DecelerateInterpolator()).start();
+    }
+
     public void showHome() {
         selectPage(PAGE_HOME);
+    }
+
+    public void showLogs() {
+        selectPage(PAGE_LOGS);
     }
 
     private void updateSelection() {
@@ -164,20 +184,14 @@ public class GhostLockBottomNavigation extends LinearLayout {
         }
     }
 
-    private int color(int resId) {
-        return getResources().getColor(resId, getContext().getTheme());
-    }
-
-    private int dp(int value) {
-        return Math.round(value * getResources().getDisplayMetrics().density);
-    }
+    private int color(int resId) { return getResources().getColor(resId, getContext().getTheme()); }
+    private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
 
     private static final class Item {
         final View view;
         final ImageView icon;
         final TextView label;
         final String iconKey;
-
         Item(View view, ImageView icon, TextView label, String iconKey) {
             this.view = view;
             this.icon = icon;
