@@ -4,7 +4,6 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.content.Context;
-import android.content.res.ColorStateList;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.text.SpannableStringBuilder;
@@ -18,8 +17,6 @@ import android.util.AttributeSet;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.mikepenz.iconics.IconicsDrawable;
-
 import java.util.Locale;
 
 public class KernelInfoView extends TextView {
@@ -27,8 +24,6 @@ public class KernelInfoView extends TextView {
     private static final int EXPANDED_LINES = 12;
     private static final long EXPAND_DURATION = 220L;
     private static final long COLLAPSE_DURATION = 180L;
-    private static final int ICON_SIZE_DP = 14;
-    private static final int ICON_GAP_DP = 8;
     private static final int SECTION_TEXT_SP = 10;
     private static final int IDENTITY_TEXT_SP = 16;
     private static final int CODENAME_TEXT_SP = 12;
@@ -49,12 +44,9 @@ public class KernelInfoView extends TextView {
     private void init() {
         setEllipsize(TextUtils.TruncateAt.END);
         setMaxLines(COLLAPSED_LINES);
-        setClickable(true);
-        setFocusable(true);
-        setCompoundDrawablePadding(dp(ICON_GAP_DP));
+        setClickable(false);
+        setFocusable(false);
         setLineSpacing(dp(2), 1.0f);
-        setOnClickListener(v -> toggleExpanded());
-        updateExpandIcon();
     }
 
     @Override
@@ -69,28 +61,11 @@ public class KernelInfoView extends TextView {
         if (expanded) {
             setMaxLines(EXPANDED_LINES);
             setEllipsize(null);
-            setContentDescription("Collapse device information");
             super.setText(snapshotText, BufferType.SPANNABLE);
         } else {
             setMaxLines(COLLAPSED_LINES);
             setEllipsize(TextUtils.TruncateAt.END);
-            setContentDescription("Expand device information");
             super.setText(compactText, BufferType.NORMAL);
-        }
-        updateExpandIcon();
-    }
-
-    private void updateExpandIcon() {
-        try {
-            String iconKey = expanded ? "faw-chevron-up" : "faw-chevron-down";
-            IconicsDrawable icon = new IconicsDrawable(getContext(), iconKey);
-            icon.setColorList(ColorStateList.valueOf(getCurrentTextColor()));
-            int size = dp(ICON_SIZE_DP);
-            icon.setSizeXPx(size);
-            icon.setSizeYPx(size);
-            setCompoundDrawablesRelativeWithIntrinsicBounds(null, null, icon, null);
-        } catch (Throwable ignored) {
-            setCompoundDrawablesRelativeWithIntrinsicBounds(null, null, null, null);
         }
     }
 
@@ -156,23 +131,12 @@ public class KernelInfoView extends TextView {
         int start = out.length();
         out.append(value == null ? "unknown" : value);
         out.setSpan(new AbsoluteSizeSpan(sizeSp, true), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        if (bold) {
-            out.setSpan(new StyleSpan(Typeface.BOLD), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        }
-        if (secondary) {
-            out.setSpan(new ForegroundColorSpan(colorSecondary()), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        } else {
-            out.setSpan(new ForegroundColorSpan(colorPrimary()), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        }
+        if (bold) out.setSpan(new StyleSpan(Typeface.BOLD), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        out.setSpan(new ForegroundColorSpan(secondary ? colorSecondary() : colorPrimary()), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
     }
 
-    private int colorPrimary() {
-        return getResources().getColor(com.ghostlock.app.R.color.text_primary, getContext().getTheme());
-    }
-
-    private int colorSecondary() {
-        return getResources().getColor(com.ghostlock.app.R.color.text_secondary, getContext().getTheme());
-    }
+    private int colorPrimary() { return getResources().getColor(R.color.text_primary, getContext().getTheme()); }
+    private int colorSecondary() { return getResources().getColor(R.color.text_secondary, getContext().getTheme()); }
 
     private String humanAndroidVersion() {
         String release = valid(Build.VERSION.RELEASE);
@@ -238,7 +202,9 @@ public class KernelInfoView extends TextView {
     private String safe(String value) { return value == null || value.trim().isEmpty() ? "unknown" : value.trim(); }
     private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
 
-    private void toggleExpanded() {
+    public boolean isExpanded() { return expanded; }
+
+    public void toggleExpanded() {
         if (animating) return;
         expanded = !expanded;
         animateSnapshot();
@@ -258,7 +224,6 @@ public class KernelInfoView extends TextView {
             setEllipsize(TextUtils.TruncateAt.END);
             super.setText(compactText, BufferType.NORMAL);
         }
-        updateExpandIcon();
 
         ViewGroup.LayoutParams lp = getLayoutParams();
         int width = getWidth();
