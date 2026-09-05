@@ -16,13 +16,13 @@ import android.widget.TextView;
 import java.util.Locale;
 
 public class KernelInfoView extends TextView {
-    private static final float SECTION_SCALE = 0.95f;
-    private static final float IDENTITY_SCALE = 1.05f;
-    private static final float LABEL_SCALE = 0.86f;
-    private static final float VALUE_SCALE = 0.86f;
-    private static final float DETAIL_SCALE = 0.86f;
-    private static final float KERNEL_SCALE = 0.80f;
-    private static final int LABEL_COLUMN_DP = 92;
+    private static final float SECTION_SCALE = 0.84f;
+    private static final float IDENTITY_SCALE = 1.0f;
+    private static final float LABEL_SCALE = 0.88f;
+    private static final float VALUE_SCALE = 0.94f;
+    private static final float DETAIL_SCALE = 0.94f;
+    private static final float KERNEL_SCALE = 0.88f;
+    private static final int LABEL_COLUMN_DP = 86;
 
     public KernelInfoView(Context context) { super(context); init(); }
     public KernelInfoView(Context context, AttributeSet attrs) { super(context, attrs); init(); }
@@ -34,7 +34,7 @@ public class KernelInfoView extends TextView {
         setIncludeFontPadding(false);
         setMaxLines(Integer.MAX_VALUE);
         setEllipsize(null);
-        setLineSpacing(0, 1.0f);
+        setLineSpacing(0, 1.04f);
     }
 
     @Override
@@ -61,11 +61,11 @@ public class KernelInfoView extends TextView {
         appendRow(out, "SoC", formatSoc(soc));
         appendRow(out, "Architecture", abi);
         appendRow(out, "Page Size", pageSize);
-        out.append('\n');
+        out.append("\n");
 
         appendSection(out, "BUILD");
         appendValue(out, build, DETAIL_SCALE, false, false);
-        out.append("\n\n");
+        out.append("\n");
 
         appendSection(out, "KERNEL");
         appendKernelValue(out, kernel);
@@ -75,9 +75,9 @@ public class KernelInfoView extends TextView {
     private void appendIdentity(SpannableStringBuilder out, String deviceName, String codename) {
         String name = deviceName == null ? "unknown" : deviceName.trim();
         String code = codename == null ? "unknown" : codename.trim();
-        appendValue(out, name, IDENTITY_SCALE, false, false);
+        appendValue(out, name, IDENTITY_SCALE, true, false);
         if (!code.isEmpty() && !"unknown".equalsIgnoreCase(code)) {
-            out.append("\u2003\u2003\u2003");
+            out.append("\u2002\u2002\u2002");
             int start = out.length();
             out.append(code);
             out.setSpan(new RelativeSizeSpan(IDENTITY_SCALE), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
