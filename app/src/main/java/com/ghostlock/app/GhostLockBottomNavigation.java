@@ -44,7 +44,7 @@ public class GhostLockBottomNavigation extends LinearLayout {
         background.setColor(color(R.color.surface));
         background.setCornerRadius(dp(20));
         setBackground(background);
-        setPadding(0, dp(8), 0, dp(4));
+        setPadding(0, dp(10), 0, dp(4));
         setElevation(0f);
         setTranslationZ(0f);
         setContentDescription("Page navigation");
@@ -81,17 +81,17 @@ public class GhostLockBottomNavigation extends LinearLayout {
         item.setContentDescription(label);
 
         FrameLayout iconContainer = new FrameLayout(getContext());
-        LinearLayout.LayoutParams iconContainerParams = new LinearLayout.LayoutParams(dp(44), dp(32));
+        LinearLayout.LayoutParams iconContainerParams = new LinearLayout.LayoutParams(dp(48), dp(28));
         iconContainerParams.gravity = Gravity.CENTER_HORIZONTAL;
         iconContainer.setLayoutParams(iconContainerParams);
         iconContainer.setClipChildren(false);
         iconContainer.setClipToPadding(false);
 
         ImageView icon = new ImageView(getContext());
-        FrameLayout.LayoutParams iconParams = new FrameLayout.LayoutParams(dp(32), dp(32), Gravity.CENTER);
+        FrameLayout.LayoutParams iconParams = new FrameLayout.LayoutParams(dp(30), dp(30), Gravity.CENTER);
         icon.setLayoutParams(iconParams);
         icon.setScaleType(ImageView.ScaleType.CENTER);
-        icon.setPadding(dp(5), dp(5), dp(5), dp(5));
+        icon.setPadding(dp(4), dp(4), dp(4), dp(4));
         icon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
         iconContainer.addView(icon);
         item.addView(iconContainer);
@@ -164,7 +164,7 @@ public class GhostLockBottomNavigation extends LinearLayout {
             try {
                 IconicsDrawable drawable = new IconicsDrawable(getContext(), item.iconKey);
                 drawable.setColorList(ColorStateList.valueOf(tint));
-                int size = dp(21);
+                int size = dp(20);
                 drawable.setSizeXPx(size);
                 drawable.setSizeYPx(size);
                 item.icon.setImageDrawable(drawable);
@@ -193,8 +193,8 @@ public class GhostLockBottomNavigation extends LinearLayout {
 
     private void animateItem(Item item, boolean selected, boolean animate) {
         item.iconContainer.animate().cancel();
-        float targetY = selected ? -dp(3) : 0f;
-        float targetScale = selected ? 1.04f : 1f;
+        float targetY = selected ? -dp(2) : 0f;
+        float targetScale = selected ? 1.03f : 1f;
         if (!animate) {
             item.iconContainer.setTranslationY(targetY);
             item.iconContainer.setScaleX(targetScale);
