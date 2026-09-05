@@ -13,6 +13,7 @@ import android.text.style.AbsoluteSizeSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
 import android.text.style.TabStopSpan;
+import android.text.style.TypefaceSpan;
 import android.util.AttributeSet;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -21,14 +22,17 @@ import java.util.Locale;
 
 public class KernelInfoView extends TextView {
     private static final int COLLAPSED_LINES = 2;
-    private static final int EXPANDED_LINES = 12;
+    private static final int EXPANDED_LINES = 20;
     private static final long EXPAND_DURATION = 220L;
     private static final long COLLAPSE_DURATION = 180L;
+
     private static final int SECTION_TEXT_SP = 10;
-    private static final int IDENTITY_TEXT_SP = 16;
+    private static final int IDENTITY_TEXT_SP = 17;
     private static final int CODENAME_TEXT_SP = 12;
-    private static final int VALUE_TEXT_SP = 12;
-    private static final int DETAIL_TEXT_SP = 12;
+    private static final int LABEL_TEXT_SP = 13;
+    private static final int VALUE_TEXT_SP = 13;
+    private static final int DETAIL_TEXT_SP = 13;
+    private static final int KERNEL_TEXT_SP = 12;
     private static final int LABEL_COLUMN_DP = 112;
 
     private boolean expanded;
@@ -46,7 +50,7 @@ public class KernelInfoView extends TextView {
         setMaxLines(COLLAPSED_LINES);
         setClickable(false);
         setFocusable(false);
-        setLineSpacing(dp(2), 1.0f);
+        setLineSpacing(dp(4), 1.0f);
     }
 
     @Override
@@ -87,26 +91,28 @@ public class KernelInfoView extends TextView {
         String soc = firstValidProperty("ro.soc.model", "ro.board.platform");
 
         SpannableStringBuilder out = new SpannableStringBuilder();
-        appendIdentity(out, deviceName, codename);
-        out.append("\n");
+
+        // Identity block: the only visually dominant part of the expanded snapshot.
+        appendValue(out, deviceName, IDENTITY_TEXT_SP, true, false);
+        out.append('\n');
+        appendValue(out, codename, CODENAME_TEXT_SP, false, true);
+        out.append("\n\n");
+
         appendSection(out, "PLATFORM");
-        appendRow(out, "Android", android, true);
+        appendRow(out, "Android", android, false);
         appendRow(out, "SoC", formatSoc(soc), false);
         appendRow(out, "Architecture", abi, false);
         appendRow(out, "Page Size", pageSize, false);
-        out.append("\n");
+        out.append('\n');
+
         appendSection(out, "BUILD");
         appendValue(out, build, DETAIL_TEXT_SP, true, false);
         out.append("\n\n");
-        appendSection(out, "KERNEL");
-        appendValue(out, kernel, DETAIL_TEXT_SP, false, false);
-        return out;
-    }
 
-    private void appendIdentity(SpannableStringBuilder out, String device, String codename) {
-        appendValue(out, device, IDENTITY_TEXT_SP, true, false);
-        out.append('\n');
-        appendValue(out, codename, CODENAME_TEXT_SP, false, true);
+        appendSection(out, "KERNEL");
+        appendKernelValue(out, kernel);
+
+        return out;
     }
 
     private void appendSection(SpannableStringBuilder out, String title) {
@@ -120,11 +126,19 @@ public class KernelInfoView extends TextView {
 
     private void appendRow(SpannableStringBuilder out, String label, String value, boolean emphasizeValue) {
         int lineStart = out.length();
-        appendValue(out, label, DETAIL_TEXT_SP, false, true);
+        appendValue(out, label, LABEL_TEXT_SP, false, true);
         out.append('\t');
         appendValue(out, value, VALUE_TEXT_SP, emphasizeValue, false);
         out.append('\n');
         out.setSpan(new TabStopSpan.Standard(dp(LABEL_COLUMN_DP)), lineStart, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+    }
+
+    private void appendKernelValue(SpannableStringBuilder out, String value) {
+        int start = out.length();
+        out.append(value == null ? "unknown" : value);
+        out.setSpan(new AbsoluteSizeSpan(KERNEL_TEXT_SP, true), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        out.setSpan(new TypefaceSpan(Typeface.MONOSPACE), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        out.setSpan(new ForegroundColorSpan(colorPrimary()), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
     }
 
     private void appendValue(SpannableStringBuilder out, String value, int sizeSp, boolean bold, boolean secondary) {
