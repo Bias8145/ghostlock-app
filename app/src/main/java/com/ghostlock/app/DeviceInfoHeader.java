@@ -31,7 +31,7 @@ public class DeviceInfoHeader extends LinearLayout {
         title.setLayoutParams(new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
         title.setText("DEVICE INFO");
         title.setTextColor(getResources().getColor(R.color.text_secondary, getContext().getTheme()));
-        title.setTextSize(11);
+        title.setTextSize(14);
         title.setTypeface(title.getTypeface(), android.graphics.Typeface.BOLD);
         if (android.os.Build.VERSION.SDK_INT >= 21) title.setLetterSpacing(0.08f);
         addView(title);
