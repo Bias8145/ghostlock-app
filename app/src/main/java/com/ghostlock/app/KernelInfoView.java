@@ -1,14 +1,10 @@
 package com.ghostlock.app;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
-import android.text.TextUtils;
 import android.text.style.AbsoluteSizeSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
@@ -16,16 +12,11 @@ import android.text.style.TabStopSpan;
 import android.text.style.TypefaceSpan;
 import android.util.AttributeSet;
 import android.util.TypedValue;
-import android.view.ViewGroup;
 import android.widget.TextView;
 
 import java.util.Locale;
 
 public class KernelInfoView extends TextView {
-    private static final int COLLAPSED_LINES = 2;
-    private static final long EXPAND_DURATION = 220L;
-    private static final long COLLAPSE_DURATION = 180L;
-
     private static final float SECTION_TEXT_SP = 13f;
     private static final float IDENTITY_TEXT_SP = 15f;
     private static final float LABEL_TEXT_SP = 12f;
@@ -34,53 +25,24 @@ public class KernelInfoView extends TextView {
     private static final float KERNEL_TEXT_SP = 11f;
     private static final int LABEL_COLUMN_DP = 112;
 
-    private boolean expanded;
-    private boolean animating;
-    private CharSequence compactText = "";
     private CharSequence snapshotText = "";
-    private ValueAnimator heightAnimator;
 
     public KernelInfoView(Context context) { super(context); init(); }
     public KernelInfoView(Context context, AttributeSet attrs) { super(context, attrs); init(); }
     public KernelInfoView(Context context, AttributeSet attrs, int defStyleAttr) { super(context, attrs, defStyleAttr); init(); }
 
     private void init() {
-        setEllipsize(TextUtils.TruncateAt.END);
-        setMaxLines(COLLAPSED_LINES);
         setClickable(false);
         setFocusable(false);
         setIncludeFontPadding(true);
-        setLineSpacing(sp(2f), 1.0f);
+        setLineSpacing(dp(2), 1.0f);
     }
 
     @Override
     public void setText(CharSequence text, BufferType type) {
         String base = text == null ? "" : text.toString();
-        compactText = buildCompactText(base);
         snapshotText = buildSnapshot(base);
-        applyDisplayedText();
-    }
-
-    private void applyDisplayedText() {
-        if (expanded) {
-            setMaxLines(Integer.MAX_VALUE);
-            setEllipsize(null);
-            super.setText(snapshotText, BufferType.SPANNABLE);
-        } else {
-            setMaxLines(COLLAPSED_LINES);
-            setEllipsize(TextUtils.TruncateAt.END);
-            super.setText(compactText, BufferType.NORMAL);
-        }
-    }
-
-    private String buildCompactText(String base) {
-        String[] lines = base.split("\\n", -1);
-        String device = lines.length > 0 && !lines[0].trim().isEmpty() ? lines[0].trim() : "Device: unknown";
-        String kernel = lines.length > 1 && !lines[1].trim().isEmpty() ? lines[1].trim() : "Kernel version: " + safe(System.getProperty("os.version", "unknown"));
-        if (kernel.regionMatches(true, 0, "Kernel:", 0, 7)) {
-            kernel = "Kernel version:" + kernel.substring(7);
-        }
-        return device + "\n" + kernel;
+        super.setText(snapshotText, BufferType.SPANNABLE);
     }
 
     private CharSequence buildSnapshot(String base) {
@@ -94,7 +56,6 @@ public class KernelInfoView extends TextView {
         String soc = firstValidProperty("ro.soc.model", "ro.board.platform");
 
         SpannableStringBuilder out = new SpannableStringBuilder();
-
         appendIdentity(out, deviceName, codename);
         out.append("\n\n");
 
@@ -111,7 +72,6 @@ public class KernelInfoView extends TextView {
 
         appendSection(out, "KERNEL");
         appendKernelValue(out, kernel);
-
         return out;
     }
 
@@ -230,53 +190,4 @@ public class KernelInfoView extends TextView {
     private String valid(String value) { return value == null || value.trim().isEmpty() ? "unknown" : value.trim(); }
     private String safe(String value) { return value == null || value.trim().isEmpty() ? "unknown" : value.trim(); }
     private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
-    private float sp(float value) { return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, value, getResources().getDisplayMetrics()); }
-
-    public boolean isExpanded() { return expanded; }
-
-    public void toggleExpanded() {
-        if (animating) return;
-        expanded = !expanded;
-        animateSnapshot();
-    }
-
-    private void animateSnapshot() {
-        if (heightAnimator != null) heightAnimator.cancel();
-        int start = getHeight();
-        if (start <= 0) { applyDisplayedText(); return; }
-
-        if (expanded) {
-            setMaxLines(Integer.MAX_VALUE);
-            setEllipsize(null);
-            super.setText(snapshotText, BufferType.SPANNABLE);
-        } else {
-            setMaxLines(COLLAPSED_LINES);
-            setEllipsize(TextUtils.TruncateAt.END);
-            super.setText(compactText, BufferType.NORMAL);
-        }
-
-        ViewGroup.LayoutParams lp = getLayoutParams();
-        int width = getWidth();
-        if (width <= 0) { applyDisplayedText(); return; }
-        measure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
-        int target = getMeasuredHeight();
-        lp.height = start;
-        setLayoutParams(lp);
-
-        animating = true;
-        heightAnimator = ValueAnimator.ofInt(start, Math.max(target, 1));
-        heightAnimator.setDuration(expanded ? EXPAND_DURATION : COLLAPSE_DURATION);
-        heightAnimator.addUpdateListener(animation -> { lp.height = (Integer) animation.getAnimatedValue(); requestLayout(); });
-        heightAnimator.addListener(new AnimatorListenerAdapter() {
-            @Override public void onAnimationEnd(Animator animation) {
-                lp.height = ViewGroup.LayoutParams.WRAP_CONTENT;
-                setLayoutParams(lp);
-                animating = false;
-                heightAnimator = null;
-                applyDisplayedText();
-            }
-            @Override public void onAnimationCancel(Animator animation) { animating = false; heightAnimator = null; }
-        });
-        heightAnimator.start();
-    }
 }
