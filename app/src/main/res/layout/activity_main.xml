@@ -58,12 +58,9 @@
                     android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp"
                     app:cardBackgroundColor="@color/surface_container_low" app:cardCornerRadius="20dp" app:cardElevation="0dp" app:strokeWidth="0dp">
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
-                        <com.ghostlock.app.DeviceInfoHeader
-                            android:layout_width="match_parent" android:layout_height="40dp"
-                            android:layout_marginBottom="8dp" />
                         <com.ghostlock.app.KernelInfoView
                             android:id="@+id/deviceInfo" android:layout_width="match_parent" android:layout_height="wrap_content"
-                            android:maxLines="2" android:textColor="@color/text_primary" android:textSize="12sp" />
+                            android:textColor="@color/text_primary" android:textSize="12sp" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
@@ -110,10 +107,6 @@
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
 
-        <com.ghostlock.app.GhostLockBottomNavigation
-            android:id="@+id/bottomNavigation"
-            android:layout_width="match_parent"
-            android:layout_height="72dp"
-            android:layout_marginTop="4dp" />
+        <com.ghostlock.app.GhostLockBottomNavigation android:id="@+id/bottomNavigation" android:layout_width="match_parent" android:layout_height="72dp" android:layout_marginTop="4dp" />
     </LinearLayout>
 </FrameLayout>
