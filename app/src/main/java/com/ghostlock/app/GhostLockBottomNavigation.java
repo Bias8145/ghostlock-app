@@ -1,5 +1,7 @@
 package com.ghostlock.app;
 
+import android.animation.Animator;
+import android.animation.AnimatorSet;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -25,6 +27,7 @@ public class GhostLockBottomNavigation extends LinearLayout {
     private static final int PAGE_LOGS = 1;
     private static final int PAGE_SETTINGS = 2;
     private static final int SETTINGS_REQUEST = 4107;
+    private static final long SELECTION_ANIMATION_MS = 180L;
 
     private final Item[] items = new Item[3];
     private int selectedPage = PAGE_HOME;
@@ -49,7 +52,7 @@ public class GhostLockBottomNavigation extends LinearLayout {
         items[PAGE_LOGS] = addItem("faw-list-alt", "Logs", PAGE_LOGS);
         items[PAGE_SETTINGS] = addItem("faw-cog", "Settings", PAGE_SETTINGS);
         selectedPage = getContext() instanceof SettingsActivity ? PAGE_SETTINGS : PAGE_HOME;
-        updateSelection();
+        updateSelection(false);
 
         if (Build.VERSION.SDK_INT >= 33 && getContext() instanceof Activity) {
             Activity activity = (Activity) getContext();
@@ -79,7 +82,7 @@ public class GhostLockBottomNavigation extends LinearLayout {
         item.setContentDescription(label);
 
         ImageView icon = new ImageView(getContext());
-        icon.setLayoutParams(new LayoutParams(dp(22), dp(22)));
+        icon.setLayoutParams(new LayoutParams(dp(24), dp(24)));
         icon.setScaleType(ImageView.ScaleType.CENTER);
         icon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
         item.addView(icon);
@@ -131,7 +134,7 @@ public class GhostLockBottomNavigation extends LinearLayout {
         View homeBody = getRootView().findViewById(R.id.homeBody);
         View logPanel = getRootView().findViewById(R.id.logPanel);
         if (homeBody == null || logPanel == null) {
-            updateSelection();
+            updateSelection(true);
             return;
         }
 
@@ -140,7 +143,7 @@ public class GhostLockBottomNavigation extends LinearLayout {
         } else {
             transition(logPanel, homeBody, true);
         }
-        updateSelection();
+        updateSelection(true);
     }
 
     private void transition(View show, View hide, boolean enteringLogs) {
@@ -170,7 +173,7 @@ public class GhostLockBottomNavigation extends LinearLayout {
     public void showHome() { selectPage(PAGE_HOME); }
     public void showLogs() { selectPage(PAGE_LOGS); }
 
-    private void updateSelection() {
+    private void updateSelection(boolean animate) {
         for (int i = 0; i < items.length; i++) {
             Item item = items[i];
             boolean selected = i == selectedPage;
@@ -178,7 +181,7 @@ public class GhostLockBottomNavigation extends LinearLayout {
             try {
                 IconicsDrawable drawable = new IconicsDrawable(getContext(), item.iconKey);
                 drawable.setColorList(ColorStateList.valueOf(tint));
-                int size = dp(20);
+                int size = dp(22);
                 drawable.setSizeXPx(size);
                 drawable.setSizeYPx(size);
                 item.icon.setImageDrawable(drawable);
@@ -191,7 +194,28 @@ public class GhostLockBottomNavigation extends LinearLayout {
             item.view.setElevation(0f);
             item.view.setTranslationZ(0f);
             item.view.setContentDescription(item.label.getText() + (selected ? ", selected" : ""));
+            animateItem(item, selected, animate);
         }
+    }
+
+    private void animateItem(Item item, boolean selected, boolean animate) {
+        item.icon.animate().cancel();
+        float targetY = selected ? -dp(3) : 0f;
+        float targetScale = selected ? 1.08f : 1f;
+        if (!animate) {
+            item.icon.setTranslationY(targetY);
+            item.icon.setScaleX(targetScale);
+            item.icon.setScaleY(targetScale);
+            return;
+        }
+        AnimatorSet set = new AnimatorSet();
+        item.icon.animate()
+                .translationY(targetY)
+                .scaleX(targetScale)
+                .scaleY(targetScale)
+                .setDuration(SELECTION_ANIMATION_MS)
+                .setInterpolator(new DecelerateInterpolator())
+                .start();
     }
 
     private int color(int resId) { return getResources().getColor(resId, getContext().getTheme()); }
