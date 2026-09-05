@@ -26,14 +26,14 @@ public class KernelInfoView extends TextView {
     private static final long EXPAND_DURATION = 220L;
     private static final long COLLAPSE_DURATION = 180L;
 
-    private static final int SECTION_TEXT_SP = 10;
-    private static final int IDENTITY_TEXT_SP = 17;
-    private static final int CODENAME_TEXT_SP = 12;
-    private static final int LABEL_TEXT_SP = 13;
-    private static final int VALUE_TEXT_SP = 13;
-    private static final int DETAIL_TEXT_SP = 13;
-    private static final int KERNEL_TEXT_SP = 12;
+    private static final int SECTION_TEXT_SP = 13;
+    private static final int IDENTITY_TEXT_SP = 15;
+    private static final int LABEL_TEXT_SP = 12;
+    private static final int VALUE_TEXT_SP = 12;
+    private static final int DETAIL_TEXT_SP = 12;
+    private static final int KERNEL_TEXT_SP = 11;
     private static final int LABEL_COLUMN_DP = 112;
+    private static final int IDENTITY_GAP_DP = 6;
 
     private boolean expanded;
     private boolean animating;
@@ -50,7 +50,7 @@ public class KernelInfoView extends TextView {
         setMaxLines(COLLAPSED_LINES);
         setClickable(false);
         setFocusable(false);
-        setLineSpacing(dp(4), 1.0f);
+        setLineSpacing(dp(2), 1.0f);
     }
 
     @Override
@@ -92,10 +92,7 @@ public class KernelInfoView extends TextView {
 
         SpannableStringBuilder out = new SpannableStringBuilder();
 
-        // Identity block: the only visually dominant part of the expanded snapshot.
-        appendValue(out, deviceName, IDENTITY_TEXT_SP, true, false);
-        out.append('\n');
-        appendValue(out, codename, CODENAME_TEXT_SP, false, true);
+        appendIdentity(out, deviceName, codename);
         out.append("\n\n");
 
         appendSection(out, "PLATFORM");
@@ -106,7 +103,7 @@ public class KernelInfoView extends TextView {
         out.append('\n');
 
         appendSection(out, "BUILD");
-        appendValue(out, build, DETAIL_TEXT_SP, true, false);
+        appendValue(out, build, DETAIL_TEXT_SP, false, false);
         out.append("\n\n");
 
         appendSection(out, "KERNEL");
@@ -115,12 +112,29 @@ public class KernelInfoView extends TextView {
         return out;
     }
 
+    private void appendIdentity(SpannableStringBuilder out, String deviceName, String codename) {
+        String name = deviceName == null ? "unknown" : deviceName.trim();
+        String code = codename == null ? "unknown" : codename.trim();
+        appendValue(out, name, IDENTITY_TEXT_SP, false, false);
+        if (!code.isEmpty() && !"unknown".equalsIgnoreCase(code)) {
+            out.append(" ");
+            int gapStart = out.length();
+            out.append(code);
+            out.setSpan(new AbsoluteSizeSpan(IDENTITY_TEXT_SP, true), gapStart, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            out.setSpan(new StyleSpan(Typeface.BOLD), gapStart, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            out.setSpan(new ForegroundColorSpan(colorAccent()), gapStart, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+    }
+
     private void appendSection(SpannableStringBuilder out, String title) {
         int start = out.length();
         out.append(title);
         out.setSpan(new StyleSpan(Typeface.BOLD), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         out.setSpan(new AbsoluteSizeSpan(SECTION_TEXT_SP, true), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         out.setSpan(new ForegroundColorSpan(colorSecondary()), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        if (Build.VERSION.SDK_INT >= 21) {
+            out.setSpan(new android.text.style.ScaleXSpan(1.0f), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
         out.append('\n');
     }
 
@@ -151,6 +165,7 @@ public class KernelInfoView extends TextView {
 
     private int colorPrimary() { return getResources().getColor(R.color.text_primary, getContext().getTheme()); }
     private int colorSecondary() { return getResources().getColor(R.color.text_secondary, getContext().getTheme()); }
+    private int colorAccent() { return getResources().getColor(R.color.accent, getContext().getTheme()); }
 
     private String humanAndroidVersion() {
         String release = valid(Build.VERSION.RELEASE);
