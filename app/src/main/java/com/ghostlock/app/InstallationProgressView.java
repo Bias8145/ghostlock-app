@@ -184,12 +184,12 @@ public final class InstallationProgressView extends LinearLayout {
             icon.setContentDescription(step.name);
             icon.setAlpha(step.state == STATE_PENDING ? 0.34f : 1f);
             icon.setCompoundDrawablesWithIntrinsicBounds(createStepIcon(step, 20), null, null, null);
-            row.addView(icon, new LayoutParams(dp(29), dp(29)));
+            row.addView(icon, new LayoutParams(dp(30), dp(30)));
 
             LinearLayout body = new LinearLayout(getContext());
             body.setOrientation(VERTICAL);
             LayoutParams bodyParams = new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f);
-            bodyParams.leftMargin = dp(9);
+            bodyParams.leftMargin = dp(10);
             row.addView(body, bodyParams);
 
             TextView name = text(step.name, 14, step.state == STATE_RUNNING ? R.color.accent : R.color.text_primary, Typeface.BOLD);
