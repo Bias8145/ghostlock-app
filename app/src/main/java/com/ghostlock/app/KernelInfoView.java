@@ -11,7 +11,6 @@ import android.text.style.StyleSpan;
 import android.text.style.TabStopSpan;
 import android.text.style.TypefaceSpan;
 import android.util.AttributeSet;
-import android.util.TypedValue;
 import android.widget.TextView;
 
 import java.util.Locale;
@@ -35,6 +34,8 @@ public class KernelInfoView extends TextView {
         setClickable(false);
         setFocusable(false);
         setIncludeFontPadding(true);
+        setMaxLines(Integer.MAX_VALUE);
+        setEllipsize(null);
         setLineSpacing(dp(2), 1.0f);
     }
 
