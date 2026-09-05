@@ -41,7 +41,7 @@ public class SettingsActivity extends Activity {
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
-        rootView = findViewById(android.R.id.content).getRootView();
+        rootView = findViewById(R.id.root);
         applyWindowInsetsPadding();
         findViewById(R.id.backButton).setOnClickListener(v -> goHome());
         cpuSpinner = findViewById(R.id.cpuSpinner);
