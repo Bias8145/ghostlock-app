@@ -38,10 +38,10 @@ public final class InstallationProgressView extends LinearLayout {
         LinearLayout heading = new LinearLayout(context);
         heading.setGravity(Gravity.CENTER_VERTICAL);
 
-        TextView title = text("INSTALLATION", 13, R.color.text_secondary, Typeface.BOLD);
+        TextView title = text("INSTALLATION", 14, R.color.text_secondary, Typeface.BOLD);
         heading.addView(title, new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
 
-        overallStatus = text("Ready", 13, R.color.text_secondary, Typeface.NORMAL);
+        overallStatus = text("Ready", 14, R.color.text_secondary, Typeface.NORMAL);
         overallStatus.setGravity(Gravity.CENTER_VERTICAL);
         heading.addView(overallStatus, new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
         addView(heading, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
@@ -49,7 +49,7 @@ public final class InstallationProgressView extends LinearLayout {
         steps = new LinearLayout(context);
         steps.setOrientation(VERTICAL);
         LayoutParams stepsParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        stepsParams.topMargin = dp(11);
+        stepsParams.topMargin = dp(13);
         addView(steps, stepsParams);
 
         resetStatus();
@@ -95,9 +95,7 @@ public final class InstallationProgressView extends LinearLayout {
             resetStatus();
             return;
         }
-        if (start != lastRunMarker) {
-            lastRunMarker = start;
-        }
+        if (start != lastRunMarker) lastRunMarker = start;
 
         String run = s.substring(start);
         String latest = latestLine(run);
@@ -181,43 +179,43 @@ public final class InstallationProgressView extends LinearLayout {
             LinearLayout row = new LinearLayout(getContext());
             row.setOrientation(HORIZONTAL);
             row.setGravity(Gravity.TOP);
-            row.setPadding(0, dp(2), 0, dp(i == state.size() - 1 ? 2 : 10));
+            row.setPadding(0, dp(3), 0, dp(i == state.size() - 1 ? 3 : 12));
 
             LinearLayout rail = new LinearLayout(getContext());
             rail.setOrientation(VERTICAL);
             rail.setGravity(Gravity.CENTER_HORIZONTAL);
 
-            TextView marker = text(marker(step.state), 20, markerColor(step.state), Typeface.BOLD);
+            TextView marker = text(marker(step.state), 24, markerColor(step.state), Typeface.BOLD);
             marker.setGravity(Gravity.CENTER);
-            rail.addView(marker, new LayoutParams(dp(28), dp(28)));
+            rail.addView(marker, new LayoutParams(dp(32), dp(32)));
 
             if (i < state.size() - 1) {
                 View connector = new View(getContext());
                 connector.setBackgroundColor(getContext().getColor(connectorColor(step.state)));
-                LayoutParams connectorParams = new LayoutParams(dp(2), dp(27));
+                LayoutParams connectorParams = new LayoutParams(dp(2), dp(30));
                 connectorParams.topMargin = dp(2);
                 rail.addView(connector, connectorParams);
             }
 
-            LayoutParams railParams = new LayoutParams(dp(28), LayoutParams.MATCH_PARENT);
-            railParams.rightMargin = dp(11);
+            LayoutParams railParams = new LayoutParams(dp(32), LayoutParams.MATCH_PARENT);
+            railParams.rightMargin = dp(12);
             row.addView(rail, railParams);
 
             LinearLayout body = new LinearLayout(getContext());
             body.setOrientation(VERTICAL);
-            TextView name = text(step.name, 15, step.state == STATE_RUNNING ? R.color.accent : R.color.text_primary, Typeface.BOLD);
+            TextView name = text(step.name, 16, step.state == STATE_RUNNING ? R.color.accent : R.color.text_primary, Typeface.BOLD);
             body.addView(name);
 
-            TextView detail = text(step.detail, 13, R.color.text_secondary, Typeface.NORMAL);
+            TextView detail = text(step.detail, 14, R.color.text_secondary, Typeface.NORMAL);
             LayoutParams detailParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-            detailParams.topMargin = dp(3);
+            detailParams.topMargin = dp(4);
             body.addView(detail, detailParams);
 
             if (step.state == STATE_RUNNING && latest != null && !latest.isEmpty()) {
-                TextView live = text(latest, 12, R.color.text_secondary, Typeface.NORMAL);
-                live.setMaxLines(3);
+                TextView live = text(latest, 13, R.color.text_secondary, Typeface.NORMAL);
+                live.setMaxLines(4);
                 LayoutParams liveParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-                liveParams.topMargin = dp(6);
+                liveParams.topMargin = dp(7);
                 body.addView(live, liveParams);
             }
 
