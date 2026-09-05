@@ -1,5 +1,8 @@
 package com.ghostlock.app;
 
+import android.animation.Animator;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
@@ -7,6 +10,8 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
 import android.view.Gravity;
+import android.view.View;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -29,9 +34,11 @@ public final class InstallationProgressView extends LinearLayout {
     private static final int STATE_FAILED = 3;
     private static final long ROW_ANIMATION_MS = 240L;
     private static final long STATUS_ANIMATION_MS = 180L;
+    private static final long WAITING_ANIMATION_MS = 850L;
 
     private final LinearLayout steps;
     private final TextView overallStatus;
+    private final List<Animator> waitingAnimations = new ArrayList<>();
     private TextWatcher watcher;
     private int lastRunMarker = -1;
     private String lastStateSignature = "";
@@ -64,6 +71,7 @@ public final class InstallationProgressView extends LinearLayout {
     }
 
     @Override protected void onDetachedFromWindow() {
+        stopWaitingAnimations();
         unbindLog();
         super.onDetachedFromWindow();
     }
@@ -162,7 +170,39 @@ public final class InstallationProgressView extends LinearLayout {
         overallStatus.animate().alpha(1f).translationY(0f).setDuration(STATUS_ANIMATION_MS).setInterpolator(new DecelerateInterpolator()).start();
     }
 
+    private void stopWaitingAnimations() {
+        for (Animator animator : waitingAnimations) animator.cancel();
+        waitingAnimations.clear();
+    }
+
+    private void animateWaiting(TextView icon) {
+        ObjectAnimator pulse = ObjectAnimator.ofFloat(icon, View.ALPHA, 0.48f, 1f);
+        pulse.setDuration(WAITING_ANIMATION_MS);
+        pulse.setRepeatMode(ValueAnimator.REVERSE);
+        pulse.setRepeatCount(ValueAnimator.INFINITE);
+        pulse.setInterpolator(new AccelerateDecelerateInterpolator());
+        pulse.start();
+        waitingAnimations.add(pulse);
+
+        ObjectAnimator scaleX = ObjectAnimator.ofFloat(icon, View.SCALE_X, 0.92f, 1.06f);
+        scaleX.setDuration(WAITING_ANIMATION_MS);
+        scaleX.setRepeatMode(ValueAnimator.REVERSE);
+        scaleX.setRepeatCount(ValueAnimator.INFINITE);
+        scaleX.setInterpolator(new AccelerateDecelerateInterpolator());
+        scaleX.start();
+        waitingAnimations.add(scaleX);
+
+        ObjectAnimator scaleY = ObjectAnimator.ofFloat(icon, View.SCALE_Y, 0.92f, 1.06f);
+        scaleY.setDuration(WAITING_ANIMATION_MS);
+        scaleY.setRepeatMode(ValueAnimator.REVERSE);
+        scaleY.setRepeatCount(ValueAnimator.INFINITE);
+        scaleY.setInterpolator(new AccelerateDecelerateInterpolator());
+        scaleY.start();
+        waitingAnimations.add(scaleY);
+    }
+
     private void render(List<Step> state, String latest, boolean animate) {
+        stopWaitingAnimations();
         steps.removeAllViews();
         for (int i = 0; i < state.size(); i++) {
             Step step = state.get(i);
@@ -170,8 +210,7 @@ public final class InstallationProgressView extends LinearLayout {
             card.setCardBackgroundColor(getContext().getColor(R.color.surface_container_low));
             card.setCardElevation(0f);
             card.setRadius(dp(16));
-            card.setStrokeWidth(dp(1));
-            card.setStrokeColor(getContext().getColor(step.state == STATE_RUNNING ? R.color.accent : R.color.divider));
+            card.setStrokeWidth(0);
 
             LinearLayout row = new LinearLayout(getContext());
             row.setOrientation(HORIZONTAL);
@@ -222,6 +261,8 @@ public final class InstallationProgressView extends LinearLayout {
             LayoutParams cardParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
             cardParams.bottomMargin = dp(i == state.size() - 1 ? 4 : 8);
             steps.addView(card, cardParams);
+
+            if (step.state == STATE_RUNNING) animateWaiting(icon);
 
             if (animate) {
                 card.setAlpha(0f);
@@ -280,6 +321,7 @@ public final class InstallationProgressView extends LinearLayout {
     }
 
     public void resetStatus() {
+        stopWaitingAnimations();
         lastRunMarker = -1;
         lastStateSignature = "";
         overallStatus.setText("Ready");
