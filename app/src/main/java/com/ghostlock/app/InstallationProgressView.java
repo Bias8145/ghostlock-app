@@ -2,6 +2,7 @@ package com.ghostlock.app;
 
 import android.content.Context;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
@@ -11,6 +12,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.google.android.material.card.MaterialCardView;
+import com.mikepenz.iconics.IconicsDrawable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,32 +44,26 @@ public final class InstallationProgressView extends LinearLayout {
 
         LinearLayout heading = new LinearLayout(context);
         heading.setGravity(Gravity.CENTER_VERTICAL);
-
         TextView title = text("INSTALLATION", 14, R.color.text_secondary, Typeface.BOLD);
         heading.addView(title, new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
-
         overallStatus = text("Ready", 13, R.color.text_secondary, Typeface.BOLD);
-        overallStatus.setGravity(Gravity.CENTER_VERTICAL);
         heading.addView(overallStatus, new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
         addView(heading, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
         steps = new LinearLayout(context);
         steps.setOrientation(VERTICAL);
         LayoutParams stepsParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        stepsParams.topMargin = dp(10);
+        stepsParams.topMargin = dp(8);
         addView(steps, stepsParams);
-
         resetStatus();
     }
 
-    @Override
-    protected void onAttachedToWindow() {
+    @Override protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         post(this::bindLog);
     }
 
-    @Override
-    protected void onDetachedFromWindow() {
+    @Override protected void onDetachedFromWindow() {
         unbindLog();
         super.onDetachedFromWindow();
     }
@@ -77,9 +73,7 @@ public final class InstallationProgressView extends LinearLayout {
         if (log == null || watcher != null) return;
         watcher = new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
-            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
-                updateFromLog(s == null ? "" : s.toString());
-            }
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) { updateFromLog(s == null ? "" : s.toString()); }
             @Override public void afterTextChanged(Editable s) { }
         };
         log.addTextChangedListener(watcher);
@@ -96,10 +90,7 @@ public final class InstallationProgressView extends LinearLayout {
     private void updateFromLog(String log) {
         String s = log.toLowerCase(Locale.ROOT);
         int start = s.lastIndexOf("==== start ====");
-        if (start < 0) {
-            resetStatus();
-            return;
-        }
+        if (start < 0) { resetStatus(); return; }
         if (start != lastRunMarker) lastRunMarker = start;
 
         String run = s.substring(start);
@@ -107,14 +98,7 @@ public final class InstallationProgressView extends LinearLayout {
         boolean success = run.contains("exit code=0");
         boolean processStarted = run.contains("running ghostlock") || run.contains("ghostlock-reader");
         boolean processFinished = run.contains("exit code=");
-        boolean failed = containsAny(run,
-                "error:",
-                "fatal:",
-                "segmentation fault",
-                "exit code=137",
-                "exit code=-1",
-                "ksud not found",
-                "app not installed");
+        boolean failed = containsAny(run, "error:", "fatal:", "segmentation fault", "exit code=137", "exit code=-1", "ksud not found", "app not installed");
 
         List<Step> state = new ArrayList<>();
         state.add(new Step("Prepare", "Preparing GhostLock runtime and native payload."));
@@ -124,39 +108,20 @@ public final class InstallationProgressView extends LinearLayout {
         state.add(new Step("Verify", "Waiting for the real process result."));
 
         if (run.contains("binary ready")) state.get(0).state = STATE_DONE;
-
-        if (run.contains("ksud ready")) {
-            state.get(1).state = STATE_DONE;
-        } else if (run.contains("ksud not found") || run.contains("app not installed")) {
-            state.get(1).state = STATE_FAILED;
-        }
-
-        if (containsAny(run,
-                "supported kernel",
-                "kernel supported",
-                "offsets loaded",
-                "offsets matched",
-                "offsets verified")) {
-            state.get(2).state = STATE_DONE;
-        }
-
+        if (run.contains("ksud ready")) state.get(1).state = STATE_DONE;
+        else if (run.contains("ksud not found") || run.contains("app not installed")) state.get(1).state = STATE_FAILED;
+        if (containsAny(run, "supported kernel", "kernel supported", "offsets loaded", "offsets matched", "offsets verified")) state.get(2).state = STATE_DONE;
         if (processStarted) state.get(3).state = processFinished ? STATE_DONE : STATE_RUNNING;
-
-        if (success) {
-            state.get(4).state = STATE_DONE;
-        } else if (failed) {
+        if (success) state.get(4).state = STATE_DONE;
+        else if (failed) {
             int current = firstActive(state);
             if (current >= 0) state.get(current).state = STATE_FAILED;
         }
-
         for (int i = 1; i < state.size(); i++) {
             if (state.get(i).state == STATE_RUNNING || state.get(i).state == STATE_DONE) {
-                for (int j = 0; j < i; j++) {
-                    if (state.get(j).state == STATE_PENDING) state.get(j).state = STATE_DONE;
-                }
+                for (int j = 0; j < i; j++) if (state.get(j).state == STATE_PENDING) state.get(j).state = STATE_DONE;
             }
         }
-
         if (!success && !failed && processStarted && !processFinished) state.get(3).state = STATE_RUNNING;
 
         String status;
@@ -169,10 +134,7 @@ public final class InstallationProgressView extends LinearLayout {
         if (stateChanged) {
             animateStatusChange(status);
             lastStateSignature = stateSignature(state, status);
-        } else {
-            overallStatus.setText(status);
-        }
-
+        } else overallStatus.setText(status);
         render(state, latest, stateChanged);
     }
 
@@ -197,12 +159,7 @@ public final class InstallationProgressView extends LinearLayout {
         overallStatus.setAlpha(0.55f);
         overallStatus.setTranslationY(dp(2));
         overallStatus.setText(status);
-        overallStatus.animate()
-                .alpha(1f)
-                .translationY(0f)
-                .setDuration(STATUS_ANIMATION_MS)
-                .setInterpolator(new DecelerateInterpolator())
-                .start();
+        overallStatus.animate().alpha(1f).translationY(0f).setDuration(STATUS_ANIMATION_MS).setInterpolator(new DecelerateInterpolator()).start();
     }
 
     private void render(List<Step> state, String latest, boolean animate) {
@@ -214,57 +171,74 @@ public final class InstallationProgressView extends LinearLayout {
             card.setCardElevation(0f);
             card.setRadius(dp(15));
             card.setStrokeWidth(dp(1));
-            card.setStrokeColor(getContext().getColor(
-                    step.state == STATE_RUNNING ? R.color.accent : R.color.divider));
+            card.setStrokeColor(getContext().getColor(step.state == STATE_RUNNING ? R.color.accent : R.color.divider));
 
             LinearLayout row = new LinearLayout(getContext());
             row.setOrientation(HORIZONTAL);
-            row.setGravity(Gravity.TOP | Gravity.CENTER_VERTICAL);
-            row.setPadding(dp(12), dp(10), dp(12), dp(10));
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setPadding(dp(10), dp(7), dp(10), dp(7));
 
-            TextView marker = text(marker(step.state), 22, markerColor(step.state), Typeface.BOLD);
-            marker.setGravity(Gravity.CENTER);
-            row.addView(marker, new LayoutParams(dp(32), dp(32)));
+            TextView icon = new TextView(getContext());
+            icon.setGravity(Gravity.CENTER);
+            icon.setIncludeFontPadding(false);
+            icon.setContentDescription(step.name);
+            icon.setAlpha(step.state == STATE_PENDING ? 0.34f : 1f);
+            icon.setCompoundDrawablesWithIntrinsicBounds(createStepIcon(step, 20), null, null, null);
+            row.addView(icon, new LayoutParams(dp(29), dp(29)));
 
             LinearLayout body = new LinearLayout(getContext());
             body.setOrientation(VERTICAL);
             LayoutParams bodyParams = new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f);
-            bodyParams.leftMargin = dp(10);
+            bodyParams.leftMargin = dp(9);
             row.addView(body, bodyParams);
 
-            TextView name = text(step.name, 15, step.state == STATE_RUNNING ? R.color.accent : R.color.text_primary, Typeface.BOLD);
+            TextView name = text(step.name, 14, step.state == STATE_RUNNING ? R.color.accent : R.color.text_primary, Typeface.BOLD);
             body.addView(name);
 
-            TextView detail = text(step.detail, 12, R.color.text_secondary, Typeface.NORMAL);
+            TextView detail = text(step.detail, 11, R.color.text_secondary, Typeface.NORMAL);
             LayoutParams detailParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-            detailParams.topMargin = dp(3);
+            detailParams.topMargin = dp(2);
             body.addView(detail, detailParams);
 
             if (step.state == STATE_RUNNING && latest != null && !latest.isEmpty()) {
-                TextView live = text(latest, 11, R.color.text_secondary, Typeface.NORMAL);
-                live.setMaxLines(3);
+                TextView live = text(latest, 10, R.color.text_secondary, Typeface.NORMAL);
+                live.setMaxLines(2);
                 LayoutParams liveParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-                liveParams.topMargin = dp(5);
+                liveParams.topMargin = dp(4);
                 body.addView(live, liveParams);
             }
 
             card.addView(row, new MaterialCardView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
             LayoutParams cardParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-            cardParams.bottomMargin = dp(i == state.size() - 1 ? 3 : 7);
+            cardParams.bottomMargin = dp(i == state.size() - 1 ? 2 : 6);
             steps.addView(card, cardParams);
 
             if (animate) {
                 card.setAlpha(0f);
-                card.setTranslationY(dp(5));
-                card.animate()
-                        .alpha(1f)
-                        .translationY(0f)
-                        .setStartDelay(Math.min(i * 20L, 80L))
-                        .setDuration(ROW_ANIMATION_MS)
-                        .setInterpolator(new DecelerateInterpolator())
-                        .start();
+                card.setTranslationY(dp(4));
+                card.animate().alpha(1f).translationY(0f).setStartDelay(Math.min(i * 20L, 80L)).setDuration(ROW_ANIMATION_MS).setInterpolator(new DecelerateInterpolator()).start();
             }
         }
+    }
+
+    private Drawable createStepIcon(Step step, int sizeDp) {
+        String icon;
+        switch (step.name) {
+            case "Prepare": icon = "faw-box-open"; break;
+            case "Check manager": icon = "faw-user-shield"; break;
+            case "Check kernel": icon = "faw-microchip"; break;
+            case "Execute": icon = "faw-terminal"; break;
+            case "Verify": icon = "faw-shield-alt"; break;
+            default: icon = "faw-circle"; break;
+        }
+        int color;
+        switch (step.state) {
+            case STATE_DONE: color = getContext().getColor(R.color.status_success); break;
+            case STATE_RUNNING: color = getContext().getColor(R.color.accent); break;
+            case STATE_FAILED: color = getContext().getColor(R.color.status_error); break;
+            default: color = getContext().getColor(R.color.text_secondary); break;
+        }
+        return new IconicsDrawable(getContext(), icon).color(color).sizeDp(sizeDp);
     }
 
     private String latestLine(String run) {
@@ -279,24 +253,6 @@ public final class InstallationProgressView extends LinearLayout {
     private static boolean containsAny(String value, String... needles) {
         for (String needle : needles) if (value.contains(needle)) return true;
         return false;
-    }
-
-    private String marker(int state) {
-        switch (state) {
-            case STATE_DONE: return "✓";
-            case STATE_RUNNING: return "●";
-            case STATE_FAILED: return "×";
-            default: return "○";
-        }
-    }
-
-    private int markerColor(int state) {
-        switch (state) {
-            case STATE_DONE: return R.color.status_success;
-            case STATE_RUNNING: return R.color.accent;
-            case STATE_FAILED: return R.color.status_error;
-            default: return R.color.text_secondary;
-        }
     }
 
     private TextView text(String value, float size, int color, int style) {
