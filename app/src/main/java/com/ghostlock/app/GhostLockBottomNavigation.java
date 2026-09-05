@@ -7,6 +7,7 @@ import android.content.res.ColorStateList;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -69,7 +70,7 @@ public class GhostLockBottomNavigation extends LinearLayout {
         LinearLayout item = new LinearLayout(getContext());
         item.setOrientation(VERTICAL);
         item.setGravity(Gravity.CENTER);
-        item.setPadding(dp(4), dp(2), dp(4), dp(2));
+        item.setPadding(dp(3), dp(2), dp(3), dp(2));
         item.setMinimumHeight(dp(48));
         item.setClickable(true);
         item.setFocusable(true);
@@ -87,11 +88,13 @@ public class GhostLockBottomNavigation extends LinearLayout {
         textParams.topMargin = dp(1);
         text.setLayoutParams(textParams);
         text.setGravity(Gravity.CENTER);
-        text.setSingleLine(true);
         text.setIncludeFontPadding(false);
         text.setText(label);
         text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f);
         text.setTypeface(Typeface.DEFAULT, Typeface.NORMAL);
+        text.setSingleLine(true);
+        text.setEllipsize(TextUtils.TruncateAt.END);
+        text.setAutoSizeTextTypeUniformWithConfiguration(9, 11, 1, TypedValue.COMPLEX_UNIT_SP);
         text.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
         item.addView(text);
 
@@ -144,10 +147,6 @@ public class GhostLockBottomNavigation extends LinearLayout {
 
         show.animate().cancel();
         hide.animate().cancel();
-
-        // Keep the outgoing page completely invisible before making the
-        // incoming weighted page visible. This prevents a one-frame flash of
-        // the Home header/back row while LinearLayout recalculates its height.
         hide.setAlpha(0f);
         hide.setVisibility(GONE);
 
