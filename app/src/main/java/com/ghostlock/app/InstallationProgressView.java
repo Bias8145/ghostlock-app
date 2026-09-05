@@ -238,7 +238,10 @@ public final class InstallationProgressView extends LinearLayout {
             case STATE_FAILED: color = getContext().getColor(R.color.status_error); break;
             default: color = getContext().getColor(R.color.text_secondary); break;
         }
-        return new IconicsDrawable(getContext(), icon).color(color).sizeDp(sizeDp);
+        IconicsDrawable drawable = new IconicsDrawable(getContext(), icon);
+        drawable.setColorInt(color);
+        drawable.setSizeDp(sizeDp);
+        return drawable;
     }
 
     private String latestLine(String run) {
