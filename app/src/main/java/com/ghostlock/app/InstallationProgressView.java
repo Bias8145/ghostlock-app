@@ -32,7 +32,7 @@ public final class InstallationProgressView extends LinearLayout {
     private static final int STATE_RUNNING = 1;
     private static final int STATE_DONE = 2;
     private static final int STATE_FAILED = 3;
-    private static final long ROW_ANIMATION_MS = 240L;
+    private static final long ROW_ANIMATION_MS = 180L;
     private static final long STATUS_ANIMATION_MS = 180L;
     private static final long WAITING_ANIMATION_MS = 1100L;
 
@@ -267,8 +267,8 @@ public final class InstallationProgressView extends LinearLayout {
 
             if (animate) {
                 card.setAlpha(0f);
-                card.setTranslationY(dp(4));
-                card.animate().alpha(1f).translationY(0f).setStartDelay(Math.min(i * 20L, 80L)).setDuration(ROW_ANIMATION_MS).setInterpolator(new DecelerateInterpolator()).start();
+                card.setTranslationY(dp(6));
+                card.animate().alpha(1f).translationY(0f).setStartDelay(Math.min(i * 16L, 64L)).setDuration(ROW_ANIMATION_MS).setInterpolator(new DecelerateInterpolator()).start();
             }
         }
     }
