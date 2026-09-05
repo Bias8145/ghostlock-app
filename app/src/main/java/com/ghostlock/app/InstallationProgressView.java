@@ -34,7 +34,7 @@ public final class InstallationProgressView extends LinearLayout {
     private static final int STATE_FAILED = 3;
     private static final long ROW_ANIMATION_MS = 240L;
     private static final long STATUS_ANIMATION_MS = 180L;
-    private static final long WAITING_ANIMATION_MS = 850L;
+    private static final long WAITING_ANIMATION_MS = 1100L;
 
     private final LinearLayout steps;
     private final TextView overallStatus;
@@ -176,7 +176,7 @@ public final class InstallationProgressView extends LinearLayout {
     }
 
     private void animateWaiting(TextView icon) {
-        ObjectAnimator pulse = ObjectAnimator.ofFloat(icon, View.ALPHA, 0.48f, 1f);
+        ObjectAnimator pulse = ObjectAnimator.ofFloat(icon, View.ALPHA, 0.62f, 1f);
         pulse.setDuration(WAITING_ANIMATION_MS);
         pulse.setRepeatMode(ValueAnimator.REVERSE);
         pulse.setRepeatCount(ValueAnimator.INFINITE);
@@ -184,7 +184,7 @@ public final class InstallationProgressView extends LinearLayout {
         pulse.start();
         waitingAnimations.add(pulse);
 
-        ObjectAnimator scaleX = ObjectAnimator.ofFloat(icon, View.SCALE_X, 0.94f, 1.04f);
+        ObjectAnimator scaleX = ObjectAnimator.ofFloat(icon, View.SCALE_X, 0.94f, 1.08f);
         scaleX.setDuration(WAITING_ANIMATION_MS);
         scaleX.setRepeatMode(ValueAnimator.REVERSE);
         scaleX.setRepeatCount(ValueAnimator.INFINITE);
@@ -192,7 +192,7 @@ public final class InstallationProgressView extends LinearLayout {
         scaleX.start();
         waitingAnimations.add(scaleX);
 
-        ObjectAnimator scaleY = ObjectAnimator.ofFloat(icon, View.SCALE_Y, 0.94f, 1.04f);
+        ObjectAnimator scaleY = ObjectAnimator.ofFloat(icon, View.SCALE_Y, 0.94f, 1.08f);
         scaleY.setDuration(WAITING_ANIMATION_MS);
         scaleY.setRepeatMode(ValueAnimator.REVERSE);
         scaleY.setRepeatCount(ValueAnimator.INFINITE);
