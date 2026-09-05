@@ -25,7 +25,6 @@ public class GhostLockBottomNavigation extends LinearLayout {
     private static final int PAGE_LOGS = 1;
     private static final int PAGE_SETTINGS = 2;
 
-    private final int[] iconColors = new int[2];
     private final Item[] items = new Item[3];
     private int selectedPage = PAGE_HOME;
 
@@ -51,9 +50,6 @@ public class GhostLockBottomNavigation extends LinearLayout {
         setPadding(0, dp(4), 0, dp(4));
         setElevation(dp(2));
         setContentDescription("Page navigation");
-
-        iconColors[0] = color(R.color.icon_tint);
-        iconColors[1] = color(R.color.text_secondary);
 
         items[PAGE_HOME] = addItem("faw-home", "Home", PAGE_HOME);
         items[PAGE_LOGS] = addItem("faw-list-alt", "Logs", PAGE_LOGS);
@@ -85,7 +81,6 @@ public class GhostLockBottomNavigation extends LinearLayout {
         text.setLayoutParams(textParams);
         text.setGravity(Gravity.CENTER);
         text.setSingleLine(true);
-        text.setEllipsize(null);
         text.setIncludeFontPadding(false);
         text.setText(label);
         text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f);
@@ -142,9 +137,7 @@ public class GhostLockBottomNavigation extends LinearLayout {
             }
             item.label.setTextColor(tint);
             item.label.setTypeface(Typeface.DEFAULT, selected ? Typeface.BOLD : Typeface.NORMAL);
-            item.view.setBackgroundResource(selected
-                    ? android.R.drawable.list_selector_background
-                    : android.R.color.transparent);
+            item.view.setBackgroundColor(android.graphics.Color.TRANSPARENT);
             item.view.setContentDescription(item.label.getText() + (selected ? ", selected" : ""));
         }
     }
