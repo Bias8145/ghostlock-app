@@ -77,7 +77,7 @@ public class KernelInfoView extends TextView {
         String code = codename == null ? "unknown" : codename.trim();
         appendValue(out, name, IDENTITY_SCALE, false, false);
         if (!code.isEmpty() && !"unknown".equalsIgnoreCase(code)) {
-            out.append("\u2002\u2002");
+            out.append("\u2003\u2003\u2003");
             int start = out.length();
             out.append(code);
             out.setSpan(new RelativeSizeSpan(IDENTITY_SCALE), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
