@@ -14,7 +14,6 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginBottom="76dp"
         android:orientation="vertical">
         <FrameLayout android:id="@+id/pageContainer" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:padding="0dp" android:clipToPadding="false">
             <ScrollView android:id="@+id/homeScroll" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:clipToPadding="false" android:paddingStart="0dp" android:paddingTop="4dp" android:paddingEnd="0dp" android:paddingBottom="16dp" android:scrollbars="none">
@@ -32,13 +31,13 @@
                 <com.google.android.material.card.MaterialCardView android:id="@+id/logContentPanel" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" app:cardBackgroundColor="@color/log_bg" app:cardCornerRadius="20dp" app:cardElevation="0dp" app:strokeWidth="0dp"><LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="12dp"><LinearLayout android:layout_width="match_parent" android:layout_height="56dp" android:gravity="center_vertical"><TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center_vertical" android:text="@string/log_title" android:textColor="@color/log_title" android:textSize="14sp" android:textStyle="bold" android:visibility="gone" /><com.google.android.material.button.MaterialButton android:id="@+id/copyButton" style="@style/Widget.Material3.Button.TonalButton" android:layout_width="wrap_content" android:layout_height="40dp" android:minWidth="0dp" android:minHeight="40dp" android:insetTop="0dp" android:insetBottom="0dp" android:gravity="center" android:text="Copy log" android:textAllCaps="false" android:textColor="@color/log_title" android:textSize="12sp" android:contentDescription="Copy log" app:backgroundTint="@color/surface_container" app:cornerRadius="13dp" app:strokeWidth="0dp" /><com.ghostlock.app.ClearLogButton android:id="@+id/clearLogButton" style="@style/Widget.Material3.Button.TonalButton" android:layout_width="wrap_content" android:layout_height="40dp" android:layout_marginStart="6dp" android:minWidth="0dp" android:minHeight="40dp" android:insetTop="0dp" android:insetBottom="0dp" android:gravity="center" android:text="Clear log" android:textAllCaps="false" android:textColor="@color/log_title" android:textSize="12sp" android:contentDescription="Clear log" app:backgroundTint="@color/surface_container" app:cornerRadius="13dp" app:strokeWidth="0dp" /></LinearLayout><View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginBottom="12dp" android:background="@color/log_divider" /><com.ghostlock.app.LogScrollView android:id="@+id/logScroll" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:fillViewport="false" android:fadeScrollbars="false" android:overScrollMode="always" android:paddingBottom="10dp" android:scrollbars="none" android:clipToPadding="false"><TextView android:id="@+id/logView" android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="monospace" android:lineSpacingExtra="3dp" android:textColor="@color/log_text" android:textIsSelectable="true" android:textSize="12sp" android:breakStrategy="high_quality" android:hyphenationFrequency="none" /></com.ghostlock.app.LogScrollView></LinearLayout></com.google.android.material.card.MaterialCardView>
             </LinearLayout>
         </FrameLayout>
+        <com.ghostlock.app.GhostLockBottomNavigation
+            android:id="@+id/bottomNavigation"
+            android:layout_width="288dp"
+            android:layout_height="68dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="4dp"
+            android:elevation="0dp" />
     </LinearLayout>
-
-    <com.ghostlock.app.GhostLockBottomNavigation
-        android:id="@+id/bottomNavigation"
-        android:layout_width="288dp"
-        android:layout_height="68dp"
-        android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginBottom="4dp"
-        android:elevation="0dp" />
 </FrameLayout>
