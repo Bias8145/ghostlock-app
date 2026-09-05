@@ -47,8 +47,7 @@
                         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="1dp" android:text="@string/header_subtitle" android:textColor="@color/text_secondary" android:textSize="11sp" />
                     </LinearLayout>
                     <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:gravity="center_vertical">
-                        <com.ghostlock.app.SettingsButton android:id="@+id/advancedButton" android:layout_width="48dp" android:layout_height="48dp" android:background="?attr/selectableItemBackgroundBorderless" android:contentDescription="@string/action_advanced" android:padding="11dp" android:src="@drawable/ic_advanced" android:tint="@color/icon_tint" />
-                        <com.ghostlock.app.ThemeToggleButton android:id="@+id/themeToggleButton" android:layout_width="48dp" android:layout_height="48dp" android:layout_marginStart="2dp" android:background="?attr/selectableItemBackgroundBorderless" android:contentDescription="@string/action_theme_toggle" android:padding="10dp" />
+                        <com.ghostlock.app.ThemeToggleButton android:id="@+id/themeToggleButton" android:layout_width="48dp" android:layout_height="48dp" android:background="?attr/selectableItemBackgroundBorderless" android:contentDescription="@string/action_theme_toggle" android:padding="10dp" />
                     </LinearLayout>
                 </LinearLayout>
 
@@ -88,8 +87,15 @@
                 <com.ghostlock.app.InstallationProgressView android:id="@+id/installationProgress" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16dp" />
             </LinearLayout>
 
-            <com.google.android.material.card.MaterialCardView android:id="@+id/logPanel" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginBottom="8dp" android:minHeight="0dp" app:cardBackgroundColor="@color/log_bg" app:cardCornerRadius="20dp" app:cardElevation="0dp" app:strokeWidth="0dp">
+            <com.google.android.material.card.MaterialCardView android:id="@+id/logPanel" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginBottom="8dp" android:minHeight="0dp" android:visibility="gone" app:cardBackgroundColor="@color/log_bg" app:cardCornerRadius="20dp" app:cardElevation="0dp" app:strokeWidth="0dp">
                 <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="12dp">
+                    <LinearLayout android:id="@+id/logBackRow" android:layout_width="match_parent" android:layout_height="52dp" android:layout_marginBottom="4dp" android:clickable="true" android:focusable="true" android:gravity="center_vertical" android:orientation="horizontal">
+                        <ImageButton android:id="@+id/logBackButton" android:layout_width="42dp" android:layout_height="42dp" android:background="@drawable/bg_tool_header" android:contentDescription="Back to Home" android:padding="9dp" android:src="@drawable/ic_chevron_down" android:rotation="90" android:tint="@color/icon_tint" />
+                        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="10dp" android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Back to Home" android:textColor="@color/log_title" android:textSize="13sp" android:textStyle="bold" />
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="1dp" android:text="Return to the main page" android:textColor="@color/text_secondary" android:textSize="10sp" />
+                        </LinearLayout>
+                    </LinearLayout>
                     <LinearLayout android:layout_width="match_parent" android:layout_height="56dp" android:gravity="center_vertical">
                         <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center_vertical" android:text="@string/log_title" android:textColor="@color/log_title" android:textSize="14sp" android:textStyle="bold" />
                         <com.google.android.material.button.MaterialButton android:id="@+id/copyButton" style="@style/Widget.Material3.Button.TonalButton" android:layout_width="100dp" android:layout_height="40dp" android:minWidth="0dp" android:insetTop="0dp" android:insetBottom="0dp" android:gravity="center" android:text="Copy log" android:textAllCaps="false" android:textColor="@color/log_title" android:textSize="12sp" android:contentDescription="Copy log" app:backgroundTint="@color/surface_container" app:cornerRadius="13dp" app:strokeWidth="0dp" />
