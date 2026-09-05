@@ -2,7 +2,6 @@ package com.ghostlock.app;
 
 import android.content.Context;
 import android.graphics.Typeface;
-import android.os.Build;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
@@ -11,6 +10,8 @@ import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import com.google.android.material.card.MaterialCardView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,8 +26,8 @@ public final class InstallationProgressView extends LinearLayout {
     private static final int STATE_RUNNING = 1;
     private static final int STATE_DONE = 2;
     private static final int STATE_FAILED = 3;
-    private static final long ROW_ANIMATION_MS = 220L;
-    private static final long STATUS_ANIMATION_MS = 160L;
+    private static final long ROW_ANIMATION_MS = 240L;
+    private static final long STATUS_ANIMATION_MS = 180L;
 
     private final LinearLayout steps;
     private final TextView overallStatus;
@@ -43,10 +44,10 @@ public final class InstallationProgressView extends LinearLayout {
         LinearLayout heading = new LinearLayout(context);
         heading.setGravity(Gravity.CENTER_VERTICAL);
 
-        TextView title = text("INSTALLATION", 15, R.color.text_secondary, Typeface.BOLD);
+        TextView title = text("INSTALLATION", 17, R.color.text_secondary, Typeface.BOLD);
         heading.addView(title, new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
 
-        overallStatus = text("Ready", 15, R.color.text_secondary, Typeface.NORMAL);
+        overallStatus = text("Ready", 16, R.color.text_secondary, Typeface.BOLD);
         overallStatus.setGravity(Gravity.CENTER_VERTICAL);
         heading.addView(overallStatus, new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
         addView(heading, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
@@ -54,7 +55,7 @@ public final class InstallationProgressView extends LinearLayout {
         steps = new LinearLayout(context);
         steps.setOrientation(VERTICAL);
         LayoutParams stepsParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        stepsParams.topMargin = dp(16);
+        stepsParams.topMargin = dp(14);
         addView(steps, stepsParams);
 
         resetStatus();
@@ -209,34 +210,30 @@ public final class InstallationProgressView extends LinearLayout {
         steps.removeAllViews();
         for (int i = 0; i < state.size(); i++) {
             Step step = state.get(i);
+            MaterialCardView card = new MaterialCardView(getContext());
+            card.setCardBackgroundColor(getContext().getColor(R.color.surface_container_low));
+            card.setCardElevation(0f);
+            card.setRadius(dp(17));
+            card.setStrokeWidth(dp(1));
+            card.setStrokeColor(getContext().getColor(
+                    step.state == STATE_RUNNING ? R.color.accent : R.color.divider));
+
             LinearLayout row = new LinearLayout(getContext());
             row.setOrientation(HORIZONTAL);
-            row.setGravity(Gravity.TOP);
-            row.setPadding(0, dp(4), 0, dp(i == state.size() - 1 ? 4 : 15));
-
-            LinearLayout rail = new LinearLayout(getContext());
-            rail.setOrientation(VERTICAL);
-            rail.setGravity(Gravity.CENTER_HORIZONTAL);
+            row.setGravity(Gravity.TOP | Gravity.CENTER_VERTICAL);
+            row.setPadding(dp(14), dp(13), dp(14), dp(13));
 
             TextView marker = text(marker(step.state), 28, markerColor(step.state), Typeface.BOLD);
             marker.setGravity(Gravity.CENTER);
-            rail.addView(marker, new LayoutParams(dp(36), dp(36)));
-
-            if (i < state.size() - 1) {
-                View connector = new View(getContext());
-                connector.setBackgroundColor(getContext().getColor(connectorColor(step.state)));
-                LayoutParams connectorParams = new LayoutParams(dp(2), dp(34));
-                connectorParams.topMargin = dp(2);
-                rail.addView(connector, connectorParams);
-            }
-
-            LayoutParams railParams = new LayoutParams(dp(36), LayoutParams.MATCH_PARENT);
-            railParams.rightMargin = dp(14);
-            row.addView(rail, railParams);
+            row.addView(marker, new LayoutParams(dp(38), dp(38)));
 
             LinearLayout body = new LinearLayout(getContext());
             body.setOrientation(VERTICAL);
-            TextView name = text(step.name, 17, step.state == STATE_RUNNING ? R.color.accent : R.color.text_primary, Typeface.BOLD);
+            LayoutParams bodyParams = new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f);
+            bodyParams.leftMargin = dp(12);
+            row.addView(body, bodyParams);
+
+            TextView name = text(step.name, 18, step.state == STATE_RUNNING ? R.color.accent : R.color.text_primary, Typeface.BOLD);
             body.addView(name);
 
             TextView detail = text(step.detail, 15, R.color.text_secondary, Typeface.NORMAL);
@@ -252,24 +249,24 @@ public final class InstallationProgressView extends LinearLayout {
                 body.addView(live, liveParams);
             }
 
-            row.addView(body, new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
-            steps.addView(row, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+            card.addView(row, new MaterialCardView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+            LayoutParams cardParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+            cardParams.bottomMargin = dp(i == state.size() - 1 ? 4 : 9);
+            steps.addView(card, cardParams);
 
             if (animate) {
-                row.setAlpha(0f);
-                row.setTranslationY(dp(6));
-                row.animate()
+                card.setAlpha(0f);
+                card.setTranslationY(dp(7));
+                card.animate()
                         .alpha(1f)
                         .translationY(0f)
-                        .setStartDelay(Math.min(i * 22L, 88L))
+                        .setStartDelay(Math.min(i * 24L, 96L))
                         .setDuration(ROW_ANIMATION_MS)
                         .setInterpolator(new DecelerateInterpolator())
                         .start();
             }
         }
     }
-
-    private int connectorColor(int state) { return state == STATE_DONE ? R.color.status_success : R.color.divider; }
 
     private String latestLine(String run) {
         String[] lines = run.split("\\n");
