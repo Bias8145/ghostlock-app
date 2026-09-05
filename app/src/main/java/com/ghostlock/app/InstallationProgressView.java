@@ -209,13 +209,14 @@ public final class InstallationProgressView extends LinearLayout {
             MaterialCardView card = new MaterialCardView(getContext());
             card.setCardBackgroundColor(getContext().getColor(R.color.surface_container_low));
             card.setCardElevation(0f);
-            card.setRadius(dp(16));
+            card.setTranslationZ(0f);
+            card.setRadius(dp(18));
             card.setStrokeWidth(0);
 
             LinearLayout row = new LinearLayout(getContext());
             row.setOrientation(HORIZONTAL);
             row.setGravity(Gravity.CENTER_VERTICAL);
-            row.setPadding(dp(12), dp(11), dp(12), dp(11));
+            row.setPadding(dp(13), dp(13), dp(13), dp(13));
 
             LinearLayout iconSlot = new LinearLayout(getContext());
             iconSlot.setGravity(Gravity.CENTER);
