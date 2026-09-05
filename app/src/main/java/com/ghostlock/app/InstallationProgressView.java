@@ -184,7 +184,7 @@ public final class InstallationProgressView extends LinearLayout {
         pulse.start();
         waitingAnimations.add(pulse);
 
-        ObjectAnimator scaleX = ObjectAnimator.ofFloat(icon, View.SCALE_X, 0.92f, 1.06f);
+        ObjectAnimator scaleX = ObjectAnimator.ofFloat(icon, View.SCALE_X, 0.94f, 1.04f);
         scaleX.setDuration(WAITING_ANIMATION_MS);
         scaleX.setRepeatMode(ValueAnimator.REVERSE);
         scaleX.setRepeatCount(ValueAnimator.INFINITE);
@@ -192,7 +192,7 @@ public final class InstallationProgressView extends LinearLayout {
         scaleX.start();
         waitingAnimations.add(scaleX);
 
-        ObjectAnimator scaleY = ObjectAnimator.ofFloat(icon, View.SCALE_Y, 0.92f, 1.06f);
+        ObjectAnimator scaleY = ObjectAnimator.ofFloat(icon, View.SCALE_Y, 0.94f, 1.04f);
         scaleY.setDuration(WAITING_ANIMATION_MS);
         scaleY.setRepeatMode(ValueAnimator.REVERSE);
         scaleY.setRepeatCount(ValueAnimator.INFINITE);
@@ -221,24 +221,24 @@ public final class InstallationProgressView extends LinearLayout {
             iconSlot.setGravity(Gravity.CENTER);
             iconSlot.setClipChildren(false);
             iconSlot.setClipToPadding(false);
-            LayoutParams iconSlotParams = new LayoutParams(dp(32), dp(32));
+            LayoutParams iconSlotParams = new LayoutParams(dp(28), dp(28));
 
             TextView icon = new TextView(getContext());
             icon.setGravity(Gravity.CENTER);
             icon.setIncludeFontPadding(false);
             icon.setContentDescription(step.name);
             icon.setAlpha(step.state == STATE_PENDING ? 0.34f : 1f);
-            Drawable iconDrawable = createStepIcon(step, 21);
+            Drawable iconDrawable = createStepIcon(step, 17);
             icon.setCompoundDrawables(null, null, null, null);
             icon.setCompoundDrawablePadding(0);
             icon.setBackground(iconDrawable);
-            iconSlot.addView(icon, new LayoutParams(dp(32), dp(32)));
+            iconSlot.addView(icon, new LayoutParams(dp(28), dp(28)));
             row.addView(iconSlot, iconSlotParams);
 
             LinearLayout body = new LinearLayout(getContext());
             body.setOrientation(VERTICAL);
             LayoutParams bodyParams = new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f);
-            bodyParams.leftMargin = dp(11);
+            bodyParams.leftMargin = dp(10);
             row.addView(body, bodyParams);
 
             TextView name = text(step.name, 14, step.state == STATE_RUNNING ? R.color.accent : R.color.text_primary, Typeface.BOLD);
