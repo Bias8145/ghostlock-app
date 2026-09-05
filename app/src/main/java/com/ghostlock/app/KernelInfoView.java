@@ -10,6 +10,9 @@ import android.util.AttributeSet;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.mikepenz.fontawesome_typeface_library.FontAwesome;
+import com.mikepenz.iconics.IconicsDrawable;
+
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,6 +30,8 @@ public class KernelInfoView extends TextView {
     private static final int EXPANDED_LINES = 12;
     private static final long EXPAND_DURATION = 220L;
     private static final long COLLAPSE_DURATION = 180L;
+    private static final int ICON_SIZE_DP = 14;
+    private static final int ICON_GAP_DP = 8;
 
     private boolean expanded;
     private boolean animating;
@@ -54,8 +59,10 @@ public class KernelInfoView extends TextView {
         setMaxLines(COLLAPSED_LINES);
         setClickable(true);
         setFocusable(true);
+        setPaddingRelative(0, 0, dp(2), 0);
+        setCompoundDrawablePadding(dp(ICON_GAP_DP));
         setOnClickListener(v -> toggleExpanded());
-        setContentDescription("Expand device information");
+        updateExpandIcon();
     }
 
     @Override
@@ -71,12 +78,25 @@ public class KernelInfoView extends TextView {
             setMaxLines(EXPANDED_LINES);
             setEllipsize(null);
             setContentDescription("Collapse device information");
-            super.setText("⌃  " + snapshotText, BufferType.NORMAL);
+            super.setText(snapshotText, BufferType.NORMAL);
         } else {
             setMaxLines(COLLAPSED_LINES);
             setEllipsize(TextUtils.TruncateAt.END);
             setContentDescription("Expand device information");
-            super.setText("⌄  " + compactText, BufferType.NORMAL);
+            super.setText(compactText, BufferType.NORMAL);
+        }
+        updateExpandIcon();
+    }
+
+    private void updateExpandIcon() {
+        try {
+            IconicsDrawable icon = new IconicsDrawable(getContext(),
+                    expanded ? FontAwesome.Icon.faw_chevron_up : FontAwesome.Icon.faw_chevron_down)
+                    .color(getCurrentTextColor())
+                    .sizeDp(ICON_SIZE_DP);
+            setCompoundDrawablesRelativeWithIntrinsicBounds(null, null, icon, null);
+        } catch (Throwable ignored) {
+            setCompoundDrawablesRelativeWithIntrinsicBounds(null, null, null, null);
         }
     }
 
@@ -194,6 +214,10 @@ public class KernelInfoView extends TextView {
         return value == null || value.trim().isEmpty() ? "unknown" : value.trim();
     }
 
+    private int dp(int value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
+    }
+
     private void toggleExpanded() {
         if (animating) return;
         expanded = !expanded;
@@ -214,12 +238,13 @@ public class KernelInfoView extends TextView {
         if (expanded) {
             setMaxLines(EXPANDED_LINES);
             setEllipsize(null);
-            super.setText("⌃  " + snapshotText, BufferType.NORMAL);
+            super.setText(snapshotText, BufferType.NORMAL);
         } else {
             setMaxLines(COLLAPSED_LINES);
             setEllipsize(TextUtils.TruncateAt.END);
-            super.setText("⌄  " + compactText, BufferType.NORMAL);
+            super.setText(compactText, BufferType.NORMAL);
         }
+        updateExpandIcon();
 
         ViewGroup.LayoutParams lp = getLayoutParams();
         int width = getWidth();
