@@ -1,6 +1,5 @@
 package com.ghostlock.app;
 
-import android.animation.Animator;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -45,7 +44,7 @@ public class GhostLockBottomNavigation extends LinearLayout {
         background.setColor(color(R.color.surface));
         background.setCornerRadius(dp(20));
         setBackground(background);
-        setPadding(dp(4), dp(3), dp(4), dp(3));
+        setPadding(0, dp(4), 0, dp(4));
         setElevation(0f);
         setTranslationZ(0f);
         setContentDescription("Page navigation");
@@ -61,13 +60,9 @@ public class GhostLockBottomNavigation extends LinearLayout {
             activity.getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
                     android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT,
                     () -> {
-                        if (activity instanceof SettingsActivity) {
-                            activity.finish();
-                        } else if (selectedPage == PAGE_LOGS) {
-                            showHome();
-                        } else {
-                            activity.finish();
-                        }
+                        if (activity instanceof SettingsActivity) activity.finish();
+                        else if (selectedPage == PAGE_LOGS) showHome();
+                        else activity.finish();
                     });
         }
     }
@@ -75,32 +70,34 @@ public class GhostLockBottomNavigation extends LinearLayout {
     private Item addItem(String iconKey, String label, int page) {
         LinearLayout item = new LinearLayout(getContext());
         item.setOrientation(VERTICAL);
-        item.setGravity(Gravity.CENTER);
-        item.setClipChildren(false);
-        item.setClipToPadding(false);
+        item.setGravity(Gravity.CENTER_HORIZONTAL);
         item.setPadding(dp(3), dp(2), dp(3), dp(2));
         item.setMinimumHeight(dp(48));
         item.setClickable(true);
         item.setFocusable(true);
+        item.setClipChildren(false);
+        item.setClipToPadding(false);
         item.setLayoutParams(new LayoutParams(0, LayoutParams.MATCH_PARENT, 1f));
         item.setContentDescription(label);
 
         FrameLayout iconContainer = new FrameLayout(getContext());
+        LinearLayout.LayoutParams iconContainerParams = new LinearLayout.LayoutParams(dp(32), dp(32));
+        iconContainerParams.gravity = Gravity.CENTER_HORIZONTAL;
+        iconContainer.setLayoutParams(iconContainerParams);
         iconContainer.setClipChildren(false);
         iconContainer.setClipToPadding(false);
-        iconContainer.setGravity(Gravity.CENTER);
-        iconContainer.setLayoutParams(new LayoutParams(dp(32), dp(32)));
 
         ImageView icon = new ImageView(getContext());
-        FrameLayout.LayoutParams iconParams = new FrameLayout.LayoutParams(dp(26), dp(26), Gravity.CENTER);
+        FrameLayout.LayoutParams iconParams = new FrameLayout.LayoutParams(dp(32), dp(32), Gravity.CENTER);
         icon.setLayoutParams(iconParams);
         icon.setScaleType(ImageView.ScaleType.CENTER);
+        icon.setPadding(dp(5), dp(5), dp(5), dp(5));
         icon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
         iconContainer.addView(icon);
         item.addView(iconContainer);
 
         TextView text = new TextView(getContext());
-        LayoutParams textParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         textParams.topMargin = dp(1);
         text.setLayoutParams(textParams);
         text.setGravity(Gravity.CENTER);
@@ -121,74 +118,48 @@ public class GhostLockBottomNavigation extends LinearLayout {
 
     private void selectPage(int page) {
         Activity activity = getContext() instanceof Activity ? (Activity) getContext() : null;
-
         if (activity instanceof SettingsActivity) {
             if (page == PAGE_SETTINGS) return;
-            if (page == PAGE_HOME) {
-                activity.finish();
-                return;
-            }
+            if (page == PAGE_HOME) { activity.finish(); return; }
             Intent result = new Intent();
             result.putExtra("navigate_to", "logs");
             activity.setResult(Activity.RESULT_OK, result);
             activity.finish();
             return;
         }
-
         if (page == PAGE_SETTINGS) {
-            if (activity != null) {
-                activity.startActivityForResult(new Intent(activity, SettingsActivity.class), SETTINGS_REQUEST);
-            }
+            if (activity != null) activity.startActivityForResult(new Intent(activity, SettingsActivity.class), SETTINGS_REQUEST);
             return;
         }
-
         selectedPage = page;
         View homeBody = getRootView().findViewById(R.id.homeBody);
         View logPanel = getRootView().findViewById(R.id.logPanel);
-        if (homeBody == null || logPanel == null) {
-            updateSelection(true);
-            return;
-        }
-
-        if (page == PAGE_HOME) {
-            transition(homeBody, logPanel, false);
-        } else {
-            transition(logPanel, homeBody, true);
-        }
+        if (homeBody == null || logPanel == null) { updateSelection(true); return; }
+        if (page == PAGE_HOME) transition(homeBody, logPanel, false);
+        else transition(logPanel, homeBody, true);
         updateSelection(true);
     }
 
     private void transition(View show, View hide, boolean enteringLogs) {
         if (show.getVisibility() == VISIBLE && hide.getVisibility() == GONE) return;
-
         show.animate().cancel();
         hide.animate().cancel();
         hide.setAlpha(0f);
         hide.setVisibility(GONE);
-
         show.setVisibility(VISIBLE);
         show.setAlpha(0f);
         show.setTranslationX(enteringLogs ? dp(18) : -dp(18));
-
-        show.post(() -> show.animate()
-                .alpha(1f)
-                .translationX(0f)
-                .setDuration(180)
+        show.post(() -> show.animate().alpha(1f).translationX(0f).setDuration(180)
                 .setInterpolator(new DecelerateInterpolator())
-                .withEndAction(() -> {
-                    show.setAlpha(1f);
-                    show.setTranslationX(0f);
-                })
-                .start());
+                .withEndAction(() -> { show.setAlpha(1f); show.setTranslationX(0f); }).start());
     }
 
     public void showHome() { selectPage(PAGE_HOME); }
     public void showLogs() { selectPage(PAGE_LOGS); }
 
     private void updateSelection(boolean animate) {
-        for (int i = 0; i < items.length; i++) {
-            Item item = items[i];
-            boolean selected = i == selectedPage;
+        for (Item item : items) {
+            boolean selected = item == items[selectedPage];
             int tint = color(selected ? R.color.icon_tint : R.color.text_secondary);
             try {
                 IconicsDrawable drawable = new IconicsDrawable(getContext(), item.iconKey);
@@ -197,9 +168,7 @@ public class GhostLockBottomNavigation extends LinearLayout {
                 drawable.setSizeXPx(size);
                 drawable.setSizeYPx(size);
                 item.icon.setImageDrawable(drawable);
-            } catch (Throwable ignored) {
-                item.icon.setImageDrawable(null);
-            }
+            } catch (Throwable ignored) { item.icon.setImageDrawable(null); }
             item.label.setTextColor(tint);
             item.label.setTypeface(Typeface.DEFAULT, selected ? Typeface.BOLD : Typeface.NORMAL);
             item.view.setBackgroundColor(android.graphics.Color.TRANSPARENT);
@@ -232,13 +201,8 @@ public class GhostLockBottomNavigation extends LinearLayout {
             item.iconContainer.setScaleY(targetScale);
             return;
         }
-        item.iconContainer.animate()
-                .translationY(targetY)
-                .scaleX(targetScale)
-                .scaleY(targetScale)
-                .setDuration(SELECTION_ANIMATION_MS)
-                .setInterpolator(new DecelerateInterpolator())
-                .start();
+        item.iconContainer.animate().translationY(targetY).scaleX(targetScale).scaleY(targetScale)
+                .setDuration(SELECTION_ANIMATION_MS).setInterpolator(new DecelerateInterpolator()).start();
     }
 
     private int color(int resId) { return getResources().getColor(resId, getContext().getTheme()); }
