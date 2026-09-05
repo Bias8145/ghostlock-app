@@ -35,7 +35,7 @@
         <item name="android:windowAnimationStyle">@style/Animation.GhostLock.Settings</item>
     </style>
 
-    <style name="Animation.GhostLock.Settings">
+    <style name="Animation.GhostLock.Settings" parent="@android:style/Animation.Activity">
         <item name="android:windowEnterAnimation">@anim/settings_enter</item>
         <item name="android:windowExitAnimation">@anim/settings_exit</item>
         <item name="android:windowShowAnimation">@anim/settings_enter</item>
