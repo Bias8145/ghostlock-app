@@ -2,11 +2,13 @@ package com.ghostlock.app;
 
 import android.content.Context;
 import android.graphics.Typeface;
+import android.os.Build;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -23,11 +25,14 @@ public final class InstallationProgressView extends LinearLayout {
     private static final int STATE_RUNNING = 1;
     private static final int STATE_DONE = 2;
     private static final int STATE_FAILED = 3;
+    private static final long ROW_ANIMATION_MS = 220L;
+    private static final long STATUS_ANIMATION_MS = 160L;
 
     private final LinearLayout steps;
     private final TextView overallStatus;
     private TextWatcher watcher;
     private int lastRunMarker = -1;
+    private String lastStateSignature = "";
 
     public InstallationProgressView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -154,12 +159,21 @@ public final class InstallationProgressView extends LinearLayout {
 
         if (!success && !failed && processStarted && !processFinished) state.get(3).state = STATE_RUNNING;
 
-        if (success) overallStatus.setText("Completed");
-        else if (failed) overallStatus.setText("Failed");
-        else if (processStarted || hasActiveStage(state)) overallStatus.setText("Running");
-        else overallStatus.setText("Preparing");
+        String status;
+        if (success) status = "Completed";
+        else if (failed) status = "Failed";
+        else if (processStarted || hasActiveStage(state)) status = "Running";
+        else status = "Preparing";
 
-        render(state, latest);
+        boolean stateChanged = !stateSignature(state, status).equals(lastStateSignature);
+        if (stateChanged) {
+            animateStatusChange(status);
+            lastStateSignature = stateSignature(state, status);
+        } else {
+            overallStatus.setText(status);
+        }
+
+        render(state, latest, stateChanged);
     }
 
     private boolean hasActiveStage(List<Step> state) {
@@ -172,7 +186,26 @@ public final class InstallationProgressView extends LinearLayout {
         return -1;
     }
 
-    private void render(List<Step> state, String latest) {
+    private String stateSignature(List<Step> state, String status) {
+        StringBuilder signature = new StringBuilder(status).append(':');
+        for (Step step : state) signature.append(step.state).append(',');
+        return signature.toString();
+    }
+
+    private void animateStatusChange(String status) {
+        overallStatus.animate().cancel();
+        overallStatus.setAlpha(0.55f);
+        overallStatus.setTranslationY(dp(2));
+        overallStatus.setText(status);
+        overallStatus.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setDuration(STATUS_ANIMATION_MS)
+                .setInterpolator(new DecelerateInterpolator())
+                .start();
+    }
+
+    private void render(List<Step> state, String latest, boolean animate) {
         steps.removeAllViews();
         for (int i = 0; i < state.size(); i++) {
             Step step = state.get(i);
@@ -221,6 +254,18 @@ public final class InstallationProgressView extends LinearLayout {
 
             row.addView(body, new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
             steps.addView(row, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+
+            if (animate) {
+                row.setAlpha(0f);
+                row.setTranslationY(dp(6));
+                row.animate()
+                        .alpha(1f)
+                        .translationY(0f)
+                        .setStartDelay(Math.min(i * 22L, 88L))
+                        .setDuration(ROW_ANIMATION_MS)
+                        .setInterpolator(new DecelerateInterpolator())
+                        .start();
+            }
         }
     }
 
@@ -264,11 +309,13 @@ public final class InstallationProgressView extends LinearLayout {
         view.setTextSize(size);
         view.setTextColor(getContext().getColor(color));
         view.setTypeface(Typeface.DEFAULT, style);
+        view.setIncludeFontPadding(false);
         return view;
     }
 
     public void resetStatus() {
         lastRunMarker = -1;
+        lastStateSignature = "";
         overallStatus.setText("Ready");
         List<Step> state = new ArrayList<>();
         state.add(new Step("Prepare", "Waiting for GhostLock to start."));
@@ -276,7 +323,8 @@ public final class InstallationProgressView extends LinearLayout {
         state.add(new Step("Check kernel", "Waiting"));
         state.add(new Step("Execute", "Waiting"));
         state.add(new Step("Verify", "Waiting"));
-        render(state, "");
+        lastStateSignature = stateSignature(state, "Ready");
+        render(state, "", false);
     }
 
     private int dp(float value) { return Math.round(value * getResources().getDisplayMetrics().density); }
