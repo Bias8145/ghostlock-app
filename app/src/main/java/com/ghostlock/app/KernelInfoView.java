@@ -16,12 +16,12 @@ import android.widget.TextView;
 import java.util.Locale;
 
 public class KernelInfoView extends TextView {
-    private static final float SECTION_SCALE = 0.84f;
-    private static final float IDENTITY_SCALE = 1.0f;
-    private static final float LABEL_SCALE = 0.88f;
-    private static final float VALUE_SCALE = 0.94f;
-    private static final float DETAIL_SCALE = 0.94f;
-    private static final float KERNEL_SCALE = 0.88f;
+    private static final float SECTION_SCALE = 1.02f;
+    private static final float IDENTITY_SCALE = 1.08f;
+    private static final float LABEL_SCALE = 0.98f;
+    private static final float VALUE_SCALE = 1.02f;
+    private static final float DETAIL_SCALE = 1.00f;
+    private static final float KERNEL_SCALE = 0.98f;
     private static final int LABEL_COLUMN_DP = 86;
 
     public KernelInfoView(Context context) { super(context); init(); }
@@ -34,7 +34,7 @@ public class KernelInfoView extends TextView {
         setIncludeFontPadding(false);
         setMaxLines(Integer.MAX_VALUE);
         setEllipsize(null);
-        setLineSpacing(0, 1.04f);
+        setLineSpacing(0, 1.08f);
     }
 
     @Override
@@ -65,7 +65,7 @@ public class KernelInfoView extends TextView {
 
         appendSection(out, "BUILD");
         appendValue(out, build, DETAIL_SCALE, false, false);
-        out.append("\n");
+        out.append("\n\n");
 
         appendSection(out, "KERNEL");
         appendKernelValue(out, kernel);
@@ -97,7 +97,7 @@ public class KernelInfoView extends TextView {
 
     private void appendRow(SpannableStringBuilder out, String label, String value) {
         int lineStart = out.length();
-        appendValue(out, label, LABEL_SCALE, false, true);
+        appendValue(out, label, LABEL_SCALE, true, true);
         out.append('\t');
         appendValue(out, value, VALUE_SCALE, false, false);
         out.append('\n');
