@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
+import android.os.Build;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -17,8 +19,7 @@ import com.mikepenz.iconics.IconicsDrawable;
 
 /**
  * Compact three-page navigation for Home, Logs and Settings.
- * Uses the existing Font Awesome/Iconics dependency and keeps the existing
- * Home and log views alive so Run/progress state is not recreated on tab change.
+ * Keeps Home and Logs in the same Activity so Run/progress/log state is preserved.
  */
 public class GhostLockBottomNavigation extends LinearLayout {
     private static final int PAGE_HOME = 0;
@@ -46,7 +47,10 @@ public class GhostLockBottomNavigation extends LinearLayout {
     private void init() {
         setOrientation(HORIZONTAL);
         setGravity(Gravity.CENTER);
-        setBackgroundColor(color(R.color.surface));
+        GradientDrawable background = new GradientDrawable();
+        background.setColor(color(R.color.surface));
+        background.setCornerRadius(dp(20));
+        setBackground(background);
         setPadding(0, dp(4), 0, dp(4));
         setElevation(dp(2));
         setContentDescription("Page navigation");
@@ -55,6 +59,19 @@ public class GhostLockBottomNavigation extends LinearLayout {
         items[PAGE_LOGS] = addItem("faw-list-alt", "Logs", PAGE_LOGS);
         items[PAGE_SETTINGS] = addItem("faw-cog", "Settings", PAGE_SETTINGS);
         updateSelection();
+
+        if (Build.VERSION.SDK_INT >= 33 && getContext() instanceof Activity) {
+            Activity activity = (Activity) getContext();
+            activity.getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+                    android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT,
+                    () -> {
+                        if (selectedPage == PAGE_LOGS) {
+                            showHome();
+                        } else {
+                            activity.finish();
+                        }
+                    });
+        }
     }
 
     private Item addItem(String iconKey, String label, int page) {
@@ -112,12 +129,17 @@ public class GhostLockBottomNavigation extends LinearLayout {
 
         if (page == PAGE_HOME) {
             homeBody.setVisibility(VISIBLE);
-            logPanel.setVisibility(VISIBLE);
+            logPanel.setVisibility(GONE);
         } else {
             homeBody.setVisibility(GONE);
             logPanel.setVisibility(VISIBLE);
         }
         updateSelection();
+    }
+
+    /** Return from Logs to the Home page without recreating the Activity. */
+    public void showHome() {
+        selectPage(PAGE_HOME);
     }
 
     private void updateSelection() {
