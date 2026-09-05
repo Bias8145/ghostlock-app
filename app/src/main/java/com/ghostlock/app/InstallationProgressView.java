@@ -1,30 +1,34 @@
 package com.ghostlock.app;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Typeface;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
+import android.view.Gravity;
+import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 /**
- * Compact installation status summary driven directly by the live log.
- * Uses subtle state transitions only; there are no timers or fake progress values.
+ * GitHub-Actions-style installation timeline driven only by the real live log.
+ * No timers, fake percentages, or synthetic completion states are used.
  */
 public final class InstallationProgressView extends LinearLayout {
-    private final TextView statusIcon;
-    private final TextView statusTitle;
-    private final TextView statusDetail;
-    private ValueAnimator breathingAnimator;
+    private static final int STATE_PENDING = 0;
+    private static final int STATE_RUNNING = 1;
+    private static final int STATE_DONE = 2;
+    private static final int STATE_FAILED = 3;
+
+    private final LinearLayout steps;
+    private final TextView overallStatus;
+    private TextView lastDetail;
+    private TextWatcher watcher;
     private int lastRunMarker = -1;
-    private String lastTitle = "";
-    private String lastDetail = "";
 
     public InstallationProgressView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -32,210 +36,246 @@ public final class InstallationProgressView extends LinearLayout {
         setClipChildren(false);
         setClipToPadding(false);
 
-        TextView heading = new TextView(context);
-        heading.setText("INSTALLATION");
-        heading.setTextColor(context.getColor(R.color.text_secondary));
-        heading.setTextSize(11);
-        heading.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        LayoutParams headingParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        headingParams.bottomMargin = dp(7);
-        addView(heading, headingParams);
+        LinearLayout heading = new LinearLayout(context);
+        heading.setGravity(Gravity.CENTER_VERTICAL);
 
-        LinearLayout body = new LinearLayout(context);
-        body.setOrientation(HORIZONTAL);
-        body.setGravity(android.view.Gravity.CENTER_VERTICAL);
-        body.setPadding(0, dp(2), 0, dp(2));
+        TextView title = text("INSTALLATION", 11, R.color.text_secondary, Typeface.BOLD);
+        heading.addView(title, new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
 
-        statusIcon = new TextView(context);
-        statusIcon.setTextColor(context.getColor(R.color.text_secondary));
-        // Optical sizing: balance the glyph visually against the 14sp status title.
-        statusIcon.setTextSize(18);
-        statusIcon.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        statusIcon.setGravity(android.view.Gravity.CENTER);
-        LayoutParams iconParams = new LayoutParams(dp(24), dp(24));
-        iconParams.rightMargin = dp(10);
-        body.addView(statusIcon, iconParams);
+        overallStatus = text("Ready", 11, R.color.text_secondary, Typeface.NORMAL);
+        overallStatus.setGravity(Gravity.CENTER_VERTICAL);
+        heading.addView(overallStatus, new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+        addView(heading, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
-        LinearLayout text = new LinearLayout(context);
-        text.setOrientation(VERTICAL);
-        text.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        steps = new LinearLayout(context);
+        steps.setOrientation(VERTICAL);
+        LayoutParams stepsParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        stepsParams.topMargin = dp(8);
+        addView(steps, stepsParams);
 
-        statusTitle = new TextView(context);
-        statusTitle.setTextColor(context.getColor(R.color.text_primary));
-        statusTitle.setTextSize(14);
-        statusTitle.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        text.addView(statusTitle);
-
-        statusDetail = new TextView(context);
-        statusDetail.setTextColor(context.getColor(R.color.text_secondary));
-        statusDetail.setTextSize(12);
-        LayoutParams detailParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        detailParams.topMargin = dp(3);
-        text.addView(statusDetail, detailParams);
-
-        body.addView(text, new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
-        addView(body, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
         resetStatus();
     }
 
-    @Override protected void onAttachedToWindow() {
+    @Override
+    protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         post(this::bindLog);
     }
 
-    @Override protected void onDetachedFromWindow() {
-        stopBreathing();
+    @Override
+    protected void onDetachedFromWindow() {
+        unbindLog();
         super.onDetachedFromWindow();
     }
 
     private void bindLog() {
         TextView log = getRootView().findViewById(R.id.logView);
-        if (log == null) return;
-        updateFromLog(log.getText() == null ? "" : log.getText().toString());
-        log.addTextChangedListener(new TextWatcher() {
+        if (log == null || watcher != null) return;
+        watcher = new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
                 updateFromLog(s == null ? "" : s.toString());
             }
             @Override public void afterTextChanged(Editable s) { }
-        });
+        };
+        log.addTextChangedListener(watcher);
+        updateFromLog(log.getText() == null ? "" : log.getText().toString());
+    }
+
+    private void unbindLog() {
+        if (watcher == null) return;
+        TextView log = getRootView().findViewById(R.id.logView);
+        if (log != null) log.removeTextChangedListener(watcher);
+        watcher = null;
     }
 
     private void updateFromLog(String log) {
         String s = log.toLowerCase(Locale.ROOT);
-        int startMarker = s.lastIndexOf("==== start ====");
-        if (startMarker < 0) {
+        int start = s.lastIndexOf("==== start ====");
+        if (start < 0) {
             resetStatus();
             return;
         }
-        if (startMarker != lastRunMarker) {
-            lastRunMarker = startMarker;
+        if (start != lastRunMarker) {
+            lastRunMarker = start;
         }
 
-        String currentRun = s.substring(startMarker);
-        String[] lines = currentRun.split("\\n");
-        String latest = "";
-        for (int i = lines.length - 1; i >= 0; i--) {
-            if (!lines[i].trim().isEmpty()) {
-                latest = lines[i].trim();
-                break;
+        String run = s.substring(start);
+        String latest = latestLine(run);
+        boolean success = latest.contains("exit code=0");
+        boolean failed = containsAny(latest, "error:", "failed", "unsupported", "exit code=137", "exit code=-1")
+                || containsAny(run, "error:", "fatal:", "segmentation fault");
+
+        List<Step> state = new ArrayList<>();
+        state.add(new Step("Prepare", "Preparing GhostLock runtime and native payload."));
+        state.add(new Step("Check manager", "Locating a compatible KernelSU manager and ksud."));
+        state.add(new Step("Check kernel", "Checking the running kernel and supported offsets."));
+        state.add(new Step("Execute", "Running the GhostLock native operation."));
+        state.add(new Step("Verify", "Waiting for the real process result."));
+
+        if (run.contains("cpu pair:")) state.get(0).state = STATE_DONE;
+        if (run.contains("binary ready")) state.get(0).state = STATE_DONE;
+
+        if (run.contains("ksud ready")) {
+            state.get(1).state = STATE_DONE;
+        } else if (run.contains("ksud not found") || run.contains("app not installed")) {
+            state.get(1).state = STATE_FAILED;
+        }
+
+        if (containsAny(run, "kernel", "supported kernel", "offset")) {
+            state.get(2).state = STATE_DONE;
+        }
+
+        if (run.contains("exit code=") || run.contains("running ghostlock")) {
+            state.get(3).state = STATE_DONE;
+        }
+
+        if (success) {
+            state.get(4).state = STATE_DONE;
+        } else if (failed) {
+            int current = firstActive(state);
+            if (current >= 0) state.get(current).state = STATE_FAILED;
+        }
+
+        int active = firstActive(state);
+        if (!success && !failed && active >= 0) {
+            state.get(active).state = STATE_RUNNING;
+        }
+
+        // If a later stage is observed, all preceding stages are real completed work.
+        for (int i = 1; i < state.size(); i++) {
+            if (state.get(i).state == STATE_RUNNING || state.get(i).state == STATE_DONE) {
+                for (int j = 0; j < i; j++) {
+                    if (state.get(j).state == STATE_PENDING) state.get(j).state = STATE_DONE;
+                }
             }
         }
 
-        if (latest.contains("exit code=0")) {
-            setStatus("Installation completed", "GhostLock executed successfully. Exit code: 0", "✓");
-            return;
-        }
-        if (containsAny(latest, "error:", "failed", "unsupported", "exit code=137", "exit code=-1")) {
-            setStatus("Installation failed", latest, "×");
-            return;
-        }
-
-        String title = "Running installation";
-        String detail = latest.isEmpty() ? "Waiting for installation output..." : latest;
-        if (containsAny(latest, "binary ready", "ksud ready")) {
-            title = "Checking manager";
-        } else if (containsAny(latest, "kernel", "uname", "supported kernel")) {
-            title = "Checking kernel";
-        } else if (containsAny(latest, "offset", "pselect", "kallsyms", "phys", "init_task", "security_hook")) {
-            title = "Resolving kernel offsets";
-        } else if (containsAny(latest, "running ghostlock", "preparing", "prepare")) {
-            title = "Executing GhostLock";
-        } else if (containsAny(latest, "execution", "exit code=")) {
-            title = "Verifying result";
-        }
-        setStatus(title, detail, "●");
-    }
-
-    private void setStatus(String title, String detail, String icon) {
-        boolean iconChanged = !icon.equals(statusIcon.getText().toString());
-        statusTitle.setText(title);
-        statusDetail.setText(detail);
-        statusIcon.setText(icon);
-
-        if (iconChanged && isAttachedToWindow()) {
-            animateState();
-        }
-
-        if ("●".equals(icon)) {
-            startBreathing();
+        if (success) {
+            overallStatus.setText("Completed");
+        } else if (failed) {
+            overallStatus.setText("Failed");
+        } else if (active >= 0) {
+            overallStatus.setText("Running");
         } else {
-            stopBreathing();
+            overallStatus.setText("Preparing");
         }
 
-        lastTitle = title;
-        lastDetail = detail;
+        render(state, latest);
     }
 
-    private void animateState() {
-        stopBreathing();
-        statusIcon.animate().cancel();
-        statusTitle.animate().cancel();
-        statusDetail.animate().cancel();
-
-        statusIcon.setAlpha(0.35f);
-        statusIcon.setScaleX(0.82f);
-        statusIcon.setScaleY(0.82f);
-        statusTitle.setAlpha(0.55f);
-        statusDetail.setAlpha(0.55f);
-
-        statusIcon.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(180)
-                .setListener(new AnimatorListenerAdapter() {
-                    @Override public void onAnimationEnd(Animator animation) {
-                        if ("●".equals(statusIcon.getText().toString())) {
-                            startBreathing();
-                        }
-                    }
-                }).start();
-        statusTitle.animate().alpha(1f).setDuration(180).start();
-        statusDetail.animate().alpha(1f).setDuration(220).start();
-    }
-
-    private void startBreathing() {
-        if (!isAttachedToWindow() || breathingAnimator != null && breathingAnimator.isRunning()) {
-            return;
+    private int firstActive(List<Step> state) {
+        for (int i = 0; i < state.size(); i++) {
+            if (state.get(i).state == STATE_PENDING) return i;
         }
-        breathingAnimator = ValueAnimator.ofFloat(1.0f, 1.08f, 1.0f);
-        breathingAnimator.setDuration(1200);
-        breathingAnimator.setRepeatCount(ValueAnimator.INFINITE);
-        breathingAnimator.setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator());
-        breathingAnimator.addUpdateListener(animation -> {
-            if (!"●".equals(statusIcon.getText().toString())) {
-                stopBreathing();
-                return;
+        return -1;
+    }
+
+    private void render(List<Step> state, String latest) {
+        steps.removeAllViews();
+        lastDetail = null;
+        for (int i = 0; i < state.size(); i++) {
+            Step step = state.get(i);
+            LinearLayout row = new LinearLayout(getContext());
+            row.setOrientation(HORIZONTAL);
+            row.setGravity(Gravity.TOP);
+            row.setPadding(0, dp(2), 0, dp(i == state.size() - 1 ? 2 : 7));
+
+            TextView marker = text(marker(step.state), 17, markerColor(step.state), Typeface.BOLD);
+            marker.setGravity(Gravity.CENTER);
+            LayoutParams markerParams = new LayoutParams(dp(24), dp(24));
+            markerParams.rightMargin = dp(9);
+            row.addView(marker, markerParams);
+
+            LinearLayout body = new LinearLayout(getContext());
+            body.setOrientation(VERTICAL);
+            TextView name = text(step.name, 13, R.color.text_primary, Typeface.BOLD);
+            body.addView(name);
+
+            TextView detail = text(step.detail, 11, R.color.text_secondary, Typeface.NORMAL);
+            LayoutParams detailParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+            detailParams.topMargin = dp(2);
+            body.addView(detail, detailParams);
+
+            if (step.state == STATE_RUNNING && latest != null && !latest.isEmpty()) {
+                TextView live = text(latest, 11, R.color.text_secondary, Typeface.NORMAL);
+                live.setMaxLines(2);
+                LayoutParams liveParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+                liveParams.topMargin = dp(4);
+                body.addView(live, liveParams);
+                lastDetail = live;
             }
-            float scale = (Float) animation.getAnimatedValue();
-            statusIcon.setScaleX(scale);
-            statusIcon.setScaleY(scale);
-        });
-        breathingAnimator.start();
-    }
 
-    private void stopBreathing() {
-        if (breathingAnimator != null) {
-            breathingAnimator.cancel();
-            breathingAnimator = null;
+            row.addView(body, new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
+            steps.addView(row, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
         }
-        statusIcon.setScaleX(1f);
-        statusIcon.setScaleY(1f);
     }
 
-    public void resetStatus() {
-        stopBreathing();
-        lastRunMarker = -1;
-        lastTitle = "";
-        lastDetail = "";
-        setStatus("Ready to run", "Run GhostLock to begin installation.", "○");
+    private String latestLine(String run) {
+        String[] lines = run.split("\\n");
+        for (int i = lines.length - 1; i >= 0; i--) {
+            String line = lines[i].trim();
+            if (!line.isEmpty() && !line.equals("==== start ====")) return line;
+        }
+        return "";
     }
 
     private static boolean containsAny(String value, String... needles) {
-        for (String needle : needles) {
-            if (value.contains(needle)) return true;
-        }
+        for (String needle : needles) if (value.contains(needle)) return true;
         return false;
+    }
+
+    private String marker(int state) {
+        switch (state) {
+            case STATE_DONE: return "✓";
+            case STATE_RUNNING: return "●";
+            case STATE_FAILED: return "×";
+            default: return "○";
+        }
+    }
+
+    private int markerColor(int state) {
+        switch (state) {
+            case STATE_DONE: return R.color.status_success;
+            case STATE_RUNNING: return R.color.accent;
+            case STATE_FAILED: return R.color.status_error;
+            default: return R.color.text_secondary;
+        }
+    }
+
+    private TextView text(String value, float size, int color, int style) {
+        TextView view = new TextView(getContext());
+        view.setText(value);
+        view.setTextSize(size);
+        view.setTextColor(getContext().getColor(color));
+        view.setTypeface(Typeface.DEFAULT, style);
+        return view;
+    }
+
+    public void resetStatus() {
+        lastRunMarker = -1;
+        overallStatus.setText("Ready");
+        List<Step> state = new ArrayList<>();
+        state.add(new Step("Prepare", "Waiting for GhostLock to start."));
+        state.add(new Step("Check manager", "Waiting"));
+        state.add(new Step("Check kernel", "Waiting"));
+        state.add(new Step("Execute", "Waiting"));
+        state.add(new Step("Verify", "Waiting"));
+        render(state, "");
     }
 
     private int dp(float value) {
         return Math.round(value * getResources().getDisplayMetrics().density);
+    }
+
+    private static final class Step {
+        final String name;
+        final String detail;
+        int state = STATE_PENDING;
+
+        Step(String name, String detail) {
+            this.name = name;
+            this.detail = detail;
+        }
     }
 }
