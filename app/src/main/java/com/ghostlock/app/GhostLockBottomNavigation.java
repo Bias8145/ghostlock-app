@@ -82,8 +82,9 @@ public class GhostLockBottomNavigation extends LinearLayout {
         item.setContentDescription(label);
 
         ImageView icon = new ImageView(getContext());
-        icon.setLayoutParams(new LayoutParams(dp(24), dp(24)));
+        icon.setLayoutParams(new LayoutParams(dp(30), dp(30)));
         icon.setScaleType(ImageView.ScaleType.CENTER);
+        icon.setPadding(dp(4), dp(4), dp(4), dp(4));
         icon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
         item.addView(icon);
 
@@ -194,8 +195,20 @@ public class GhostLockBottomNavigation extends LinearLayout {
             item.view.setElevation(0f);
             item.view.setTranslationZ(0f);
             item.view.setContentDescription(item.label.getText() + (selected ? ", selected" : ""));
+            updateIconShape(item, selected);
             animateItem(item, selected, animate);
         }
+    }
+
+    private void updateIconShape(Item item, boolean selected) {
+        if (!selected) {
+            item.icon.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+            return;
+        }
+        GradientDrawable shape = new GradientDrawable();
+        shape.setColor(color(R.color.accent_container));
+        shape.setCornerRadius(dp(11));
+        item.icon.setBackground(shape);
     }
 
     private void animateItem(Item item, boolean selected, boolean animate) {
