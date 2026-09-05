@@ -32,64 +32,75 @@
             android:clipChildren="true"
             android:clipToPadding="true">
 
-            <LinearLayout
-                android:id="@+id/homeBody"
+            <ScrollView
+                android:id="@+id/homeScroll"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:orientation="vertical">
+                android:fillViewport="true"
+                android:clipToPadding="false"
+                android:overScrollMode="ifContentScrolls"
+                android:scrollbars="vertical">
 
-                <LinearLayout android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginBottom="8dp" android:gravity="center_vertical">
-                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
-                        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:gravity="center_vertical">
-                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/app_name" android:textColor="@color/text_primary" android:textSize="20sp" android:textStyle="bold" />
-                            <LinearLayout android:id="@+id/kernelChip" android:layout_width="wrap_content" android:layout_height="24dp" android:layout_marginStart="7dp" android:background="@drawable/bg_kernel_status" android:gravity="center_vertical" android:minWidth="0dp" android:paddingStart="8dp" android:paddingEnd="8dp">
-                                <TextView android:id="@+id/kernelChipText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/kernel_supported" android:textColor="@color/text_primary" android:textSize="10sp" android:textStyle="bold" />
-                            </LinearLayout>
-                        </LinearLayout>
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="1dp" android:text="@string/header_subtitle" android:textColor="@color/text_secondary" android:textSize="11sp" />
-                    </LinearLayout>
-                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:gravity="center_vertical">
-                        <com.ghostlock.app.ThemeToggleButton android:id="@+id/themeToggleButton" android:layout_width="48dp" android:layout_height="48dp" android:background="?attr/selectableItemBackgroundBorderless" android:contentDescription="@string/action_theme_toggle" android:padding="10dp" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                <com.ghostlock.app.RuntimeStatusView android:id="@+id/runtimeStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp" />
-
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp"
-                    app:cardBackgroundColor="@color/surface_container_low" app:cardCornerRadius="20dp" app:cardElevation="0dp" app:strokeWidth="0dp">
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
-                        <com.ghostlock.app.KernelInfoView
-                            android:id="@+id/deviceInfo" android:layout_width="match_parent" android:layout_height="wrap_content"
-                            android:textColor="@color/text_primary" android:textSize="12sp" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="0dp" android:gravity="center_vertical" android:orientation="horizontal">
-                    <com.ghostlock.app.CollapsibleToolsLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.7" android:layout_marginEnd="8dp">
-                        <LinearLayout android:layout_width="match_parent" android:layout_height="56dp" android:background="@drawable/bg_tool_header" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="14dp" android:paddingEnd="6dp">
-                            <ImageView android:layout_width="36dp" android:layout_height="36dp" android:padding="8dp" android:src="@drawable/ic_tools" android:tint="@color/icon_tint" />
-                            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="7dp" android:text="Tools" android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" />
-                        </LinearLayout>
-                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:orientation="vertical">
-                            <LinearLayout android:layout_width="match_parent" android:layout_height="56dp" android:orientation="horizontal">
-                                <com.ghostlock.app.ThemedToolButton android:id="@+id/importButton" android:tag="import" style="@style/Widget.Material3.Button.TonalButton" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:text="Import" android:textAllCaps="false" app:cornerRadius="18dp" />
-                                <com.ghostlock.app.ThemedToolButton android:id="@+id/otaButton" android:tag="parse_link" style="@style/Widget.Material3.Button.TonalButton" android:layout_width="0dp" android:layout_height="match_parent" android:layout_marginStart="8dp" android:layout_weight="1" android:text="Parse Link" android:textAllCaps="false" app:cornerRadius="18dp" />
-                            </LinearLayout>
-                            <com.ghostlock.app.ThemedToolButton android:id="@+id/parseButton" android:tag="parse_boot" style="@style/Widget.Material3.Button.TonalButton" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="8dp" android:text="Parse Boot" android:textAllCaps="false" app:cornerRadius="18dp" />
-                        </LinearLayout>
-                        <com.ghostlock.app.ThemedToolButton android:id="@+id/exportButton" android:tag="export" style="@style/Widget.Material3.Button.TonalButton" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="8dp" android:text="@string/action_export_offsets" android:textAllCaps="false" android:visibility="gone" app:cornerRadius="18dp" />
-                    </com.ghostlock.app.CollapsibleToolsLayout>
-                    <com.ghostlock.app.ConfirmRunButton android:id="@+id/runButton" android:layout_width="0dp" android:layout_height="56dp" android:layout_weight="0.8" android:background="@drawable/bg_tool_header" android:elevation="0dp" android:gravity="center" android:minHeight="56dp" android:paddingStart="8dp" android:paddingEnd="8dp" android:text="▶  Run" android:textAllCaps="false" android:textColor="@color/run_text" android:textSize="14sp" android:textStyle="bold" />
-                </LinearLayout>
-
-                <com.ghostlock.app.InstallationProgressView
-                    android:id="@+id/installationProgress"
+                <LinearLayout
+                    android:id="@+id/homeBody"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="28dp"
-                    android:layout_marginBottom="20dp" />
-            </LinearLayout>
+                    android:orientation="vertical"
+                    android:paddingBottom="20dp">
+
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginBottom="8dp" android:gravity="center_vertical">
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                            <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:gravity="center_vertical">
+                                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/app_name" android:textColor="@color/text_primary" android:textSize="20sp" android:textStyle="bold" />
+                                <LinearLayout android:id="@+id/kernelChip" android:layout_width="wrap_content" android:layout_height="24dp" android:layout_marginStart="7dp" android:background="@drawable/bg_kernel_status" android:gravity="center_vertical" android:minWidth="0dp" android:paddingStart="8dp" android:paddingEnd="8dp">
+                                    <TextView android:id="@+id/kernelChipText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/kernel_supported" android:textColor="@color/text_primary" android:textSize="10sp" android:textStyle="bold" />
+                                </LinearLayout>
+                            </LinearLayout>
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="1dp" android:text="@string/header_subtitle" android:textColor="@color/text_secondary" android:textSize="11sp" />
+                        </LinearLayout>
+                        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:gravity="center_vertical">
+                            <com.ghostlock.app.ThemeToggleButton android:id="@+id/themeToggleButton" android:layout_width="48dp" android:layout_height="48dp" android:background="?attr/selectableItemBackgroundBorderless" android:contentDescription="@string/action_theme_toggle" android:padding="10dp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <com.ghostlock.app.RuntimeStatusView android:id="@+id/runtimeStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp" />
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp"
+                        app:cardBackgroundColor="@color/surface_container_low" app:cardCornerRadius="20dp" app:cardElevation="0dp" app:strokeWidth="0dp">
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+                            <com.ghostlock.app.KernelInfoView
+                                android:id="@+id/deviceInfo" android:layout_width="match_parent" android:layout_height="wrap_content"
+                                android:textColor="@color/text_primary" android:textSize="12sp" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="0dp" android:gravity="center_vertical" android:orientation="horizontal">
+                        <com.ghostlock.app.CollapsibleToolsLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.7" android:layout_marginEnd="8dp">
+                            <LinearLayout android:layout_width="match_parent" android:layout_height="56dp" android:background="@drawable/bg_tool_header" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="14dp" android:paddingEnd="6dp">
+                                <ImageView android:layout_width="36dp" android:layout_height="36dp" android:padding="8dp" android:src="@drawable/ic_tools" android:tint="@color/icon_tint" />
+                                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="7dp" android:text="Tools" android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" />
+                            </LinearLayout>
+                            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:orientation="vertical">
+                                <LinearLayout android:layout_width="match_parent" android:layout_height="56dp" android:orientation="horizontal">
+                                    <com.ghostlock.app.ThemedToolButton android:id="@+id/importButton" android:tag="import" style="@style/Widget.Material3.Button.TonalButton" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:text="Import" android:textAllCaps="false" app:cornerRadius="18dp" />
+                                    <com.ghostlock.app.ThemedToolButton android:id="@+id/otaButton" android:tag="parse_link" style="@style/Widget.Material3.Button.TonalButton" android:layout_width="0dp" android:layout_height="match_parent" android:layout_marginStart="8dp" android:layout_weight="1" android:text="Parse Link" android:textAllCaps="false" app:cornerRadius="18dp" />
+                                </LinearLayout>
+                                <com.ghostlock.app.ThemedToolButton android:id="@+id/parseButton" android:tag="parse_boot" style="@style/Widget.Material3.Button.TonalButton" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="8dp" android:text="Parse Boot" android:textAllCaps="false" app:cornerRadius="18dp" />
+                            </LinearLayout>
+                            <com.ghostlock.app.ThemedToolButton android:id="@+id/exportButton" android:tag="export" style="@style/Widget.Material3.Button.TonalButton" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="8dp" android:text="@string/action_export_offsets" android:textAllCaps="false" android:visibility="gone" app:cornerRadius="18dp" />
+                        </com.ghostlock.app.CollapsibleToolsLayout>
+                        <com.ghostlock.app.ConfirmRunButton android:id="@+id/runButton" android:layout_width="0dp" android:layout_height="56dp" android:layout_weight="0.8" android:background="@drawable/bg_tool_header" android:elevation="0dp" android:gravity="center" android:minHeight="56dp" android:paddingStart="8dp" android:paddingEnd="8dp" android:text="▶  Run" android:textAllCaps="false" android:textColor="@color/run_text" android:textSize="14sp" android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <com.ghostlock.app.InstallationProgressView
+                        android:id="@+id/installationProgress"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="28dp"
+                        android:layout_marginBottom="20dp" />
+                </LinearLayout>
+            </ScrollView>
 
             <LinearLayout
                 android:id="@+id/logPanel"
