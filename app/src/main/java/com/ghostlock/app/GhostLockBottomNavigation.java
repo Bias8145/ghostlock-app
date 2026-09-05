@@ -1,7 +1,6 @@
 package com.ghostlock.app;
 
 import android.animation.Animator;
-import android.animation.AnimatorSet;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -15,6 +14,7 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -27,7 +27,7 @@ public class GhostLockBottomNavigation extends LinearLayout {
     private static final int PAGE_LOGS = 1;
     private static final int PAGE_SETTINGS = 2;
     private static final int SETTINGS_REQUEST = 4107;
-    private static final long SELECTION_ANIMATION_MS = 180L;
+    private static final long SELECTION_ANIMATION_MS = 220L;
 
     private final Item[] items = new Item[3];
     private int selectedPage = PAGE_HOME;
@@ -39,11 +39,13 @@ public class GhostLockBottomNavigation extends LinearLayout {
     private void init() {
         setOrientation(HORIZONTAL);
         setGravity(Gravity.CENTER);
+        setClipChildren(false);
+        setClipToPadding(false);
         GradientDrawable background = new GradientDrawable();
         background.setColor(color(R.color.surface));
         background.setCornerRadius(dp(20));
         setBackground(background);
-        setPadding(0, dp(4), 0, dp(4));
+        setPadding(dp(4), dp(3), dp(4), dp(3));
         setElevation(0f);
         setTranslationZ(0f);
         setContentDescription("Page navigation");
@@ -74,6 +76,8 @@ public class GhostLockBottomNavigation extends LinearLayout {
         LinearLayout item = new LinearLayout(getContext());
         item.setOrientation(VERTICAL);
         item.setGravity(Gravity.CENTER);
+        item.setClipChildren(false);
+        item.setClipToPadding(false);
         item.setPadding(dp(3), dp(2), dp(3), dp(2));
         item.setMinimumHeight(dp(48));
         item.setClickable(true);
@@ -81,12 +85,19 @@ public class GhostLockBottomNavigation extends LinearLayout {
         item.setLayoutParams(new LayoutParams(0, LayoutParams.MATCH_PARENT, 1f));
         item.setContentDescription(label);
 
+        FrameLayout iconContainer = new FrameLayout(getContext());
+        iconContainer.setClipChildren(false);
+        iconContainer.setClipToPadding(false);
+        iconContainer.setGravity(Gravity.CENTER);
+        iconContainer.setLayoutParams(new LayoutParams(dp(32), dp(32)));
+
         ImageView icon = new ImageView(getContext());
-        icon.setLayoutParams(new LayoutParams(dp(30), dp(30)));
+        FrameLayout.LayoutParams iconParams = new FrameLayout.LayoutParams(dp(26), dp(26), Gravity.CENTER);
+        icon.setLayoutParams(iconParams);
         icon.setScaleType(ImageView.ScaleType.CENTER);
-        icon.setPadding(dp(4), dp(4), dp(4), dp(4));
         icon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
-        item.addView(icon);
+        iconContainer.addView(icon);
+        item.addView(iconContainer);
 
         TextView text = new TextView(getContext());
         LayoutParams textParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
@@ -105,7 +116,7 @@ public class GhostLockBottomNavigation extends LinearLayout {
 
         item.setOnClickListener(v -> selectPage(page));
         addView(item);
-        return new Item(item, icon, text, iconKey);
+        return new Item(item, iconContainer, icon, text, iconKey);
     }
 
     private void selectPage(int page) {
@@ -182,7 +193,7 @@ public class GhostLockBottomNavigation extends LinearLayout {
             try {
                 IconicsDrawable drawable = new IconicsDrawable(getContext(), item.iconKey);
                 drawable.setColorList(ColorStateList.valueOf(tint));
-                int size = dp(22);
+                int size = dp(21);
                 drawable.setSizeXPx(size);
                 drawable.setSizeYPx(size);
                 item.icon.setImageDrawable(drawable);
@@ -202,27 +213,26 @@ public class GhostLockBottomNavigation extends LinearLayout {
 
     private void updateIconShape(Item item, boolean selected) {
         if (!selected) {
-            item.icon.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+            item.iconContainer.setBackgroundColor(android.graphics.Color.TRANSPARENT);
             return;
         }
         GradientDrawable shape = new GradientDrawable();
         shape.setColor(color(R.color.accent_container));
-        shape.setCornerRadius(dp(11));
-        item.icon.setBackground(shape);
+        shape.setCornerRadius(dp(10));
+        item.iconContainer.setBackground(shape);
     }
 
     private void animateItem(Item item, boolean selected, boolean animate) {
-        item.icon.animate().cancel();
-        float targetY = selected ? -dp(3) : 0f;
-        float targetScale = selected ? 1.08f : 1f;
+        item.iconContainer.animate().cancel();
+        float targetY = selected ? -dp(5) : 0f;
+        float targetScale = selected ? 1.06f : 1f;
         if (!animate) {
-            item.icon.setTranslationY(targetY);
-            item.icon.setScaleX(targetScale);
-            item.icon.setScaleY(targetScale);
+            item.iconContainer.setTranslationY(targetY);
+            item.iconContainer.setScaleX(targetScale);
+            item.iconContainer.setScaleY(targetScale);
             return;
         }
-        AnimatorSet set = new AnimatorSet();
-        item.icon.animate()
+        item.iconContainer.animate()
                 .translationY(targetY)
                 .scaleX(targetScale)
                 .scaleY(targetScale)
@@ -236,11 +246,13 @@ public class GhostLockBottomNavigation extends LinearLayout {
 
     private static final class Item {
         final View view;
+        final FrameLayout iconContainer;
         final ImageView icon;
         final TextView label;
         final String iconKey;
-        Item(View view, ImageView icon, TextView label, String iconKey) {
+        Item(View view, FrameLayout iconContainer, ImageView icon, TextView label, String iconKey) {
             this.view = view;
+            this.iconContainer = iconContainer;
             this.icon = icon;
             this.label = label;
             this.iconKey = iconKey;
