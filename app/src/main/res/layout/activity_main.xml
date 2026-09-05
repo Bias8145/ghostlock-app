@@ -65,7 +65,7 @@
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="20dp" android:gravity="center_vertical" android:orientation="horizontal">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="0dp" android:gravity="center_vertical" android:orientation="horizontal">
                     <com.ghostlock.app.CollapsibleToolsLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.7" android:layout_marginEnd="8dp">
                         <LinearLayout android:layout_width="match_parent" android:layout_height="56dp" android:background="@drawable/bg_tool_header" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="14dp" android:paddingEnd="6dp">
                             <ImageView android:layout_width="36dp" android:layout_height="36dp" android:padding="8dp" android:src="@drawable/ic_tools" android:tint="@color/icon_tint" />
@@ -83,33 +83,58 @@
                     <com.ghostlock.app.ConfirmRunButton android:id="@+id/runButton" android:layout_width="0dp" android:layout_height="56dp" android:layout_weight="0.8" android:background="@drawable/bg_tool_header" android:elevation="0dp" android:gravity="center" android:minHeight="56dp" android:paddingStart="8dp" android:paddingEnd="8dp" android:text="▶  Run" android:textAllCaps="false" android:textColor="@color/run_text" android:textSize="14sp" android:textStyle="bold" />
                 </LinearLayout>
 
-                <com.ghostlock.app.InstallationProgressView android:id="@+id/installationProgress" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16dp" />
+                <com.ghostlock.app.InstallationProgressView
+                    android:id="@+id/installationProgress"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:layout_marginBottom="20dp" />
             </LinearLayout>
 
-            <com.google.android.material.card.MaterialCardView android:id="@+id/logPanel" android:layout_width="match_parent" android:layout_height="match_parent" android:layout_marginBottom="8dp" android:minHeight="0dp" android:visibility="gone" app:cardBackgroundColor="@color/log_bg" app:cardCornerRadius="20dp" app:cardElevation="0dp" app:strokeWidth="0dp">
-                <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="12dp">
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginBottom="8dp" android:gravity="center_vertical">
-                        <ImageView android:layout_width="34dp" android:layout_height="34dp" android:padding="6dp" android:src="@drawable/ic_terminal" android:tint="@color/icon_tint" />
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="5dp" android:text="LOG" android:textColor="@color/text_primary" android:textSize="20sp" android:textStyle="bold" />
-                    </LinearLayout>
-                    <LinearLayout android:id="@+id/logBackRow" android:layout_width="match_parent" android:layout_height="52dp" android:layout_marginBottom="12dp" android:clickable="true" android:focusable="true" android:gravity="center_vertical" android:orientation="horizontal">
-                        <com.ghostlock.app.LogBackButton android:id="@+id/logBackButton" android:layout_width="42dp" android:layout_height="42dp" android:background="@drawable/bg_tool_header" android:contentDescription="Back to Home" android:padding="9dp" android:src="@drawable/ic_chevron_down" android:rotation="90" android:tint="@color/icon_tint" />
-                        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="10dp" android:orientation="vertical">
-                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Back to Home" android:textColor="@color/log_title" android:textSize="13sp" android:textStyle="bold" />
-                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="1dp" android:text="Return to the main page" android:textColor="@color/text_secondary" android:textSize="10sp" />
-                        </LinearLayout>
-                    </LinearLayout>
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="56dp" android:gravity="center_vertical">
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center_vertical" android:text="@string/log_title" android:textColor="@color/log_title" android:textSize="14sp" android:textStyle="bold" android:visibility="gone" />
-                        <com.google.android.material.button.MaterialButton android:id="@+id/copyButton" style="@style/Widget.Material3.Button.TonalButton" android:layout_width="100dp" android:layout_height="40dp" android:minWidth="0dp" android:insetTop="0dp" android:insetBottom="0dp" android:gravity="center" android:text="Copy log" android:textAllCaps="false" android:textColor="@color/log_title" android:textSize="12sp" android:contentDescription="Copy log" app:backgroundTint="@color/surface_container" app:cornerRadius="13dp" app:strokeWidth="0dp" />
-                        <com.ghostlock.app.ClearLogButton android:id="@+id/clearLogButton" style="@style/Widget.Material3.Button.TonalButton" android:layout_width="100dp" android:layout_height="40dp" android:layout_marginStart="6dp" android:minWidth="0dp" android:insetTop="0dp" android:insetBottom="0dp" android:gravity="center" android:text="Clear log" android:textAllCaps="false" android:textColor="@color/log_title" android:textSize="12sp" android:contentDescription="Clear log" app:backgroundTint="@color/surface_container" app:cornerRadius="13dp" app:strokeWidth="0dp" />
-                    </LinearLayout>
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginBottom="12dp" android:background="@color/log_divider" />
-                    <com.ghostlock.app.LogScrollView android:id="@+id/logScroll" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:fillViewport="false" android:fadeScrollbars="false" android:overScrollMode="always" android:paddingBottom="10dp" android:scrollbars="vertical" android:clipToPadding="false">
-                        <TextView android:id="@+id/logView" android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="monospace" android:lineSpacingExtra="3dp" android:textColor="@color/log_text" android:textIsSelectable="true" android:textSize="12sp" />
-                    </com.ghostlock.app.LogScrollView>
+            <LinearLayout
+                android:id="@+id/logPanel"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginBottom="8dp"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginBottom="4dp" android:gravity="center_vertical">
+                    <ImageView android:layout_width="34dp" android:layout_height="34dp" android:padding="6dp" android:src="@drawable/ic_terminal" android:tint="@color/icon_tint" />
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="5dp" android:text="LOG" android:textColor="@color/text_primary" android:textSize="20sp" android:textStyle="bold" />
                 </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+
+                <LinearLayout android:id="@+id/logBackRow" android:layout_width="match_parent" android:layout_height="52dp" android:layout_marginBottom="12dp" android:clickable="true" android:focusable="true" android:gravity="center_vertical" android:orientation="horizontal">
+                    <com.ghostlock.app.LogBackButton android:id="@+id/logBackButton" android:layout_width="42dp" android:layout_height="42dp" android:background="@drawable/bg_tool_header" android:contentDescription="Back to Home" android:padding="9dp" android:src="@drawable/ic_chevron_down" android:rotation="90" android:tint="@color/icon_tint" />
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="10dp" android:orientation="vertical">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Back to Home" android:textColor="@color/log_title" android:textSize="13sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="1dp" android:text="Return to the main page" android:textColor="@color/text_secondary" android:textSize="10sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/logContentPanel"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:minHeight="0dp"
+                    app:cardBackgroundColor="@color/log_bg"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="0dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="12dp">
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="56dp" android:gravity="center_vertical">
+                            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center_vertical" android:text="@string/log_title" android:textColor="@color/log_title" android:textSize="14sp" android:textStyle="bold" android:visibility="gone" />
+                            <com.google.android.material.button.MaterialButton android:id="@+id/copyButton" style="@style/Widget.Material3.Button.TonalButton" android:layout_width="100dp" android:layout_height="40dp" android:minWidth="0dp" android:insetTop="0dp" android:insetBottom="0dp" android:gravity="center" android:text="Copy log" android:textAllCaps="false" android:textColor="@color/log_title" android:textSize="12sp" android:contentDescription="Copy log" app:backgroundTint="@color/surface_container" app:cornerRadius="13dp" app:strokeWidth="0dp" />
+                            <com.ghostlock.app.ClearLogButton android:id="@+id/clearLogButton" style="@style/Widget.Material3.Button.TonalButton" android:layout_width="100dp" android:layout_height="40dp" android:layout_marginStart="6dp" android:minWidth="0dp" android:insetTop="0dp" android:insetBottom="0dp" android:gravity="center" android:text="Clear log" android:textAllCaps="false" android:textColor="@color/log_title" android:textSize="12sp" android:contentDescription="Clear log" app:backgroundTint="@color/surface_container" app:cornerRadius="13dp" app:strokeWidth="0dp" />
+                        </LinearLayout>
+                        <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginBottom="12dp" android:background="@color/log_divider" />
+                        <com.ghostlock.app.LogScrollView android:id="@+id/logScroll" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:fillViewport="false" android:fadeScrollbars="false" android:overScrollMode="always" android:paddingBottom="10dp" android:scrollbars="vertical" android:clipToPadding="false">
+                            <TextView android:id="@+id/logView" android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="monospace" android:lineSpacingExtra="3dp" android:textColor="@color/log_text" android:textIsSelectable="true" android:textSize="12sp" />
+                        </com.ghostlock.app.LogScrollView>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
         </FrameLayout>
 
         <com.ghostlock.app.GhostLockBottomNavigation android:id="@+id/bottomNavigation" android:layout_width="match_parent" android:layout_height="72dp" android:layout_marginTop="4dp" />
