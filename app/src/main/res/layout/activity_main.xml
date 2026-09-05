@@ -38,6 +38,7 @@
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="4dp"
+            android:translationY="12dp"
             android:elevation="0dp" />
     </LinearLayout>
 </FrameLayout>
