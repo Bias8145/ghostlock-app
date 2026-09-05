@@ -44,7 +44,7 @@ public class GhostLockBottomNavigation extends LinearLayout {
         background.setColor(color(R.color.surface));
         background.setCornerRadius(dp(20));
         setBackground(background);
-        setPadding(0, dp(4), 0, dp(4));
+        setPadding(0, dp(8), 0, dp(4));
         setElevation(0f);
         setTranslationZ(0f);
         setContentDescription("Page navigation");
@@ -81,7 +81,7 @@ public class GhostLockBottomNavigation extends LinearLayout {
         item.setContentDescription(label);
 
         FrameLayout iconContainer = new FrameLayout(getContext());
-        LinearLayout.LayoutParams iconContainerParams = new LinearLayout.LayoutParams(dp(32), dp(32));
+        LinearLayout.LayoutParams iconContainerParams = new LinearLayout.LayoutParams(dp(44), dp(32));
         iconContainerParams.gravity = Gravity.CENTER_HORIZONTAL;
         iconContainer.setLayoutParams(iconContainerParams);
         iconContainer.setClipChildren(false);
@@ -187,14 +187,14 @@ public class GhostLockBottomNavigation extends LinearLayout {
         }
         GradientDrawable shape = new GradientDrawable();
         shape.setColor(color(R.color.accent_container));
-        shape.setCornerRadius(dp(10));
+        shape.setCornerRadius(dp(14));
         item.iconContainer.setBackground(shape);
     }
 
     private void animateItem(Item item, boolean selected, boolean animate) {
         item.iconContainer.animate().cancel();
-        float targetY = selected ? -dp(5) : 0f;
-        float targetScale = selected ? 1.06f : 1f;
+        float targetY = selected ? -dp(3) : 0f;
+        float targetScale = selected ? 1.04f : 1f;
         if (!animate) {
             item.iconContainer.setTranslationY(targetY);
             item.iconContainer.setScaleX(targetScale);
