@@ -41,7 +41,7 @@ public class DeviceInfoHeader extends LinearLayout {
         chevron.setLayoutParams(iconParams);
         chevron.setPadding(dp(12), dp(12), dp(12), dp(12));
         chevron.setScaleType(ImageView.ScaleType.CENTER);
-        chevron.setBackgroundResource(com.google.android.material.R.drawable.mtrl_btn_transparent_bg);
+        chevron.setBackgroundResource(android.R.color.transparent);
         chevron.setClickable(false);
         addView(chevron);
 
