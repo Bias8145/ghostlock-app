@@ -59,7 +59,6 @@ public class KernelInfoView extends TextView {
         setMaxLines(COLLAPSED_LINES);
         setClickable(true);
         setFocusable(true);
-        setPaddingRelative(0, 0, dp(2), 0);
         setCompoundDrawablePadding(dp(ICON_GAP_DP));
         setOnClickListener(v -> toggleExpanded());
         updateExpandIcon();
