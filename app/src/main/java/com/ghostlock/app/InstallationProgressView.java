@@ -269,7 +269,7 @@ public final class InstallationProgressView extends LinearLayout {
         }
     }
 
-    private int connectorColor(int state) { return state == STATE_DONE ? R.color.status_success : R.color.surface_variant; }
+    private int connectorColor(int state) { return state == STATE_DONE ? R.color.status_success : R.color.divider; }
 
     private String latestLine(String run) {
         String[] lines = run.split("\\n");
