@@ -41,7 +41,8 @@ public class GhostLockBottomNavigation extends LinearLayout {
         background.setCornerRadius(dp(20));
         setBackground(background);
         setPadding(0, dp(4), 0, dp(4));
-        setElevation(dp(2));
+        setElevation(0f);
+        setTranslationZ(0f);
         setContentDescription("Page navigation");
 
         items[PAGE_HOME] = addItem("faw-home", "Home", PAGE_HOME);
@@ -187,6 +188,8 @@ public class GhostLockBottomNavigation extends LinearLayout {
             item.label.setTextColor(tint);
             item.label.setTypeface(Typeface.DEFAULT, selected ? Typeface.BOLD : Typeface.NORMAL);
             item.view.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+            item.view.setElevation(0f);
+            item.view.setTranslationZ(0f);
             item.view.setContentDescription(item.label.getText() + (selected ? ", selected" : ""));
         }
     }
