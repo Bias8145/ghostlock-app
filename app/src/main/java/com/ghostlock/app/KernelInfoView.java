@@ -41,13 +41,15 @@ public class KernelInfoView extends TextView {
 
     @Override
     public void setText(CharSequence text, BufferType type) {
-        String base = text == null ? "" : text.toString();
-        snapshotText = buildSnapshot(base);
+        snapshotText = buildSnapshot();
         super.setText(snapshotText, BufferType.SPANNABLE);
     }
 
-    private CharSequence buildSnapshot(String base) {
-        String deviceName = resolveDeviceNameFromBase(base);
+    private CharSequence buildSnapshot() {
+        // The incoming legacy summary is deliberately ignored. It may contain
+        // "Kernel version:" and other labels intended for the old compact view.
+        // The snapshot is now the single source of truth for Device Info.
+        String deviceName = valid(Build.MODEL);
         String codename = propertyOrFallback("ro.product.device", Build.DEVICE);
         String build = propertyOrFallback("ro.build.display.id", Build.DISPLAY);
         String kernel = safe(System.getProperty("os.version", "unknown"));
@@ -139,18 +141,6 @@ public class KernelInfoView extends TextView {
         if (sdk == 32) return "12L";
         if (sdk == 31) return "12";
         return String.valueOf(sdk);
-    }
-
-    private String resolveDeviceNameFromBase(String base) {
-        if (base != null) {
-            int colon = base.indexOf(':');
-            if (colon > 0) {
-                String value = base.substring(colon + 1).trim();
-                if (!value.isEmpty()) return value;
-            }
-        }
-        String model = valid(Build.MODEL);
-        return model.isEmpty() ? "unknown" : model;
     }
 
     private String formatSoc(String value) {
