@@ -41,7 +41,7 @@ public class GhostLockBottomNavigation extends LinearLayout {
         background.setCornerRadius(dp(20));
         setBackground(background);
         setPadding(0, dp(4), 0, dp(4));
-        setElevation(0f);
+        setElevation(dp(2));
         setContentDescription("Page navigation");
 
         items[PAGE_HOME] = addItem("faw-home", "Home", PAGE_HOME);
