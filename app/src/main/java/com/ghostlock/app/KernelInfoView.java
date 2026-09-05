@@ -4,8 +4,13 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.content.res.ColorStateList;
+import android.graphics.Typeface;
 import android.os.Build;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
 import android.text.TextUtils;
+import android.text.style.StyleSpan;
 import android.util.AttributeSet;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -23,6 +28,11 @@ public class KernelInfoView extends TextView {
     private static final long COLLAPSE_DURATION = 180L;
     private static final int ICON_SIZE_DP = 14;
     private static final int ICON_GAP_DP = 8;
+    private static final int SECTION_TEXT_SP = 10;
+    private static final int IDENTITY_TEXT_SP = 14;
+    private static final int CODENAME_TEXT_SP = 11;
+    private static final int VALUE_TEXT_SP = 12;
+    private static final int DETAIL_TEXT_SP = 11;
 
     private boolean expanded;
     private boolean animating;
@@ -57,7 +67,7 @@ public class KernelInfoView extends TextView {
             setMaxLines(EXPANDED_LINES);
             setEllipsize(null);
             setContentDescription("Collapse device information");
-            super.setText(snapshotText, BufferType.NORMAL);
+            super.setText(snapshotText, BufferType.SPANNABLE);
         } else {
             setMaxLines(COLLAPSED_LINES);
             setEllipsize(TextUtils.TruncateAt.END);
@@ -71,7 +81,7 @@ public class KernelInfoView extends TextView {
         try {
             String iconKey = expanded ? "faw-chevron-up" : "faw-chevron-down";
             IconicsDrawable icon = new IconicsDrawable(getContext(), iconKey);
-            icon.setColorList(android.content.res.ColorStateList.valueOf(getCurrentTextColor()));
+            icon.setColorList(ColorStateList.valueOf(getCurrentTextColor()));
             int size = dp(ICON_SIZE_DP);
             icon.setSizeXPx(size);
             icon.setSizeYPx(size);
@@ -88,30 +98,72 @@ public class KernelInfoView extends TextView {
         return device + "\n" + kernel;
     }
 
-    private String buildSnapshot(String base) {
+    private CharSequence buildSnapshot(String base) {
         String deviceName = resolveDeviceNameFromBase(base);
         String codename = propertyOrFallback("ro.product.device", Build.DEVICE);
-        String model = valid(Build.MODEL);
         String build = propertyOrFallback("ro.build.display.id", Build.DISPLAY);
         String kernel = safe(System.getProperty("os.version", "unknown"));
-        String android = String.valueOf(Build.VERSION.SDK_INT);
+        String android = humanAndroidVersion();
         String abi = Build.SUPPORTED_ABIS != null && Build.SUPPORTED_ABIS.length > 0 ? safe(Build.SUPPORTED_ABIS[0]) : "unknown";
         String pageSize = pageSizeText();
-        String kmi = extractKmi(kernel);
         String soc = firstValidProperty("ro.soc.model", "ro.board.platform");
 
-        StringBuilder out = new StringBuilder(320);
-        out.append("Device: ").append(deviceName).append('\n');
-        out.append("Codename: ").append(codename).append('\n');
-        out.append("Model: ").append(model).append('\n');
-        out.append("SoC: ").append(formatSoc(soc)).append('\n');
-        out.append("Android: ").append(android).append('\n');
-        out.append("Build: ").append(build).append('\n');
-        out.append("Kernel: ").append(kernel).append('\n');
-        out.append("KMI: ").append(kmi).append('\n');
-        out.append("Architecture: ").append(abi).append('\n');
-        out.append("Page Size: ").append(pageSize);
-        return out.toString();
+        SpannableStringBuilder out = new SpannableStringBuilder();
+        appendIdentity(out, deviceName, codename);
+        out.append('\n');
+        appendSection(out, "PLATFORM");
+        appendRow(out, "Android", android, VALUE_TEXT_SP, true);
+        appendRow(out, "SoC", formatSoc(soc), VALUE_TEXT_SP, false);
+        appendRow(out, "Architecture", abi, VALUE_TEXT_SP, false);
+        appendRow(out, "Page Size", pageSize, VALUE_TEXT_SP, false);
+        out.append('\n');
+        appendSection(out, "BUILD");
+        appendValue(out, build, DETAIL_TEXT_SP, false);
+        out.append('\n');
+        appendSection(out, "KERNEL");
+        appendValue(out, kernel, DETAIL_TEXT_SP, false);
+        return out;
+    }
+
+    private void appendIdentity(SpannableStringBuilder out, String device, String codename) {
+        appendValue(out, device, IDENTITY_TEXT_SP, true);
+        out.append('\n');
+        appendValue(out, codename, CODENAME_TEXT_SP, false);
+    }
+
+    private void appendSection(SpannableStringBuilder out, String title) {
+        int start = out.length();
+        out.append(title);
+        out.setSpan(new StyleSpan(Typeface.BOLD), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        out.append('\n');
+    }
+
+    private void appendRow(SpannableStringBuilder out, String label, String value, int valueSizeSp, boolean emphasizeValue) {
+        appendValue(out, String.format(Locale.ROOT, "%-18s", label), DETAIL_TEXT_SP, false);
+        appendValue(out, value, valueSizeSp, emphasizeValue);
+        out.append('\n');
+    }
+
+    private void appendValue(SpannableStringBuilder out, String value, int sizeSp, boolean bold) {
+        int start = out.length();
+        out.append(value == null ? "unknown" : value);
+        out.setSpan(new android.text.style.AbsoluteSizeSpan(sizeSp, true), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        if (bold) {
+            out.setSpan(new StyleSpan(Typeface.BOLD), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+    }
+
+    private String humanAndroidVersion() {
+        String release = valid(Build.VERSION.RELEASE);
+        if (!release.isEmpty() && !"unknown".equalsIgnoreCase(release)) return release;
+        int sdk = Build.VERSION.SDK_INT;
+        if (sdk >= 36) return "16";
+        if (sdk == 35) return "15";
+        if (sdk == 34) return "14";
+        if (sdk == 33) return "13";
+        if (sdk == 32) return "12L";
+        if (sdk == 31) return "12";
+        return String.valueOf(sdk);
     }
 
     private String resolveDeviceNameFromBase(String base) {
@@ -184,7 +236,7 @@ public class KernelInfoView extends TextView {
         if (expanded) {
             setMaxLines(EXPANDED_LINES);
             setEllipsize(null);
-            super.setText(snapshotText, BufferType.NORMAL);
+            super.setText(snapshotText, BufferType.SPANNABLE);
         } else {
             setMaxLines(COLLAPSED_LINES);
             setEllipsize(TextUtils.TruncateAt.END);
