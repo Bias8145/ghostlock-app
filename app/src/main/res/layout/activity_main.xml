@@ -24,17 +24,18 @@
         android:paddingEnd="16dp"
         android:paddingBottom="0dp">
 
-        <LinearLayout
+        <FrameLayout
             android:id="@+id/pageContainer"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:orientation="vertical">
+            android:clipChildren="true"
+            android:clipToPadding="true">
 
             <LinearLayout
                 android:id="@+id/homeBody"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:orientation="vertical">
 
                 <LinearLayout android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginBottom="8dp" android:gravity="center_vertical">
@@ -85,7 +86,7 @@
                 <com.ghostlock.app.InstallationProgressView android:id="@+id/installationProgress" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16dp" />
             </LinearLayout>
 
-            <com.google.android.material.card.MaterialCardView android:id="@+id/logPanel" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginBottom="8dp" android:minHeight="0dp" android:visibility="gone" app:cardBackgroundColor="@color/log_bg" app:cardCornerRadius="20dp" app:cardElevation="0dp" app:strokeWidth="0dp">
+            <com.google.android.material.card.MaterialCardView android:id="@+id/logPanel" android:layout_width="match_parent" android:layout_height="match_parent" android:layout_marginBottom="8dp" android:minHeight="0dp" android:visibility="gone" app:cardBackgroundColor="@color/log_bg" app:cardCornerRadius="20dp" app:cardElevation="0dp" app:strokeWidth="0dp">
                 <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="12dp">
                     <LinearLayout android:id="@+id/logBackRow" android:layout_width="match_parent" android:layout_height="52dp" android:layout_marginBottom="4dp" android:clickable="true" android:focusable="true" android:gravity="center_vertical" android:orientation="horizontal">
                         <com.ghostlock.app.LogBackButton android:id="@+id/logBackButton" android:layout_width="42dp" android:layout_height="42dp" android:background="@drawable/bg_tool_header" android:contentDescription="Back to Home" android:padding="9dp" android:src="@drawable/ic_chevron_down" android:rotation="90" android:tint="@color/icon_tint" />
@@ -105,7 +106,7 @@
                     </com.ghostlock.app.LogScrollView>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
-        </LinearLayout>
+        </FrameLayout>
 
         <com.ghostlock.app.GhostLockBottomNavigation android:id="@+id/bottomNavigation" android:layout_width="match_parent" android:layout_height="72dp" android:layout_marginTop="4dp" />
     </LinearLayout>
