@@ -169,27 +169,27 @@ public final class InstallationProgressView extends LinearLayout {
             MaterialCardView card = new MaterialCardView(getContext());
             card.setCardBackgroundColor(getContext().getColor(R.color.surface_container_low));
             card.setCardElevation(0f);
-            card.setRadius(dp(15));
+            card.setRadius(dp(16));
             card.setStrokeWidth(dp(1));
             card.setStrokeColor(getContext().getColor(step.state == STATE_RUNNING ? R.color.accent : R.color.divider));
 
             LinearLayout row = new LinearLayout(getContext());
             row.setOrientation(HORIZONTAL);
             row.setGravity(Gravity.CENTER_VERTICAL);
-            row.setPadding(dp(10), dp(7), dp(10), dp(7));
+            row.setPadding(dp(12), dp(11), dp(12), dp(11));
 
             TextView icon = new TextView(getContext());
             icon.setGravity(Gravity.CENTER);
             icon.setIncludeFontPadding(false);
             icon.setContentDescription(step.name);
             icon.setAlpha(step.state == STATE_PENDING ? 0.34f : 1f);
-            icon.setCompoundDrawablesWithIntrinsicBounds(createStepIcon(step, 20), null, null, null);
-            row.addView(icon, new LayoutParams(dp(30), dp(30)));
+            icon.setCompoundDrawablesWithIntrinsicBounds(createStepIcon(step, 21), null, null, null);
+            row.addView(icon, new LayoutParams(dp(32), dp(32)));
 
             LinearLayout body = new LinearLayout(getContext());
             body.setOrientation(VERTICAL);
             LayoutParams bodyParams = new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f);
-            bodyParams.leftMargin = dp(10);
+            bodyParams.leftMargin = dp(11);
             row.addView(body, bodyParams);
 
             TextView name = text(step.name, 14, step.state == STATE_RUNNING ? R.color.accent : R.color.text_primary, Typeface.BOLD);
@@ -197,20 +197,20 @@ public final class InstallationProgressView extends LinearLayout {
 
             TextView detail = text(step.detail, 11, R.color.text_secondary, Typeface.NORMAL);
             LayoutParams detailParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-            detailParams.topMargin = dp(2);
+            detailParams.topMargin = dp(4);
             body.addView(detail, detailParams);
 
             if (step.state == STATE_RUNNING && latest != null && !latest.isEmpty()) {
                 TextView live = text(latest, 10, R.color.text_secondary, Typeface.NORMAL);
                 live.setMaxLines(2);
                 LayoutParams liveParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-                liveParams.topMargin = dp(4);
+                liveParams.topMargin = dp(6);
                 body.addView(live, liveParams);
             }
 
             card.addView(row, new MaterialCardView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
             LayoutParams cardParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-            cardParams.bottomMargin = dp(i == state.size() - 1 ? 2 : 6);
+            cardParams.bottomMargin = dp(i == state.size() - 1 ? 4 : 8);
             steps.addView(card, cardParams);
 
             if (animate) {
