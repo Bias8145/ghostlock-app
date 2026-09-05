@@ -20,6 +20,7 @@
             android:name=".SettingsActivity"
             android:exported="false"
             android:screenOrientation="portrait"
+            android:theme="@style/Theme.GhostLock.Settings"
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".MainActivity"
