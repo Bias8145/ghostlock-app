@@ -2,12 +2,13 @@ package com.ghostlock.app;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Typeface;
+import android.graphics.Insets;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowInsets;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
@@ -35,10 +36,13 @@ public class SettingsActivity extends Activity {
     private final List<String> cpuPairLabels = new ArrayList<>();
     private LinearLayout cpuPairOptions;
     private ImageView cpuPairChevron;
+    private View rootView;
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
+        rootView = findViewById(android.R.id.content).getRootView();
+        applyWindowInsetsPadding();
         findViewById(R.id.backButton).setOnClickListener(v -> goHome());
         cpuSpinner = findViewById(R.id.cpuSpinner);
         buildCpuPairs();
@@ -47,42 +51,46 @@ public class SettingsActivity extends Activity {
         setupResourcePanels();
     }
 
+    private void applyWindowInsetsPadding() {
+        rootView.setOnApplyWindowInsetsListener((v, insets) -> {
+            Insets bars = insets.getInsets(WindowInsets.Type.systemBars());
+            int side = dp(20);
+            v.setPadding(side, bars.top + dp(12), side, bars.bottom + dp(12));
+            return insets;
+        });
+        rootView.requestApplyInsets();
+    }
+
     private void setupCpuPairPanel() {
         ViewGroup cardContent = (ViewGroup) cpuSpinner.getParent();
         if (cardContent == null || cardContent.getChildCount() < 3) return;
         cpuSpinner.setVisibility(View.GONE);
-
         View titleView = cardContent.getChildAt(0);
         View descriptionView = cardContent.getChildAt(1);
         cardContent.removeView(titleView);
         cardContent.removeView(descriptionView);
-
         LinearLayout header = new LinearLayout(this);
         header.setOrientation(LinearLayout.HORIZONTAL);
         header.setGravity(Gravity.CENTER_VERTICAL);
         header.setPadding(dp(0), dp(0), dp(0), dp(2));
-
         LinearLayout textColumn = new LinearLayout(this);
         textColumn.setOrientation(LinearLayout.VERTICAL);
         textColumn.setGravity(Gravity.CENTER_VERTICAL);
         textColumn.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
         textColumn.addView(titleView, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         textColumn.addView(descriptionView, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-
         cpuPairChevron = new ImageView(this);
         cpuPairChevron.setImageResource(R.drawable.ic_chevron_down);
         cpuPairChevron.setColorFilter(getResources().getColor(R.color.icon_tint));
         LinearLayout.LayoutParams chevronLp = new LinearLayout.LayoutParams(dp(20), dp(20));
         chevronLp.setMargins(dp(8), 0, dp(4), 0);
         cpuPairChevron.setLayoutParams(chevronLp);
-
         header.addView(textColumn);
         header.addView(cpuPairChevron);
         header.setClickable(true);
         header.setFocusable(true);
         header.setOnClickListener(v -> toggleCpuPairPanel());
         cardContent.addView(header, 0);
-
         cpuPairOptions = new LinearLayout(this);
         cpuPairOptions.setOrientation(LinearLayout.VERTICAL);
         cpuPairOptions.setVisibility(View.GONE);
@@ -110,21 +118,17 @@ public class SettingsActivity extends Activity {
             row.setGravity(Gravity.CENTER_VERTICAL);
             row.setMinimumHeight(dp(46));
             row.setPadding(dp(12), 0, dp(10), 0);
-            // Do not reuse the Spinner background here: bg_spinner contains a
-            // dropdown arrow, which is inappropriate for individual choices.
             row.setBackground(null);
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(46));
             lp.setMargins(0, dp(3), 0, dp(3));
             row.setLayoutParams(lp);
-
             TextView label = new TextView(this);
             label.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
             label.setText(cpuPairLabels.get(i));
             label.setTextColor(getResources().getColor(active ? R.color.text_primary : R.color.text_secondary));
             label.setTextSize(12);
-            if (active) label.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+            if (active) label.setTypeface(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD);
             row.addView(label);
-
             if (active) {
                 TextView check = new TextView(this);
                 check.setText("✓");
@@ -167,9 +171,7 @@ public class SettingsActivity extends Activity {
         View textColumn = ((ViewGroup) header).getChildAt(0);
         if (!(textColumn instanceof ViewGroup) || ((ViewGroup) textColumn).getChildCount() < 2) return;
         View description = ((ViewGroup) textColumn).getChildAt(1);
-        if (description instanceof TextView) {
-            ((TextView) description).setText("Selected: " + value + "\nTap to change the CPU pair.");
-        }
+        if (description instanceof TextView) ((TextView) description).setText("Selected: " + value + "\nTap to change the CPU pair.");
     }
 
     private void setupResourcePanels() {
@@ -205,10 +207,8 @@ public class SettingsActivity extends Activity {
     }
 
     private void openUrl(String url) {
-        try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); }
-        catch (Exception ignored) { }
+        try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); } catch (Exception ignored) { }
     }
-
     private void goHome() { finish(); }
     @Override public void onBackPressed() { goHome(); }
 
