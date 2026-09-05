@@ -15,6 +15,7 @@ import android.text.style.StyleSpan;
 import android.text.style.TabStopSpan;
 import android.text.style.TypefaceSpan;
 import android.util.AttributeSet;
+import android.util.TypedValue;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
@@ -22,18 +23,16 @@ import java.util.Locale;
 
 public class KernelInfoView extends TextView {
     private static final int COLLAPSED_LINES = 2;
-    private static final int EXPANDED_LINES = 20;
     private static final long EXPAND_DURATION = 220L;
     private static final long COLLAPSE_DURATION = 180L;
 
-    private static final int SECTION_TEXT_SP = 13;
-    private static final int IDENTITY_TEXT_SP = 15;
-    private static final int LABEL_TEXT_SP = 12;
-    private static final int VALUE_TEXT_SP = 12;
-    private static final int DETAIL_TEXT_SP = 12;
-    private static final int KERNEL_TEXT_SP = 11;
+    private static final float SECTION_TEXT_SP = 13f;
+    private static final float IDENTITY_TEXT_SP = 15f;
+    private static final float LABEL_TEXT_SP = 12f;
+    private static final float VALUE_TEXT_SP = 12f;
+    private static final float DETAIL_TEXT_SP = 12f;
+    private static final float KERNEL_TEXT_SP = 11f;
     private static final int LABEL_COLUMN_DP = 112;
-    private static final int IDENTITY_GAP_DP = 6;
 
     private boolean expanded;
     private boolean animating;
@@ -50,7 +49,8 @@ public class KernelInfoView extends TextView {
         setMaxLines(COLLAPSED_LINES);
         setClickable(false);
         setFocusable(false);
-        setLineSpacing(dp(2), 1.0f);
+        setIncludeFontPadding(true);
+        setLineSpacing(sp(2f), 1.0f);
     }
 
     @Override
@@ -63,7 +63,7 @@ public class KernelInfoView extends TextView {
 
     private void applyDisplayedText() {
         if (expanded) {
-            setMaxLines(EXPANDED_LINES);
+            setMaxLines(Integer.MAX_VALUE);
             setEllipsize(null);
             super.setText(snapshotText, BufferType.SPANNABLE);
         } else {
@@ -76,7 +76,10 @@ public class KernelInfoView extends TextView {
     private String buildCompactText(String base) {
         String[] lines = base.split("\\n", -1);
         String device = lines.length > 0 && !lines[0].trim().isEmpty() ? lines[0].trim() : "Device: unknown";
-        String kernel = lines.length > 1 && !lines[1].trim().isEmpty() ? lines[1].trim() : "Kernel: " + safe(System.getProperty("os.version", "unknown"));
+        String kernel = lines.length > 1 && !lines[1].trim().isEmpty() ? lines[1].trim() : "Kernel version: " + safe(System.getProperty("os.version", "unknown"));
+        if (kernel.regionMatches(true, 0, "Kernel:", 0, 7)) {
+            kernel = "Kernel version:" + kernel.substring(7);
+        }
         return device + "\n" + kernel;
     }
 
@@ -118,11 +121,11 @@ public class KernelInfoView extends TextView {
         appendValue(out, name, IDENTITY_TEXT_SP, false, false);
         if (!code.isEmpty() && !"unknown".equalsIgnoreCase(code)) {
             out.append(" ");
-            int gapStart = out.length();
+            int start = out.length();
             out.append(code);
-            out.setSpan(new AbsoluteSizeSpan(IDENTITY_TEXT_SP, true), gapStart, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            out.setSpan(new StyleSpan(Typeface.BOLD), gapStart, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            out.setSpan(new ForegroundColorSpan(colorAccent()), gapStart, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            out.setSpan(new AbsoluteSizeSpan((int) IDENTITY_TEXT_SP, true), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            out.setSpan(new StyleSpan(Typeface.BOLD), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            out.setSpan(new ForegroundColorSpan(colorAccent()), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
     }
 
@@ -130,11 +133,8 @@ public class KernelInfoView extends TextView {
         int start = out.length();
         out.append(title);
         out.setSpan(new StyleSpan(Typeface.BOLD), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        out.setSpan(new AbsoluteSizeSpan(SECTION_TEXT_SP, true), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        out.setSpan(new AbsoluteSizeSpan((int) SECTION_TEXT_SP, true), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         out.setSpan(new ForegroundColorSpan(colorSecondary()), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        if (Build.VERSION.SDK_INT >= 21) {
-            out.setSpan(new android.text.style.ScaleXSpan(1.0f), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        }
         out.append('\n');
     }
 
@@ -150,15 +150,15 @@ public class KernelInfoView extends TextView {
     private void appendKernelValue(SpannableStringBuilder out, String value) {
         int start = out.length();
         out.append(value == null ? "unknown" : value);
-        out.setSpan(new AbsoluteSizeSpan(KERNEL_TEXT_SP, true), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        out.setSpan(new AbsoluteSizeSpan((int) KERNEL_TEXT_SP, true), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         out.setSpan(new TypefaceSpan(Typeface.MONOSPACE), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         out.setSpan(new ForegroundColorSpan(colorPrimary()), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
     }
 
-    private void appendValue(SpannableStringBuilder out, String value, int sizeSp, boolean bold, boolean secondary) {
+    private void appendValue(SpannableStringBuilder out, String value, float sizeSp, boolean bold, boolean secondary) {
         int start = out.length();
         out.append(value == null ? "unknown" : value);
-        out.setSpan(new AbsoluteSizeSpan(sizeSp, true), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        out.setSpan(new AbsoluteSizeSpan((int) sizeSp, true), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         if (bold) out.setSpan(new StyleSpan(Typeface.BOLD), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         out.setSpan(new ForegroundColorSpan(secondary ? colorSecondary() : colorPrimary()), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
     }
@@ -230,6 +230,7 @@ public class KernelInfoView extends TextView {
     private String valid(String value) { return value == null || value.trim().isEmpty() ? "unknown" : value.trim(); }
     private String safe(String value) { return value == null || value.trim().isEmpty() ? "unknown" : value.trim(); }
     private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
+    private float sp(float value) { return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, value, getResources().getDisplayMetrics()); }
 
     public boolean isExpanded() { return expanded; }
 
@@ -245,7 +246,7 @@ public class KernelInfoView extends TextView {
         if (start <= 0) { applyDisplayedText(); return; }
 
         if (expanded) {
-            setMaxLines(EXPANDED_LINES);
+            setMaxLines(Integer.MAX_VALUE);
             setEllipsize(null);
             super.setText(snapshotText, BufferType.SPANNABLE);
         } else {
