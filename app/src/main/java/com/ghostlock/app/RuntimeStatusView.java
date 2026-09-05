@@ -14,8 +14,11 @@ public class RuntimeStatusView extends LinearLayout {
     public RuntimeStatusView(Context context) { this(context, null); }
     public RuntimeStatusView(Context context, android.util.AttributeSet attrs) {
         super(context, attrs); setOrientation(VERTICAL); setPadding(dp(18),dp(16),dp(18),dp(16));
-        state=text(15,true); addView(state); message=text(12,false); addView(message,margin(-1,-2,0,7,0,0)); manager=text(11,true); addView(manager,margin(-1,-2,0,13,0,0));
-        action=text(12,true); action.setGravity(Gravity.CENTER); action.setPadding(dp(12),0,dp(12),0); action.setMinHeight(dp(56)); action.setVisibility(View.GONE); addView(action,margin(-1,dp(56),0,18,0,0)); refresh();
+        state=text(15,true); addView(state,wrap(0,0,0,0,0,0));
+        message=text(12,false); addView(message,wrap(0,7,0,0,0,0));
+        manager=text(11,true); addView(manager,wrap(0,13,0,0,0,0));
+        action=text(12,true); action.setGravity(Gravity.CENTER); action.setPadding(dp(12),dp(8),dp(12),dp(8)); action.setMinHeight(dp(56)); action.setVisibility(View.GONE); addView(action,wrap(0,18,0,0,0,0));
+        refresh();
     }
     @Override protected void onAttachedToWindow(){super.onAttachedToWindow();refresh();}
     @Override public void onWindowFocusChanged(boolean hasFocus){super.onWindowFocusChanged(hasFocus);if(hasFocus)post(this::refresh);}
@@ -37,13 +40,13 @@ public class RuntimeStatusView extends LinearLayout {
     private void showManagerPicker(){
         final java.util.List<ManagerCompatibility.ManagerInfo> managers=ManagerCompatibility.registeredManagers(getContext()); final android.app.Dialog dialog=new android.app.Dialog(getContext());
         LinearLayout box=new LinearLayout(getContext());box.setOrientation(VERTICAL);box.setPadding(dp(22),dp(20),dp(22),dp(16));box.setBackground(round(ContextCompat.getColor(getContext(),R.color.surface),26));
-        TextView title=text(19,true);title.setText("Install supported manager");box.addView(title);TextView subtitle=text(12,false);subtitle.setText("Select a registered manager to continue.");box.addView(subtitle,margin(-1,-2,0,6,0,14));
-        for(ManagerCompatibility.ManagerInfo info:managers){TextView row=text(14,true);row.setText(info.name+(info.installed?"  ·  Installed":"  ·  Not installed"));row.setGravity(Gravity.CENTER_VERTICAL);row.setPadding(dp(14),0,dp(14),0);row.setTextColor(ContextCompat.getColor(getContext(),R.color.text_primary));row.setBackground(round(ContextCompat.getColor(getContext(),R.color.surface_container_low),16));row.setClickable(true);row.setFocusable(true);row.setOnClickListener(v->{dialog.dismiss();ManagerCompatibility.openInstaller(getContext(),info);});box.addView(row,margin(-1,54,0,0,0,9));}
-        TextView cancel=text(13,true);cancel.setText("Cancel");cancel.setGravity(Gravity.CENTER);cancel.setTextColor(ContextCompat.getColor(getContext(),R.color.accent));cancel.setOnClickListener(v->dialog.dismiss());box.addView(cancel,margin(-1,44,0,4,0,0));dialog.setContentView(box);
+        TextView title=text(19,true);title.setText("Install supported manager");box.addView(title);TextView subtitle=text(12,false);subtitle.setText("Select a registered manager to continue.");box.addView(subtitle,wrap(0,6,0,0,0,14));
+        for(ManagerCompatibility.ManagerInfo info:managers){TextView row=text(14,true);row.setText(info.name+(info.installed?"  ·  Installed":"  ·  Not installed"));row.setGravity(Gravity.CENTER_VERTICAL);row.setPadding(dp(14),dp(8),dp(14),dp(8));row.setMinHeight(dp(54));row.setTextColor(ContextCompat.getColor(getContext(),R.color.text_primary));row.setBackground(round(ContextCompat.getColor(getContext(),R.color.surface_container_low),16));row.setClickable(true);row.setFocusable(true);row.setOnClickListener(v->{dialog.dismiss();ManagerCompatibility.openInstaller(getContext(),info);});box.addView(row,wrap(0,0,0,0,0,9));}
+        TextView cancel=text(13,true);cancel.setText("Cancel");cancel.setGravity(Gravity.CENTER);cancel.setMinHeight(dp(44));cancel.setTextColor(ContextCompat.getColor(getContext(),R.color.accent));cancel.setOnClickListener(v->dialog.dismiss());box.addView(cancel,wrap(0,4,0,0,0,0));dialog.setContentView(box);
         dialog.setOnShowListener(x->{if(dialog.getWindow()!=null){dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);dialog.getWindow().setDimAmount(.68f);dialog.getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND);dialog.getWindow().setLayout((int)(getResources().getDisplayMetrics().widthPixels*.88f),-2);}});dialog.show();
     }
-    private TextView text(int size,boolean bold){TextView v=new TextView(getContext());v.setTextSize(size);v.setTextColor(ContextCompat.getColor(getContext(),R.color.text_primary));if(bold)v.setTypeface(null,android.graphics.Typeface.BOLD);return v;}
-    private LinearLayout.LayoutParams margin(int w,int h,int l,int t,int r,int b){LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(w,h);p.setMargins(dp(l),dp(t),dp(r),dp(b));return p;}
+    private TextView text(int size,boolean bold){TextView v=new TextView(getContext());v.setTextSize(size);v.setTextColor(ContextCompat.getColor(getContext(),R.color.text_primary));v.setIncludeFontPadding(false);if(bold)v.setTypeface(null,android.graphics.Typeface.BOLD);return v;}
+    private LinearLayout.LayoutParams wrap(int l,int t,int r,int b,int unused1,int unused2){LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT,LayoutParams.WRAP_CONTENT);p.setMargins(dp(l),dp(t),dp(r),dp(b));return p;}
     private GradientDrawable round(int color,int radius){GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(dp(radius));return d;}
     private void setSurface(int colorRes){setBackground(round(ContextCompat.getColor(getContext(),colorRes),22));}
     private int dp(int value){return Math.round(value*getResources().getDisplayMetrics().density);}
