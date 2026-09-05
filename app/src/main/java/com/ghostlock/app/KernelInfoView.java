@@ -10,7 +10,10 @@ import android.os.Build;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
+import android.text.style.AbsoluteSizeSpan;
+import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
+import android.text.style.TabStopSpan;
 import android.util.AttributeSet;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -18,8 +21,6 @@ import android.widget.TextView;
 import com.mikepenz.iconics.IconicsDrawable;
 
 import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class KernelInfoView extends TextView {
     private static final int COLLAPSED_LINES = 2;
@@ -29,10 +30,11 @@ public class KernelInfoView extends TextView {
     private static final int ICON_SIZE_DP = 14;
     private static final int ICON_GAP_DP = 8;
     private static final int SECTION_TEXT_SP = 10;
-    private static final int IDENTITY_TEXT_SP = 14;
-    private static final int CODENAME_TEXT_SP = 11;
+    private static final int IDENTITY_TEXT_SP = 16;
+    private static final int CODENAME_TEXT_SP = 12;
     private static final int VALUE_TEXT_SP = 12;
-    private static final int DETAIL_TEXT_SP = 11;
+    private static final int DETAIL_TEXT_SP = 12;
+    private static final int LABEL_COLUMN_DP = 112;
 
     private boolean expanded;
     private boolean animating;
@@ -50,6 +52,7 @@ public class KernelInfoView extends TextView {
         setClickable(true);
         setFocusable(true);
         setCompoundDrawablePadding(dp(ICON_GAP_DP));
+        setLineSpacing(dp(2), 1.0f);
         setOnClickListener(v -> toggleExpanded());
         updateExpandIcon();
     }
@@ -110,47 +113,65 @@ public class KernelInfoView extends TextView {
 
         SpannableStringBuilder out = new SpannableStringBuilder();
         appendIdentity(out, deviceName, codename);
-        out.append('\n');
+        out.append("\n");
         appendSection(out, "PLATFORM");
-        appendRow(out, "Android", android, VALUE_TEXT_SP, true);
-        appendRow(out, "SoC", formatSoc(soc), VALUE_TEXT_SP, false);
-        appendRow(out, "Architecture", abi, VALUE_TEXT_SP, false);
-        appendRow(out, "Page Size", pageSize, VALUE_TEXT_SP, false);
-        out.append('\n');
+        appendRow(out, "Android", android, true);
+        appendRow(out, "SoC", formatSoc(soc), false);
+        appendRow(out, "Architecture", abi, false);
+        appendRow(out, "Page Size", pageSize, false);
+        out.append("\n");
         appendSection(out, "BUILD");
-        appendValue(out, build, DETAIL_TEXT_SP, false);
-        out.append('\n');
+        appendValue(out, build, DETAIL_TEXT_SP, true, false);
+        out.append("\n\n");
         appendSection(out, "KERNEL");
-        appendValue(out, kernel, DETAIL_TEXT_SP, false);
+        appendValue(out, kernel, DETAIL_TEXT_SP, false, false);
         return out;
     }
 
     private void appendIdentity(SpannableStringBuilder out, String device, String codename) {
-        appendValue(out, device, IDENTITY_TEXT_SP, true);
+        appendValue(out, device, IDENTITY_TEXT_SP, true, false);
         out.append('\n');
-        appendValue(out, codename, CODENAME_TEXT_SP, false);
+        appendValue(out, codename, CODENAME_TEXT_SP, false, true);
     }
 
     private void appendSection(SpannableStringBuilder out, String title) {
         int start = out.length();
         out.append(title);
         out.setSpan(new StyleSpan(Typeface.BOLD), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        out.setSpan(new AbsoluteSizeSpan(SECTION_TEXT_SP, true), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        out.setSpan(new ForegroundColorSpan(colorSecondary()), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         out.append('\n');
     }
 
-    private void appendRow(SpannableStringBuilder out, String label, String value, int valueSizeSp, boolean emphasizeValue) {
-        appendValue(out, String.format(Locale.ROOT, "%-18s", label), DETAIL_TEXT_SP, false);
-        appendValue(out, value, valueSizeSp, emphasizeValue);
+    private void appendRow(SpannableStringBuilder out, String label, String value, boolean emphasizeValue) {
+        int lineStart = out.length();
+        appendValue(out, label, DETAIL_TEXT_SP, false, true);
+        out.append('\t');
+        appendValue(out, value, VALUE_TEXT_SP, emphasizeValue, false);
         out.append('\n');
+        out.setSpan(new TabStopSpan.Standard(dp(LABEL_COLUMN_DP)), lineStart, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
     }
 
-    private void appendValue(SpannableStringBuilder out, String value, int sizeSp, boolean bold) {
+    private void appendValue(SpannableStringBuilder out, String value, int sizeSp, boolean bold, boolean secondary) {
         int start = out.length();
         out.append(value == null ? "unknown" : value);
-        out.setSpan(new android.text.style.AbsoluteSizeSpan(sizeSp, true), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        out.setSpan(new AbsoluteSizeSpan(sizeSp, true), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         if (bold) {
             out.setSpan(new StyleSpan(Typeface.BOLD), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
+        if (secondary) {
+            out.setSpan(new ForegroundColorSpan(colorSecondary()), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        } else {
+            out.setSpan(new ForegroundColorSpan(colorPrimary()), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+    }
+
+    private int colorPrimary() {
+        return getResources().getColor(com.ghostlock.app.R.color.text_primary, getContext().getTheme());
+    }
+
+    private int colorSecondary() {
+        return getResources().getColor(com.ghostlock.app.R.color.text_secondary, getContext().getTheme());
     }
 
     private String humanAndroidVersion() {
@@ -186,11 +207,6 @@ public class KernelInfoView extends TextView {
         if (lower.startsWith("gs201")) return "Google Tensor G2 (" + value + ")";
         if (lower.startsWith("gs101")) return "Google Tensor G1 (" + value + ")";
         return value;
-    }
-
-    private String extractKmi(String kernel) {
-        Matcher matcher = Pattern.compile("(android\\d+-\\d+\\.\\d+)").matcher(kernel == null ? "" : kernel);
-        return matcher.find() ? matcher.group(1) : "unknown";
     }
 
     private String pageSizeText() {
