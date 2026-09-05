@@ -17,7 +17,7 @@ import java.util.Locale;
 
 public class KernelInfoView extends TextView {
     private static final float SECTION_SCALE = 1.02f;
-    private static final float IDENTITY_SCALE = 1.08f;
+    private static final float IDENTITY_SCALE = 1.18f;
     private static final float LABEL_SCALE = 0.98f;
     private static final float VALUE_SCALE = 1.02f;
     private static final float DETAIL_SCALE = 1.00f;
