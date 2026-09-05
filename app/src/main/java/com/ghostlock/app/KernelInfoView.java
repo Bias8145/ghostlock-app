@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
  * Expandable device snapshot shown by the Home screen's DEVICE INFO card.
  *
  * The snapshot is display-only: it does not participate in GhostLock target
- * or offset selection.  The existing MainActivity can continue to provide
+ * or offset selection. The existing MainActivity can continue to provide
  * the compact device/kernel summary; this view enriches it with runtime
  * information and exposes it through a tap-to-expand interaction.
  */
@@ -67,33 +67,34 @@ public class KernelInfoView extends TextView {
     }
 
     private void applyDisplayedText() {
-        CharSequence value;
         if (expanded) {
-            value = "⌃  " + snapshotText;
             setMaxLines(EXPANDED_LINES);
             setEllipsize(null);
             setContentDescription("Collapse device information");
+            super.setText("⌃  " + snapshotText, BufferType.NORMAL);
         } else {
-            value = "⌄  " + compactText;
             setMaxLines(COLLAPSED_LINES);
             setEllipsize(TextUtils.TruncateAt.END);
             setContentDescription("Expand device information");
+            super.setText("⌄  " + compactText, BufferType.NORMAL);
         }
-        super.setText(value, BufferType.NORMAL);
     }
 
     private String buildCompactText(String base) {
         String[] lines = base.split("\\n", -1);
-        String device = lines.length > 0 ? lines[0] : "Device: unknown";
-        String kernel = lines.length > 1 ? lines[1] : "Kernel: " + safe(System.getProperty("os.version", "unknown"));
+        String device = lines.length > 0 && !lines[0].trim().isEmpty()
+                ? lines[0].trim() : "Device: unknown";
+        String kernel = lines.length > 1 && !lines[1].trim().isEmpty()
+                ? lines[1].trim()
+                : "Kernel: " + safe(System.getProperty("os.version", "unknown"));
         return device + "\n" + kernel;
     }
 
     private String buildSnapshot(String base) {
         String deviceName = resolveDeviceNameFromBase(base);
-        String codename = firstValidProperty("ro.product.device", Build.DEVICE);
+        String codename = propertyOrFallback("ro.product.device", Build.DEVICE);
         String model = valid(Build.MODEL);
-        String build = firstValidProperty("ro.build.display.id", Build.DISPLAY);
+        String build = propertyOrFallback("ro.build.display.id", Build.DISPLAY);
         String kernel = safe(System.getProperty("os.version", "unknown"));
         String android = String.valueOf(Build.VERSION.SDK_INT);
         String abi = Build.SUPPORTED_ABIS != null && Build.SUPPORTED_ABIS.length > 0
@@ -131,14 +132,14 @@ public class KernelInfoView extends TextView {
     }
 
     private String formatSoc(String value) {
-        if (value == null || value.isEmpty()) {
+        if (value == null || value.isEmpty() || "unknown".equalsIgnoreCase(value)) {
             return "unknown";
         }
         String lower = value.toLowerCase(Locale.ROOT);
-        if (lower.startsWith("gs101")) return "Google Tensor G1 (" + value + ")";
-        if (lower.startsWith("gs201")) return "Google Tensor G2 (" + value + ")";
-        if (lower.startsWith("zuma")) return "Google Tensor G3 (" + value + ")";
         if (lower.startsWith("zumapro")) return "Google Tensor G4 (" + value + ")";
+        if (lower.startsWith("zuma")) return "Google Tensor G3 (" + value + ")";
+        if (lower.startsWith("gs201")) return "Google Tensor G2 (" + value + ")";
+        if (lower.startsWith("gs101")) return "Google Tensor G1 (" + value + ")";
         if (lower.contains("tensor")) return value;
         return value;
     }
@@ -152,7 +153,8 @@ public class KernelInfoView extends TextView {
         try {
             long page = android.system.Os.sysconf(android.system.OsConstants._SC_PAGESIZE);
             if (page > 0) {
-                return page >= 1024 && page % 1024 == 0 ? (page / 1024) + " KB" : page + " B";
+                return page >= 1024 && page % 1024 == 0
+                        ? (page / 1024) + " KB" : page + " B";
             }
         } catch (Throwable ignored) {
         }
@@ -165,13 +167,22 @@ public class KernelInfoView extends TextView {
                 Class<?> props = Class.forName("android.os.SystemProperties");
                 Object raw = props.getMethod("get", String.class).invoke(null, key);
                 String value = raw instanceof String ? ((String) raw).trim() : "";
-                if (!value.isEmpty() && !"unknown".equalsIgnoreCase(value) && !"null".equalsIgnoreCase(value)) {
+                if (!value.isEmpty() && !"unknown".equalsIgnoreCase(value)
+                        && !"null".equalsIgnoreCase(value)) {
                     return value;
                 }
             } catch (Throwable ignored) {
             }
         }
         return "unknown";
+    }
+
+    private String propertyOrFallback(String key, String fallback) {
+        String value = firstValidProperty(key);
+        if (!"unknown".equals(value)) {
+            return value;
+        }
+        return valid(fallback);
     }
 
     private String valid(String value) {
@@ -217,7 +228,8 @@ public class KernelInfoView extends TextView {
             return;
         }
 
-        measure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
+        measure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
         int target = getMeasuredHeight();
         lp.height = start;
         setLayoutParams(lp);
