@@ -31,6 +31,17 @@
         <item name="android:alertDialogTheme">@style/ThemeOverlay.GhostLock.AlertDialog</item>
     </style>
 
+    <style name="Theme.GhostLock.Settings" parent="Theme.GhostLock">
+        <item name="android:windowAnimationStyle">@style/Animation.GhostLock.Settings</item>
+    </style>
+
+    <style name="Animation.GhostLock.Settings">
+        <item name="android:windowEnterAnimation">@anim/settings_enter</item>
+        <item name="android:windowExitAnimation">@anim/settings_exit</item>
+        <item name="android:windowShowAnimation">@anim/settings_enter</item>
+        <item name="android:windowHideAnimation">@anim/settings_exit</item>
+    </style>
+
     <style name="Widget.GhostLock" parent="Widget.Material3.Button">
         <item name="android:textAllCaps">false</item>
         <item name="android:minHeight">48dp</item>
