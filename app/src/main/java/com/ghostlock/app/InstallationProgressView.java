@@ -239,8 +239,9 @@ public final class InstallationProgressView extends LinearLayout {
             default: color = getContext().getColor(R.color.text_secondary); break;
         }
         IconicsDrawable drawable = new IconicsDrawable(getContext(), icon);
-        drawable.setColorInt(color);
-        drawable.setSizeDp(sizeDp);
+        drawable.setTint(color);
+        int sizePx = dp(sizeDp);
+        drawable.setBounds(0, 0, sizePx, sizePx);
         return drawable;
     }
 
