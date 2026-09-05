@@ -141,26 +141,34 @@ public class GhostLockBottomNavigation extends LinearLayout {
 
     private void transition(View show, View hide, boolean enteringLogs) {
         if (show.getVisibility() == VISIBLE && hide.getVisibility() == GONE) return;
-        hide.animate().cancel();
+
         show.animate().cancel();
+        hide.animate().cancel();
+
+        // Keep the outgoing page completely invisible before making the
+        // incoming weighted page visible. This prevents a one-frame flash of
+        // the Home header/back row while LinearLayout recalculates its height.
+        hide.setAlpha(0f);
+        hide.setVisibility(GONE);
+
         show.setVisibility(VISIBLE);
         show.setAlpha(0f);
         show.setTranslationX(enteringLogs ? dp(18) : -dp(18));
-        hide.animate().alpha(0f).setDuration(140).setInterpolator(new DecelerateInterpolator()).withEndAction(() -> {
-            hide.setVisibility(GONE);
-            hide.setAlpha(1f);
-            hide.setTranslationX(0f);
-        }).start();
-        show.animate().alpha(1f).translationX(0f).setDuration(180).setInterpolator(new DecelerateInterpolator()).start();
+
+        show.post(() -> show.animate()
+                .alpha(1f)
+                .translationX(0f)
+                .setDuration(180)
+                .setInterpolator(new DecelerateInterpolator())
+                .withEndAction(() -> {
+                    show.setAlpha(1f);
+                    show.setTranslationX(0f);
+                })
+                .start());
     }
 
-    public void showHome() {
-        selectPage(PAGE_HOME);
-    }
-
-    public void showLogs() {
-        selectPage(PAGE_LOGS);
-    }
+    public void showHome() { selectPage(PAGE_HOME); }
+    public void showLogs() { selectPage(PAGE_LOGS); }
 
     private void updateSelection() {
         for (int i = 0; i < items.length; i++) {
