@@ -26,7 +26,6 @@ public final class InstallationProgressView extends LinearLayout {
 
     private final LinearLayout steps;
     private final TextView overallStatus;
-    private TextView lastDetail;
     private TextWatcher watcher;
     private int lastRunMarker = -1;
 
@@ -50,7 +49,7 @@ public final class InstallationProgressView extends LinearLayout {
         steps = new LinearLayout(context);
         steps.setOrientation(VERTICAL);
         LayoutParams stepsParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        stepsParams.topMargin = dp(8);
+        stepsParams.topMargin = dp(9);
         addView(steps, stepsParams);
 
         resetStatus();
@@ -102,9 +101,17 @@ public final class InstallationProgressView extends LinearLayout {
 
         String run = s.substring(start);
         String latest = latestLine(run);
-        boolean success = latest.contains("exit code=0");
-        boolean failed = containsAny(latest, "error:", "failed", "unsupported", "exit code=137", "exit code=-1")
-                || containsAny(run, "error:", "fatal:", "segmentation fault");
+        boolean success = run.contains("exit code=0");
+        boolean processStarted = run.contains("running ghostlock") || run.contains("ghostlock-reader");
+        boolean processFinished = run.contains("exit code=");
+        boolean failed = containsAny(run,
+                "error:",
+                "fatal:",
+                "segmentation fault",
+                "exit code=137",
+                "exit code=-1",
+                "ksud not found",
+                "app not installed");
 
         List<Step> state = new ArrayList<>();
         state.add(new Step("Prepare", "Preparing GhostLock runtime and native payload."));
@@ -113,8 +120,10 @@ public final class InstallationProgressView extends LinearLayout {
         state.add(new Step("Execute", "Running the GhostLock native operation."));
         state.add(new Step("Verify", "Waiting for the real process result."));
 
-        if (run.contains("cpu pair:")) state.get(0).state = STATE_DONE;
-        if (run.contains("binary ready")) state.get(0).state = STATE_DONE;
+        // These milestones come from actual MainActivity/native log events.
+        if (run.contains("binary ready")) {
+            state.get(0).state = STATE_DONE;
+        }
 
         if (run.contains("ksud ready")) {
             state.get(1).state = STATE_DONE;
@@ -122,27 +131,33 @@ public final class InstallationProgressView extends LinearLayout {
             state.get(1).state = STATE_FAILED;
         }
 
-        if (containsAny(run, "kernel", "supported kernel", "offset")) {
+        // Do not use the word "kernel" alone: native output can mention it
+        // while reporting an error. Only mark this step complete on an actual
+        // supported-kernel/offset milestone.
+        if (containsAny(run,
+                "supported kernel",
+                "kernel supported",
+                "offsets loaded",
+                "offsets matched",
+                "offsets verified")) {
             state.get(2).state = STATE_DONE;
         }
 
-        if (run.contains("exit code=") || run.contains("running ghostlock")) {
-            state.get(3).state = STATE_DONE;
+        if (processStarted) {
+            state.get(3).state = processFinished ? STATE_DONE : STATE_RUNNING;
         }
 
         if (success) {
             state.get(4).state = STATE_DONE;
         } else if (failed) {
             int current = firstActive(state);
-            if (current >= 0) state.get(current).state = STATE_FAILED;
+            if (current >= 0) {
+                state.get(current).state = STATE_FAILED;
+            }
         }
 
-        int active = firstActive(state);
-        if (!success && !failed && active >= 0) {
-            state.get(active).state = STATE_RUNNING;
-        }
-
-        // If a later stage is observed, all preceding stages are real completed work.
+        // Once a later real milestone is visible, preceding stages are known
+        // to have completed. This is state propagation, not simulated progress.
         for (int i = 1; i < state.size(); i++) {
             if (state.get(i).state == STATE_RUNNING || state.get(i).state == STATE_DONE) {
                 for (int j = 0; j < i; j++) {
@@ -151,17 +166,30 @@ public final class InstallationProgressView extends LinearLayout {
             }
         }
 
+        // If the process has started but no final exit code exists yet, keep
+        // Execute visibly active until the real process terminates.
+        if (!success && !failed && processStarted && !processFinished) {
+            state.get(3).state = STATE_RUNNING;
+        }
+
         if (success) {
             overallStatus.setText("Completed");
         } else if (failed) {
             overallStatus.setText("Failed");
-        } else if (active >= 0) {
+        } else if (processStarted || hasActiveStage(state)) {
             overallStatus.setText("Running");
         } else {
             overallStatus.setText("Preparing");
         }
 
         render(state, latest);
+    }
+
+    private boolean hasActiveStage(List<Step> state) {
+        for (Step step : state) {
+            if (step.state == STATE_RUNNING) return true;
+        }
+        return false;
     }
 
     private int firstActive(List<Step> state) {
@@ -173,23 +201,36 @@ public final class InstallationProgressView extends LinearLayout {
 
     private void render(List<Step> state, String latest) {
         steps.removeAllViews();
-        lastDetail = null;
         for (int i = 0; i < state.size(); i++) {
             Step step = state.get(i);
             LinearLayout row = new LinearLayout(getContext());
             row.setOrientation(HORIZONTAL);
             row.setGravity(Gravity.TOP);
-            row.setPadding(0, dp(2), 0, dp(i == state.size() - 1 ? 2 : 7));
+            row.setPadding(0, dp(1), 0, dp(i == state.size() - 1 ? 1 : 7));
 
-            TextView marker = text(marker(step.state), 17, markerColor(step.state), Typeface.BOLD);
+            LinearLayout rail = new LinearLayout(getContext());
+            rail.setOrientation(VERTICAL);
+            rail.setGravity(Gravity.CENTER_HORIZONTAL);
+
+            TextView marker = text(marker(step.state), 16, markerColor(step.state), Typeface.BOLD);
             marker.setGravity(Gravity.CENTER);
-            LayoutParams markerParams = new LayoutParams(dp(24), dp(24));
-            markerParams.rightMargin = dp(9);
-            row.addView(marker, markerParams);
+            rail.addView(marker, new LayoutParams(dp(24), dp(24)));
+
+            if (i < state.size() - 1) {
+                View connector = new View(getContext());
+                connector.setBackgroundColor(getContext().getColor(connectorColor(step.state)));
+                LayoutParams connectorParams = new LayoutParams(dp(2), dp(24));
+                connectorParams.topMargin = dp(1);
+                rail.addView(connector, connectorParams);
+            }
+
+            LayoutParams railParams = new LayoutParams(dp(24), LayoutParams.MATCH_PARENT);
+            railParams.rightMargin = dp(9);
+            row.addView(rail, railParams);
 
             LinearLayout body = new LinearLayout(getContext());
             body.setOrientation(VERTICAL);
-            TextView name = text(step.name, 13, R.color.text_primary, Typeface.BOLD);
+            TextView name = text(step.name, 13, step.state == STATE_RUNNING ? R.color.accent : R.color.text_primary, Typeface.BOLD);
             body.addView(name);
 
             TextView detail = text(step.detail, 11, R.color.text_secondary, Typeface.NORMAL);
@@ -203,12 +244,15 @@ public final class InstallationProgressView extends LinearLayout {
                 LayoutParams liveParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
                 liveParams.topMargin = dp(4);
                 body.addView(live, liveParams);
-                lastDetail = live;
             }
 
             row.addView(body, new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
             steps.addView(row, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
         }
+    }
+
+    private int connectorColor(int state) {
+        return state == STATE_DONE ? R.color.status_success : R.color.surface_variant;
     }
 
     private String latestLine(String run) {
