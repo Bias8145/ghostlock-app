@@ -4,7 +4,6 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.content.Context;
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.text.Editable;
@@ -149,11 +148,11 @@ public final class InstallationProgressView extends LinearLayout {
         if (containsAny(latest, "running ghostlock", "preparing", "prepare", "starting")) {
             return new Stage("Preparing", R.drawable.ic_install_box_open);
         }
-        if (containsAny(latest, "device", "uname", "kernel", "supported kernel")) {
-            return new Stage("Checking device", R.drawable.ic_install_mobile);
-        }
         if (containsAny(latest, "binary ready", "ksud ready", "manager", "kernelsu", "resukisu")) {
             return new Stage("Detecting manager", R.drawable.ic_install_shield);
+        }
+        if (containsAny(latest, "device", "uname", "kernel", "supported kernel")) {
+            return new Stage("Checking device", R.drawable.ic_install_mobile);
         }
         if (containsAny(latest, "offset", "pselect", "kallsyms", "phys", "init_task", "security_hook")) {
             return new Stage("Loading offsets", R.drawable.ic_install_file_code);
@@ -172,8 +171,12 @@ public final class InstallationProgressView extends LinearLayout {
         statusTitle.setText(title);
         setIcon(iconRes, state);
 
+        int previousState = lastState;
+        lastIconRes = iconRes;
+        lastState = state;
+
         if (changed && isAttachedToWindow()) {
-            animateState();
+            animateState(state);
         }
 
         if (state == STATE_RUNNING) {
@@ -181,9 +184,6 @@ public final class InstallationProgressView extends LinearLayout {
         } else {
             stopBreathing();
         }
-
-        lastIconRes = iconRes;
-        lastState = state;
     }
 
     private void setIcon(int iconRes, int state) {
@@ -203,7 +203,7 @@ public final class InstallationProgressView extends LinearLayout {
         statusIcon.setAlpha(state == STATE_RUNNING ? ACTIVE_ALPHA : 1f);
     }
 
-    private void animateState() {
+    private void animateState(int state) {
         stopBreathing();
         statusIcon.animate().cancel();
         statusTitle.animate().cancel();
@@ -213,11 +213,11 @@ public final class InstallationProgressView extends LinearLayout {
         statusIcon.setScaleY(0.84f);
         statusTitle.setAlpha(0.55f);
 
-        statusIcon.animate().alpha(lastState == STATE_RUNNING ? ACTIVE_ALPHA : 1f)
+        statusIcon.animate().alpha(state == STATE_RUNNING ? ACTIVE_ALPHA : 1f)
                 .scaleX(1f).scaleY(1f).setDuration(180)
                 .setListener(new AnimatorListenerAdapter() {
                     @Override public void onAnimationEnd(Animator animation) {
-                        if (lastState == STATE_RUNNING) startBreathing();
+                        if (state == STATE_RUNNING) startBreathing();
                     }
                 }).start();
         statusTitle.animate().alpha(1f).setDuration(180).start();
