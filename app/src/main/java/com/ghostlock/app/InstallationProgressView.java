@@ -22,9 +22,7 @@ import android.widget.TextView;
 
 import com.google.android.material.button.MaterialButton;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -40,8 +38,6 @@ public final class InstallationProgressView extends LinearLayout {
     private static final int STATE_FAILED = 3;
 
     private static final int ERROR_COLOR = 0xFFFF6B6B;
-    private static final int SUCCESS_COLOR = 0xFF5FD68A;
-    private static final int MUTED_COLOR = 0xFF8B8F98;
     private static final float ACTIVE_ALPHA = 0.45f;
     private static final String PREFS = "ghostlock_install_summary";
     private static final String PREF_RESULT = "result";
@@ -174,9 +170,7 @@ public final class InstallationProgressView extends LinearLayout {
     @Override protected void onDetachedFromWindow() {
         stopBreathing();
         TextView log = getRootView().findViewById(R.id.logView);
-        if (log != null && logWatcher != null) {
-            log.removeTextChangedListener(logWatcher);
-        }
+        if (log != null && logWatcher != null) log.removeTextChangedListener(logWatcher);
         logWatcher = null;
         super.onDetachedFromWindow();
     }
@@ -225,11 +219,11 @@ public final class InstallationProgressView extends LinearLayout {
         }
 
         if (latest.contains("exit code=0")) {
-            finishRun(STATE_SUCCESS, currentRun);
+            finishRun(STATE_SUCCESS);
             return;
         }
         if (containsAny(latest, "error:", "failed", "unsupported", "exit code=137", "exit code=-1")) {
-            finishRun(STATE_FAILED, currentRun);
+            finishRun(STATE_FAILED);
             return;
         }
 
@@ -241,33 +235,21 @@ public final class InstallationProgressView extends LinearLayout {
     }
 
     private Stage stageFor(String latest) {
-        if (containsAny(latest, "running ghostlock", "preparing", "prepare", "starting")) {
-            return new Stage("preparing", "Preparing", R.drawable.ic_install_box_open);
-        }
-        if (containsAny(latest, "binary ready", "ksud ready", "manager", "kernelsu", "resukisu")) {
-            return new Stage("manager", "Detecting manager", R.drawable.ic_install_shield);
-        }
-        if (containsAny(latest, "device", "uname", "kernel", "supported kernel")) {
-            return new Stage("device", "Checking device", R.drawable.ic_install_mobile);
-        }
-        if (containsAny(latest, "offset", "pselect", "kallsyms", "phys", "init_task", "security_hook")) {
-            return new Stage("offsets", "Loading offsets", R.drawable.ic_install_file_code);
-        }
-        if (containsAny(latest, "applying", "configuration", "config", "writing", "write")) {
-            return new Stage("config", "Applying configuration", R.drawable.ic_install_gears);
-        }
-        if (containsAny(latest, "execution", "exit code=", "verifying", "verify")) {
-            return new Stage("verify", "Verifying installation", R.drawable.ic_install_circle_check);
-        }
-        return new Stage("preparing", "Preparing", R.drawable.ic_install_box_open);
+        if (containsAny(latest, "running ghostlock", "preparing", "prepare", "starting")) return stageById("preparing");
+        if (containsAny(latest, "binary ready", "ksud ready", "manager", "kernelsu", "resukisu")) return stageById("manager");
+        if (containsAny(latest, "device", "uname", "kernel", "supported kernel")) return stageById("device");
+        if (containsAny(latest, "offset", "pselect", "kallsyms", "phys", "init_task", "security_hook")) return stageById("offsets");
+        if (containsAny(latest, "applying", "configuration", "config", "writing", "write")) return stageById("config");
+        if (containsAny(latest, "execution", "exit code=", "verifying", "verify")) return stageById("verify");
+        return stageById("preparing");
     }
 
-    private void finishRun(int state, String currentRun) {
+    private void finishRun(int state) {
         if (hasTerminalResult && lastState == state) return;
         hasTerminalResult = true;
         stopBreathing();
         if (state == STATE_SUCCESS) {
-            observedStages.put("verify", new Stage("verify", "Verifying installation", R.drawable.ic_install_circle_check));
+            observedStages.put("verify", stageById("verify"));
             setStatus("Installation completed", R.drawable.ic_install_circle_check, STATE_SUCCESS);
         } else {
             setStatus(currentStageTitle, currentStageIconRes, STATE_FAILED);
@@ -276,11 +258,14 @@ public final class InstallationProgressView extends LinearLayout {
         String manager = detectManagerName();
         String kernel = System.getProperty("os.version", "unknown");
         saveLastRun(state == STATE_SUCCESS ? "Success" : "Failed", kernel, manager, duration, timelineString());
-        renderPostRun(state, kernel, manager, duration, currentRun);
-        setRunButtonState(state);
+        renderPostRun(state, kernel, manager, duration);
+        // MainActivity also updates the button in its completion callback. Post
+        // once more so the semantic terminal label wins without changing the
+        // existing execution/state machinery.
+        post(() -> setRunButtonState(state));
     }
 
-    private void renderPostRun(int state, String kernel, String manager, long duration, String currentRun) {
+    private void renderPostRun(int state, String kernel, String manager, long duration) {
         postRun.setVisibility(VISIBLE);
         summaryResult.setText(state == STATE_SUCCESS ? "Success" : "Failed");
         summaryResult.setTextColor(getContext().getColor(state == STATE_SUCCESS ? R.color.status_success : R.color.status_error));
@@ -294,9 +279,7 @@ public final class InstallationProgressView extends LinearLayout {
     private String detectManagerName() {
         try {
             ManagerCompatibility.ManagerInfo info = ManagerCompatibility.detectManager(getContext());
-            if (info != null && info.installed && info.name != null && !info.name.isEmpty()) {
-                return info.name;
-            }
+            if (info != null && info.installed && info.name != null && !info.name.isEmpty()) return info.name;
         } catch (Throwable ignored) {
         }
         return "Not detected";
@@ -304,22 +287,20 @@ public final class InstallationProgressView extends LinearLayout {
 
     private void rebuildTimeline() {
         timelineRows.removeAllViews();
-        for (Stage stage : observedStages.values()) {
-            timelineRows.addView(timelineRow(stage, true));
-        }
+        for (Stage stage : observedStages.values()) timelineRows.addView(timelineRow(stage));
         timelineBox.setVisibility(observedStages.isEmpty() ? GONE : VISIBLE);
         timelineToggle.setText("Installation timeline  ·  " + (timelineExpanded ? "Hide" : "Show"));
         timelineRows.setVisibility(timelineExpanded ? VISIBLE : GONE);
     }
 
-    private View timelineRow(Stage stage, boolean completed) {
+    private View timelineRow(Stage stage) {
         LinearLayout row = new LinearLayout(getContext());
         row.setOrientation(HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
         row.setPadding(0, dp(3), 0, dp(3));
 
         ImageView icon = new ImageView(getContext());
-        icon.setImageResource(completed ? R.drawable.ic_install_circle_check : stage.iconRes);
+        icon.setImageResource(R.drawable.ic_install_circle_check);
         icon.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
         LayoutParams ip = new LayoutParams(dp(20), dp(20));
         ip.rightMargin = dp(10);
@@ -331,7 +312,6 @@ public final class InstallationProgressView extends LinearLayout {
         title.setTextSize(12);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         row.addView(title, new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
-
         return row;
     }
 
@@ -345,10 +325,7 @@ public final class InstallationProgressView extends LinearLayout {
         View root = getRootView();
         ScrollView scroll = root.findViewById(R.id.logScroll);
         TextView log = root.findViewById(R.id.logView);
-        if (scroll != null) {
-            scroll.post(() -> scroll.fullScroll(View.FOCUS_DOWN));
-            scroll.requestFocus();
-        }
+        if (scroll != null) scroll.post(() -> scroll.fullScroll(View.FOCUS_DOWN));
         if (log != null) log.requestFocus();
     }
 
@@ -358,18 +335,10 @@ public final class InstallationProgressView extends LinearLayout {
         Button run = (Button) button;
         run.setEnabled(state != STATE_RUNNING);
         switch (state) {
-            case STATE_RUNNING:
-                run.setText("Running…");
-                break;
-            case STATE_SUCCESS:
-                run.setText("Run Again");
-                break;
-            case STATE_FAILED:
-                run.setText("Retry");
-                break;
-            default:
-                run.setText("Run GhostLock");
-                break;
+            case STATE_RUNNING: run.setText("Running…"); break;
+            case STATE_SUCCESS: run.setText("Run Again"); break;
+            case STATE_FAILED: run.setText("Retry"); break;
+            default: run.setText("Run GhostLock"); break;
         }
     }
 
