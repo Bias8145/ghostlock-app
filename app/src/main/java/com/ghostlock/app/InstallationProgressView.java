@@ -36,6 +36,8 @@ public final class InstallationProgressView extends LinearLayout {
     private int lastRunMarker = -1;
     private int lastState = -1;
     private int lastIconRes = -1;
+    private int currentStageIconRes = R.drawable.ic_install_box_open;
+    private String currentStageTitle = "Preparing";
 
     public InstallationProgressView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -116,6 +118,8 @@ public final class InstallationProgressView extends LinearLayout {
         }
         if (startMarker != lastRunMarker) {
             lastRunMarker = startMarker;
+            currentStageTitle = "Preparing";
+            currentStageIconRes = R.drawable.ic_install_box_open;
         }
 
         String currentRun = s.substring(startMarker);
@@ -134,13 +138,14 @@ public final class InstallationProgressView extends LinearLayout {
         }
 
         if (containsAny(latest, "error:", "failed", "unsupported", "exit code=137", "exit code=-1")) {
-            // Keep the semantic icon for the current stage; only the color changes to red.
-            Stage stage = stageFor(latest);
-            setStatus(stage.title, stage.iconRes, STATE_FAILED);
+            // Reuse the last semantic stage icon instead of replacing it with a generic X.
+            setStatus(currentStageTitle, currentStageIconRes, STATE_FAILED);
             return;
         }
 
         Stage stage = stageFor(latest);
+        currentStageTitle = stage.title;
+        currentStageIconRes = stage.iconRes;
         setStatus(stage.title, stage.iconRes, STATE_RUNNING);
     }
 
@@ -171,7 +176,6 @@ public final class InstallationProgressView extends LinearLayout {
         statusTitle.setText(title);
         setIcon(iconRes, state);
 
-        int previousState = lastState;
         lastIconRes = iconRes;
         lastState = state;
 
@@ -257,6 +261,8 @@ public final class InstallationProgressView extends LinearLayout {
         lastRunMarker = -1;
         lastIconRes = -1;
         lastState = STATE_READY;
+        currentStageTitle = "Preparing";
+        currentStageIconRes = R.drawable.ic_install_box_open;
         setStatus("Ready to run", R.drawable.ic_install_box_open, STATE_READY);
     }
 
