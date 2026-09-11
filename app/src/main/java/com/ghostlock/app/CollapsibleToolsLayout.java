@@ -20,7 +20,9 @@ public class CollapsibleToolsLayout extends LinearLayout {
     private View header;
     private View content;
     private ViewGroup contentParent;
+    private ViewGroup.LayoutParams originalContentLayoutParams;
     private int contentIndex = -1;
+    private Dialog toolsDialog;
 
     public CollapsibleToolsLayout(Context context) {
         super(context);
@@ -47,6 +49,7 @@ public class CollapsibleToolsLayout extends LinearLayout {
         content = getChildAt(1);
         contentParent = this;
         contentIndex = indexOfChild(content);
+        originalContentLayoutParams = content.getLayoutParams();
 
         header.setClickable(true);
         header.setFocusable(true);
@@ -59,8 +62,13 @@ public class CollapsibleToolsLayout extends LinearLayout {
         if (content == null || contentParent == null) {
             return;
         }
+        if (toolsDialog != null && toolsDialog.isShowing()) {
+            return;
+        }
 
         final Dialog dialog = new Dialog(getContext());
+        toolsDialog = dialog;
+
         LinearLayout panel = new LinearLayout(getContext());
         panel.setOrientation(VERTICAL);
         panel.setPadding(dp(20), dp(12), dp(20), dp(16));
@@ -102,46 +110,53 @@ public class CollapsibleToolsLayout extends LinearLayout {
         subtitle.setTextSize(12);
         panel.addView(subtitle, margin(-1, -2, 0, 0, 0, 14));
 
+        // Keep the original LayoutParams so the view can be restored safely.
         contentParent.removeView(content);
         content.setVisibility(VISIBLE);
         panel.addView(content, new LinearLayout.LayoutParams(-1, -2));
 
         close.setOnClickListener(v -> dialog.dismiss());
-        dialog.setOnDismissListener(d -> restoreContent());
+        dialog.setOnDismissListener(d -> restoreContent(dialog, panel));
         dialog.setContentView(panel);
 
-        Window window = dialog.getWindow();
-        dialog.setOnShowListener(d -> {
-            Window w = dialog.getWindow();
-            if (w == null) return;
-            w.setBackgroundDrawableResource(android.R.color.transparent);
-            w.setDimAmount(.60f);
-            w.addFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND);
-            w.setGravity(Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
-            w.setLayout((int) (getResources().getDisplayMetrics().widthPixels * .94f), -2);
-        });
-
+        dialog.setOnShowListener(d -> configureWindow(dialog));
         dialog.show();
-        window = dialog.getWindow();
-        if (window != null) {
-            window.setBackgroundDrawableResource(android.R.color.transparent);
-            window.setDimAmount(.60f);
-            window.addFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND);
-            window.setGravity(Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
-            window.setLayout((int) (getResources().getDisplayMetrics().widthPixels * .94f), -2);
-        }
+        configureWindow(dialog);
     }
 
-    private void restoreContent() {
-        if (content == null || contentParent == null || content.getParent() == contentParent) {
-            if (content != null) {
-                content.setVisibility(GONE);
-            }
+    private void configureWindow(Dialog dialog) {
+        Window window = dialog.getWindow();
+        if (window == null) {
             return;
         }
-        int index = Math.max(0, Math.min(contentIndex, contentParent.getChildCount()));
-        contentParent.addView(content, index);
-        content.setVisibility(GONE);
+        window.setBackgroundDrawableResource(android.R.color.transparent);
+        window.setDimAmount(.60f);
+        window.addFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+        window.setGravity(Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
+        window.setLayout((int) (getResources().getDisplayMetrics().widthPixels * .94f), -2);
+    }
+
+    private void restoreContent(Dialog dialog, ViewGroup panel) {
+        // Dismissal can happen from the close button, back button, or outside tap.
+        // Remove the view from the dialog's panel before attaching it back to Home.
+        if (content != null && content.getParent() == panel) {
+            panel.removeView(content);
+        }
+
+        if (content != null && contentParent != null && content.getParent() == null) {
+            int index = Math.max(0, Math.min(contentIndex, contentParent.getChildCount()));
+            ViewGroup.LayoutParams params = originalContentLayoutParams;
+            if (params != null) {
+                contentParent.addView(content, index, params);
+            } else {
+                contentParent.addView(content, index);
+            }
+            content.setVisibility(GONE);
+        }
+
+        if (toolsDialog == dialog) {
+            toolsDialog = null;
+        }
     }
 
     private LinearLayout.LayoutParams margin(int w, int h, int l, int t, int r, int b) {
