@@ -37,9 +37,9 @@ public final class ManagerWatermarkView extends View {
         float w = getWidth(), h = getHeight();
         if (w <= 0 || h <= 0) return;
 
-        // Intentionally oversized: RuntimeStatusView clips this decorative glyph
-        // to the card bounds, preserving the intended subtle edge-cropped style.
-        float size = Math.min(dp(104), Math.min(w * .94f, h * .94f));
+        // Intentionally oversized, but slightly reduced for a calmer balance.
+        // RuntimeStatusView clips this decorative glyph to the card bounds.
+        float size = Math.min(dp(98), Math.min(w * .94f, h * .94f));
         canvas.save();
         canvas.translate(w * .50f, h * .50f);
         paint.setColor(color);
