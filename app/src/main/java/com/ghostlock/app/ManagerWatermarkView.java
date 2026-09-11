@@ -9,8 +9,8 @@ import android.view.View;
 import androidx.core.content.ContextCompat;
 
 /**
- * Subtle decorative state glyph drawn in the manager card's existing negative space.
- * It is intentionally compact and right-biased so it never competes with actions.
+ * Subtle decorative state glyph drawn in the manager card's reserved right-side space.
+ * It stays large enough to remain visually useful while never competing with content.
  */
 public final class ManagerWatermarkView extends View {
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -27,7 +27,7 @@ public final class ManagerWatermarkView extends View {
     private void init(Context context) {
         setWillNotDraw(false);
         color = ContextCompat.getColor(context, R.color.accent);
-        setAlpha(0.12f);
+        setAlpha(0.13f);
         setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO);
         setClickable(false);
         setFocusable(false);
@@ -45,10 +45,11 @@ public final class ManagerWatermarkView extends View {
         float h = getHeight();
         if (w <= 0 || h <= 0) return;
 
-        // Keep the glyph inside the existing card space; never enlarge the card.
-        float size = Math.min(dp(76), Math.min(w * .26f, h * .62f));
-        float cx = w - size * .66f;
-        float cy = size * .52f;
+        // The parent reserves the right side for this view. Keep the glyph
+        // deliberately large and vertically centered across every card state.
+        float size = Math.min(dp(78), Math.min(w * .82f, h * .82f));
+        float cx = w * .50f;
+        float cy = h * .50f;
 
         canvas.save();
         canvas.translate(cx, cy);
