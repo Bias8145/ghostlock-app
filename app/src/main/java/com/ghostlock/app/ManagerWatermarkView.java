@@ -8,7 +8,7 @@ import android.graphics.RectF;
 import android.view.View;
 import androidx.core.content.ContextCompat;
 
-/** Large, clipped decorative state glyph for the manager status card. */
+/** Compact, subtle decorative state glyph for the manager status card. */
 public final class ManagerWatermarkView extends View {
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Path path = new Path();
@@ -37,9 +37,10 @@ public final class ManagerWatermarkView extends View {
         float w = getWidth(), h = getHeight();
         if (w <= 0 || h <= 0) return;
 
-        // Intentionally oversized, but slightly reduced for a calmer balance.
-        // RuntimeStatusView clips this decorative glyph to the card bounds.
-        float size = Math.min(dp(98), Math.min(w * .94f, h * .94f));
+        // Keep the glyph proportionate to the compact status card rather than
+        // using an oversized watermark. The reserved container provides a
+        // consistent visual anchor without competing with the card content.
+        float size = Math.min(dp(64), Math.min(w * .90f, h * .90f));
         canvas.save();
         canvas.translate(w * .50f, h * .50f);
         paint.setColor(color);
