@@ -10,8 +10,8 @@ import android.view.WindowManager;
 public final class GhostLockModal {
     private static final float DEFAULT_DIM = 0.46f;
     private static final float WARNING_DIM = 0.50f;
-    private static final int DEFAULT_BLUR = 28;
-    private static final int WARNING_BLUR = 32;
+    private static final int DEFAULT_BLUR = 32;
+    private static final int WARNING_BLUR = 36;
 
     private GhostLockModal() {}
 
