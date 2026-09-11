@@ -1,11 +1,7 @@
 package com.ghostlock.app;
 
 import android.app.Dialog;
-import android.content.Context;
-import android.graphics.RenderEffect;
-import android.graphics.Shader;
 import android.os.Build;
-import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 
@@ -13,8 +9,8 @@ import android.view.WindowManager;
 public final class GhostLockModal {
     private static final float DEFAULT_DIM = 0.46f;
     private static final float WARNING_DIM = 0.50f;
-    private static final float DEFAULT_BLUR = 14f;
-    private static final float WARNING_BLUR = 16f;
+    private static final int DEFAULT_BLUR = 14;
+    private static final int WARNING_BLUR = 16;
 
     private GhostLockModal() {}
 
@@ -36,28 +32,21 @@ public final class GhostLockModal {
         window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
         WindowManager.LayoutParams lp = window.getAttributes();
         lp.dimAmount = warning ? WARNING_DIM : DEFAULT_DIM;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+            lp.setBlurBehindRadius(warning ? WARNING_BLUR : DEFAULT_BLUR);
+        }
         window.setAttributes(lp);
-
-        applyBackgroundBlur(dialog.getContext(), warning);
     }
 
-    private static void applyBackgroundBlur(Context context, boolean warning) {
-        if (Build.VERSION.SDK_INT < 31) return;
-        if (!(context instanceof android.app.Activity)) return;
-
-        View decor = ((android.app.Activity) context).getWindow().getDecorView();
-        if (Build.VERSION.SDK_INT >= 31) {
-            float radius = warning ? WARNING_BLUR : DEFAULT_BLUR;
-            decor.setRenderEffect(RenderEffect.createBlurEffect(radius, radius, Shader.TileMode.CLAMP));
-        }
-    }
-
-    /** Remove the background blur after a modal is dismissed. */
+    /** Clears the blur radius when a modal is dismissed. */
     public static void clear(Dialog dialog) {
-        if (dialog == null) return;
-        Context context = dialog.getContext();
-        if (context instanceof android.app.Activity && Build.VERSION.SDK_INT >= 31) {
-            ((android.app.Activity) context).getWindow().getDecorView().setRenderEffect(null);
-        }
+        if (dialog == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return;
+        Window window = dialog.getWindow();
+        if (window == null) return;
+        WindowManager.LayoutParams lp = window.getAttributes();
+        lp.setBlurBehindRadius(0);
+        window.setAttributes(lp);
+        window.clearFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
     }
 }
