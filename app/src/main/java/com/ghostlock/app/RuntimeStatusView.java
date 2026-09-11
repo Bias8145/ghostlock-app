@@ -11,7 +11,7 @@ import androidx.core.content.ContextCompat;
 
 /** Compact manager status surface with a large, intentionally clipped watermark. */
 public class RuntimeStatusView extends FrameLayout {
-    private static final int WATERMARK_SIZE_DP = 124;
+    private static final int WATERMARK_SIZE_DP = 116;
 
     private final TextView state, message, manager, action;
     private final ManagerWatermarkView watermark;
@@ -33,7 +33,7 @@ public class RuntimeStatusView extends FrameLayout {
         content.setOrientation(LinearLayout.VERTICAL);
         // Device Info uses a compact 16dp card inset. Keep the same visual
         // rhythm here while reserving only a modest right gutter for the glyph.
-        content.setPadding(dp(16), dp(10), dp(76), dp(10));
+        content.setPadding(dp(16), dp(10), dp(74), dp(10));
         addView(content, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
         state = text(14, true);
@@ -74,7 +74,7 @@ public class RuntimeStatusView extends FrameLayout {
         int height = watermark.getMeasuredHeight();
         // Push the oversized glyph toward the right edge. The parent clips its
         // excess, giving every state the same intentional edge-cropped look.
-        int watermarkLeft = getWidth() - dp(88);
+        int watermarkLeft = getWidth() - dp(84);
         int watermarkTop = (getHeight() - height) / 2;
         watermark.layout(watermarkLeft, watermarkTop,
                 watermarkLeft + width, watermarkTop + height);
