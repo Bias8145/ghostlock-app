@@ -11,6 +11,8 @@ import androidx.core.content.ContextCompat;
 
 /** Compact manager status surface with a large, intentionally clipped watermark. */
 public class RuntimeStatusView extends FrameLayout {
+    private static final int WATERMARK_SIZE_DP = 124;
+
     private final TextView state, message, manager, action;
     private final ManagerWatermarkView watermark;
     private final LinearLayout content;
@@ -22,16 +24,16 @@ public class RuntimeStatusView extends FrameLayout {
         setClipChildren(true);
         setClipToPadding(true);
 
+        // Keep the decorative watermark out of the measurement pass. The card
+        // height must be driven by its content, not by the oversized glyph.
         watermark = new ManagerWatermarkView(context);
-        LayoutParams watermarkParams = new LayoutParams(dp(112), dp(112), Gravity.END | Gravity.CENTER_VERTICAL);
-        watermarkParams.setMargins(0, 0, -dp(8), 0);
-        addView(watermark, watermarkParams);
+        addView(watermark, new LayoutParams(0, 0, Gravity.END | Gravity.CENTER_VERTICAL));
 
         content = new LinearLayout(context);
         content.setOrientation(LinearLayout.VERTICAL);
-        // Keep enough breathing room for text while reserving a smaller right
-        // gutter. The oversized watermark may crop at the card edge by design.
-        content.setPadding(dp(15), dp(10), dp(88), dp(10));
+        // Device Info uses a compact 16dp card inset. Keep the same visual
+        // rhythm here while reserving only a modest right gutter for the glyph.
+        content.setPadding(dp(16), dp(10), dp(76), dp(10));
         addView(content, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
         state = text(14, true);
@@ -43,17 +45,39 @@ public class RuntimeStatusView extends FrameLayout {
 
         manager = text(10, true);
         manager.setLineSpacing(0f, 1.05f);
-        content.addView(manager, margin(-1, -2, 0, 0, 0, 7));
+        content.addView(manager, margin(-1, -2, 0, 0, 0, 6));
 
         action = text(12, true);
         action.setGravity(Gravity.CENTER);
         action.setPadding(dp(10), 0, dp(10), 0);
-        action.setMinHeight(dp(44));
+        action.setMinHeight(dp(40));
         action.setMaxLines(1);
         action.setEllipsize(android.text.TextUtils.TruncateAt.END);
         action.setVisibility(View.GONE);
-        content.addView(action, margin(-1, dp(44), 0, 0, 0, 0));
+        content.addView(action, margin(-1, dp(40), 0, 0, 0, 0));
         refresh();
+    }
+
+    @Override protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        // Let FrameLayout size itself from the real content. The watermark is
+        // deliberately measured afterwards so its oversized bounds cannot
+        // make the card taller.
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        int size = dp(WATERMARK_SIZE_DP);
+        int exact = MeasureSpec.makeMeasureSpec(size, MeasureSpec.EXACTLY);
+        watermark.measure(exact, exact);
+    }
+
+    @Override protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+        int width = watermark.getMeasuredWidth();
+        int height = watermark.getMeasuredHeight();
+        // Push the oversized glyph toward the right edge. The parent clips its
+        // excess, giving every state the same intentional edge-cropped look.
+        int watermarkLeft = getWidth() - dp(88);
+        int watermarkTop = (getHeight() - height) / 2;
+        watermark.layout(watermarkLeft, watermarkTop,
+                watermarkLeft + width, watermarkTop + height);
     }
 
     @Override protected void onAttachedToWindow() { super.onAttachedToWindow(); refresh(); }
