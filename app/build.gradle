@@ -3,7 +3,18 @@ plugins {
 }
 
 def appName = 'GhostLock'
-def appVersionName = '2.1.2'
+def branchName = System.getenv('GITHUB_REF_NAME')
+if (!branchName) {
+    try {
+        def proc = ['git', 'rev-parse', '--abbrev-ref', 'HEAD'].execute(null, project.projectDir)
+        proc.waitFor()
+        branchName = proc.text.trim()
+    } catch (Exception e) {
+        branchName = 'dev'
+    }
+}
+def appVersionName = branchName.replaceFirst(/^ghostlock-v/, '')
+
 
 def signingProps = new Properties()
 def signingPropsFile = rootProject.file('local.properties')
