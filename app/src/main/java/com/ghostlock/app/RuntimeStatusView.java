@@ -1,5 +1,7 @@
 package com.ghostlock.app;
 
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Matrix;
 import android.graphics.drawable.Drawable;
@@ -7,6 +9,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -17,6 +20,7 @@ import androidx.core.content.ContextCompat;
 public class RuntimeStatusView extends FrameLayout {
     private final TextView state, message, manager, action;
     private final LinearLayout content;
+    private ObjectAnimator watermarkBreath;
 
     public RuntimeStatusView(Context context) { this(context, null); }
     public RuntimeStatusView(Context context, android.util.AttributeSet attrs) {
@@ -30,7 +34,8 @@ public class RuntimeStatusView extends FrameLayout {
         refresh();
     }
     @Override protected void onAttachedToWindow() { super.onAttachedToWindow(); refresh(); }
-    @Override public void onWindowFocusChanged(boolean hasFocus) { super.onWindowFocusChanged(hasFocus); if (hasFocus) post(this::refresh); }
+    @Override protected void onDetachedFromWindow() { stopWatermarkBreath(); super.onDetachedFromWindow(); }
+    @Override public void onWindowFocusChanged(boolean hasFocus) { super.onWindowFocusChanged(hasFocus); if (hasFocus) post(this::refresh); else stopWatermarkBreath(); }
 
     public void refresh() {
         ManagerCompatibility.Result result = ManagerCompatibility.evaluate(getContext());
@@ -64,10 +69,30 @@ public class RuntimeStatusView extends FrameLayout {
         if (!(getParent() instanceof View)) return;
         ImageView watermark = ((View) getParent()).findViewById(R.id.managerWatermark);
         if (watermark == null) return;
+        stopWatermarkBreath();
         watermark.setImageResource(icon); watermark.setColorFilter(color, android.graphics.PorterDuff.Mode.SRC_IN);
         FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) watermark.getLayoutParams(); lp.width = LayoutParams.MATCH_PARENT; lp.height = LayoutParams.MATCH_PARENT; lp.gravity = Gravity.TOP | Gravity.END; lp.setMargins(0, 0, 0, 0); watermark.setLayoutParams(lp);
-        watermark.setScaleType(ImageView.ScaleType.MATRIX); watermark.setTranslationX(0); watermark.setTranslationY(0); watermark.setAlpha(0.042f); watermark.setClickable(false); watermark.setFocusable(false);
-        watermark.post(() -> positionWatermark(watermark));
+        watermark.setScaleType(ImageView.ScaleType.MATRIX); watermark.setTranslationX(0); watermark.setTranslationY(0); watermark.setAlpha(0.026f); watermark.setClickable(false); watermark.setFocusable(false);
+        watermark.post(() -> { positionWatermark(watermark); startWatermarkBreath(watermark); });
+    }
+
+    private void startWatermarkBreath(ImageView watermark) {
+        if (!isAttachedToWindow() || !hasWindowFocus()) return;
+        watermarkBreath = ObjectAnimator.ofFloat(watermark, View.ALPHA, 0.026f, 0.052f);
+        watermarkBreath.setDuration(1900L);
+        watermarkBreath.setStartDelay(500L);
+        watermarkBreath.setInterpolator(new AccelerateDecelerateInterpolator());
+        watermarkBreath.setRepeatMode(ValueAnimator.REVERSE);
+        watermarkBreath.setRepeatCount(ValueAnimator.INFINITE);
+        watermarkBreath.start();
+    }
+
+    private void stopWatermarkBreath() {
+        if (watermarkBreath != null) { watermarkBreath.cancel(); watermarkBreath = null; }
+        if (getParent() instanceof View) {
+            ImageView watermark = ((View) getParent()).findViewById(R.id.managerWatermark);
+            if (watermark != null) watermark.setAlpha(0.026f);
+        }
     }
 
     private void positionWatermark(ImageView watermark) {
