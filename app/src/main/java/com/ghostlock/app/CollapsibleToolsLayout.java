@@ -53,7 +53,7 @@ public class CollapsibleToolsLayout extends LinearLayout {
         close.setIconSize(dp(14));
         close.setIconPadding(0);
         close.setIconTint(ColorStateList.valueOf(color(R.color.text_secondary)));
-        close.setInsetTop(0); close.setInsetBottom(0); close.setInsetLeft(0); close.setInsetRight(0);
+        close.setInsetTop(0); close.setInsetBottom(0);
         close.setMinWidth(0); close.setMinHeight(0); close.setPadding(0, 0, 0, 0);
         close.setCornerRadius(dp(18));
         close.setBackgroundTintList(ColorStateList.valueOf(color(R.color.surface_container_low)));
