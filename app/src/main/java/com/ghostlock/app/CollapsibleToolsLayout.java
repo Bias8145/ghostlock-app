@@ -3,9 +3,9 @@ package com.ghostlock.app;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.res.ColorStateList;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.RippleDrawable;
-import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
@@ -45,7 +45,7 @@ public class CollapsibleToolsLayout extends LinearLayout {
         final Dialog dialog = new Dialog(getContext()); toolsDialog = dialog;
         LinearLayout panel = new LinearLayout(getContext()); panel.setOrientation(VERTICAL); panel.setPadding(dp(20), dp(12), dp(20), dp(16)); panel.setBackground(round(color(R.color.surface_container), 26));
         LinearLayout handleRow = new LinearLayout(getContext()); handleRow.setGravity(Gravity.CENTER); TextView handle = new TextView(getContext()); handle.setText("—"); handle.setTextColor(color(R.color.text_secondary)); handle.setTextSize(18); handle.setGravity(Gravity.CENTER); handleRow.addView(handle, new LinearLayout.LayoutParams(dp(48), dp(24))); panel.addView(handleRow, new LinearLayout.LayoutParams(-1, dp(28)));
-        LinearLayout titleRow = new LinearLayout(getContext()); titleRow.setGravity(Gravity.CENTER_VERTICAL); TextView title = new TextView(getContext()); title.setText("Tools"); title.setTextColor(color(R.color.text_primary)); title.setTextSize(20); title.setTypeface(null, android.graphics.Typeface.BOLD); titleRow.addView(title, new LinearLayout.LayoutParams(0, dp(48), 1f);
+        LinearLayout titleRow = new LinearLayout(getContext()); titleRow.setGravity(Gravity.CENTER_VERTICAL); TextView title = new TextView(getContext()); title.setText("Tools"); title.setTextColor(color(R.color.text_primary)); title.setTextSize(20); title.setTypeface(null, android.graphics.Typeface.BOLD); titleRow.addView(title, new LinearLayout.LayoutParams(0, dp(48), 1f));
 
         FrameLayout closeSlot = new FrameLayout(getContext());
         ImageButton close = new ImageButton(getContext());
