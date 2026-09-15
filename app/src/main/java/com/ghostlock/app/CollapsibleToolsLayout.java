@@ -74,11 +74,14 @@ public class CollapsibleToolsLayout extends LinearLayout {
     private RippleDrawable createCloseBackground() {
         GradientDrawable normal = new GradientDrawable();
         normal.setShape(GradientDrawable.OVAL);
-        normal.setColor(color(R.color.surface_container_low));
+        normal.setColor(android.graphics.Color.TRANSPARENT);
+        GradientDrawable mask = new GradientDrawable();
+        mask.setShape(GradientDrawable.OVAL);
+        mask.setColor(android.graphics.Color.WHITE);
         return new RippleDrawable(
                 ColorStateList.valueOf(color(R.color.border)),
                 normal,
-                null
+                mask
         );
     }
 
