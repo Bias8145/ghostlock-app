@@ -61,7 +61,7 @@ public class CollapsibleToolsLayout extends LinearLayout {
         close.setFocusable(true);
         close.setClickable(true);
 
-        FrameLayout.LayoutParams closeParams = new FrameLayout.LayoutParams(dp(40), dp(40), Gravity.CENTER);
+        FrameLayout.LayoutParams closeParams = new FrameLayout.LayoutParams(dp(32), dp(32), Gravity.CENTER);
         closeSlot.addView(close, closeParams);
         titleRow.addView(closeSlot, new LinearLayout.LayoutParams(dp(48), dp(48)));
         panel.addView(titleRow, new LinearLayout.LayoutParams(-1, dp(48)));
