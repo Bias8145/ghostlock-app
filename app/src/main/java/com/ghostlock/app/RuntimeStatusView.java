@@ -1,6 +1,8 @@
 package com.ghostlock.app;
 
 import android.content.Context;
+import android.graphics.Matrix;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.view.Gravity;
 import android.view.View;
@@ -63,7 +65,26 @@ public class RuntimeStatusView extends FrameLayout {
         ImageView watermark = ((View) getParent()).findViewById(R.id.managerWatermark);
         if (watermark == null) return;
         watermark.setImageResource(icon); watermark.setColorFilter(color, android.graphics.PorterDuff.Mode.SRC_IN);
-        FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) watermark.getLayoutParams(); lp.width = LayoutParams.MATCH_PARENT; lp.height = LayoutParams.MATCH_PARENT; lp.gravity = Gravity.END | Gravity.BOTTOM; lp.setMargins(0, 0, 0, 0); watermark.setLayoutParams(lp); watermark.setScaleType(ImageView.ScaleType.FIT_END); watermark.setTranslationX(-dp(30)); watermark.setTranslationY(0); watermark.setAlpha(0.055f); watermark.setClickable(false); watermark.setFocusable(false);
+        FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) watermark.getLayoutParams(); lp.width = LayoutParams.MATCH_PARENT; lp.height = LayoutParams.MATCH_PARENT; lp.gravity = Gravity.END | Gravity.BOTTOM; lp.setMargins(0, 0, 0, 0); watermark.setLayoutParams(lp);
+        watermark.setScaleType(ImageView.ScaleType.MATRIX); watermark.setTranslationX(0); watermark.setTranslationY(0); watermark.setAlpha(0.055f); watermark.setClickable(false); watermark.setFocusable(false);
+        watermark.post(() -> positionWatermark(watermark));
+    }
+
+    private void positionWatermark(ImageView watermark) {
+        Drawable drawable = watermark.getDrawable();
+        if (drawable == null || watermark.getWidth() <= 0 || watermark.getHeight() <= 0) return;
+        float targetSize = dp(210);
+        float intrinsicWidth = Math.max(1, drawable.getIntrinsicWidth());
+        float intrinsicHeight = Math.max(1, drawable.getIntrinsicHeight());
+        float scale = targetSize / Math.max(intrinsicWidth, intrinsicHeight);
+        float visualWidth = intrinsicWidth * scale;
+        float visualHeight = intrinsicHeight * scale;
+        float centerX = watermark.getWidth() - dp(55);
+        float centerY = watermark.getHeight() - dp(40);
+        Matrix matrix = new Matrix();
+        matrix.setScale(scale, scale);
+        matrix.postTranslate(centerX - visualWidth / 2f, centerY - visualHeight / 2f);
+        watermark.setImageMatrix(matrix);
     }
 
     private void showManagerPicker() {
