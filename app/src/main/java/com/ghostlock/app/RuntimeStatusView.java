@@ -20,23 +20,18 @@ public class RuntimeStatusView extends FrameLayout {
     public RuntimeStatusView(Context context, android.util.AttributeSet attrs) {
         super(context, attrs);
         setBackground(null);
-
         content = new LinearLayout(context);
         content.setOrientation(LinearLayout.VERTICAL);
         content.setPadding(dp(16), dp(10), dp(16), dp(10));
         addView(content, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
-
         state = text(14, true);
         content.addView(state, margin(-1, -2, 0, 0, 0, 3));
-
         message = text(11, false);
         message.setLineSpacing(0f, 1.08f);
         content.addView(message, margin(-1, -2, 0, 0, 0, 4));
-
         manager = text(10, true);
         manager.setLineSpacing(0f, 1.05f);
         content.addView(manager, margin(-1, -2, 0, 0, 0, 6));
-
         action = text(12, true);
         action.setGravity(Gravity.CENTER);
         action.setPadding(dp(10), 0, dp(10), 0);
@@ -45,7 +40,6 @@ public class RuntimeStatusView extends FrameLayout {
         action.setEllipsize(android.text.TextUtils.TruncateAt.END);
         action.setVisibility(View.GONE);
         content.addView(action, margin(-1, dp(40), 0, 0, 0, 0));
-
         refresh();
     }
 
@@ -56,6 +50,7 @@ public class RuntimeStatusView extends FrameLayout {
         ManagerCompatibility.Result result = ManagerCompatibility.evaluate(getContext());
         boolean showInstall = false;
         int watermarkColor = ContextCompat.getColor(getContext(), R.color.text_secondary);
+        int watermarkIcon = R.drawable.ic_manager_status;
         switch (result.state) {
             case READY:
                 state.setText("READY");
@@ -63,6 +58,7 @@ public class RuntimeStatusView extends FrameLayout {
                 message.setText("Compatible manager detected and verified");
                 setSurface(R.color.status_success_bg);
                 watermarkColor = ContextCompat.getColor(getContext(), R.color.status_success);
+                watermarkIcon = R.drawable.ic_install_circle_check;
                 break;
             case MANAGER_REQUIRED:
                 state.setText("MANAGER REQUIRED");
@@ -71,6 +67,7 @@ public class RuntimeStatusView extends FrameLayout {
                 setSurface(R.color.accent_container);
                 showInstall = true;
                 watermarkColor = ContextCompat.getColor(getContext(), R.color.accent);
+                watermarkIcon = R.drawable.ic_install_box_open;
                 break;
             case KERNEL_UNSUPPORTED_MANAGER_REQUIRED:
                 state.setText("MANAGER NOT INSTALLED");
@@ -79,27 +76,25 @@ public class RuntimeStatusView extends FrameLayout {
                 setSurface(R.color.accent_container);
                 showInstall = true;
                 watermarkColor = ContextCompat.getColor(getContext(), R.color.accent);
+                watermarkIcon = R.drawable.ic_install_box_open;
                 break;
             case KERNEL_UNSUPPORTED:
-                state.setText("KERNEL UNSUPPORTED");
-                state.setTextColor(ContextCompat.getColor(getContext(), R.color.status_error));
-                message.setText("The current kernel is not supported by GhostLock");
-                setSurface(R.color.status_error_bg);
-                watermarkColor = ContextCompat.getColor(getContext(), R.color.status_error);
-                break;
             case SPOOFED_MANAGER:
-                state.setText("IDENTITY MISMATCH");
-                state.setTextColor(ContextCompat.getColor(getContext(), R.color.status_error));
-                message.setText("The detected manager identity could not be verified");
-                setSurface(R.color.status_error_bg);
-                watermarkColor = ContextCompat.getColor(getContext(), R.color.status_error);
-                break;
             case UNSUPPORTED_MANAGER:
-                state.setText("UNSUPPORTED MANAGER");
+                if (result.state == ManagerCompatibility.State.KERNEL_UNSUPPORTED) {
+                    state.setText("KERNEL UNSUPPORTED");
+                    message.setText("The current kernel is not supported by GhostLock");
+                } else if (result.state == ManagerCompatibility.State.SPOOFED_MANAGER) {
+                    state.setText("IDENTITY MISMATCH");
+                    message.setText("The detected manager identity could not be verified");
+                } else {
+                    state.setText("UNSUPPORTED MANAGER");
+                    message.setText("The installed manager is not registered with GhostLock");
+                }
                 state.setTextColor(ContextCompat.getColor(getContext(), R.color.status_error));
-                message.setText("The installed manager is not registered with GhostLock");
                 setSurface(R.color.status_error_bg);
                 watermarkColor = ContextCompat.getColor(getContext(), R.color.status_error);
+                watermarkIcon = R.drawable.ic_install_shield;
                 break;
             default:
                 state.setText("MANAGER STATUS UNAVAILABLE");
@@ -108,7 +103,7 @@ public class RuntimeStatusView extends FrameLayout {
                 setSurface(R.color.surface_container);
                 break;
         }
-        updateWatermark(watermarkColor);
+        updateWatermark(watermarkColor, watermarkIcon);
 
         String managerText = !result.manager.installed ? "Manager  ·  Not installed" : result.manager.spoofed ? "Manager  ·  " + result.manager.name + "  ·  Identity mismatch" : result.manager.identityVerified ? "Manager  ·  " + result.manager.name + "  ·  Verified" : "Manager  ·  " + result.manager.name + "  ·  Recognized";
         manager.setText(managerText);
@@ -119,16 +114,26 @@ public class RuntimeStatusView extends FrameLayout {
             action.setTextColor(ContextCompat.getColor(getContext(), R.color.on_accent));
             action.setBackground(round(ContextCompat.getColor(getContext(), R.color.accent), 16));
             action.setOnClickListener(v -> showManagerPicker());
-        } else {
-            action.setOnClickListener(null);
-        }
+        } else action.setOnClickListener(null);
     }
 
-    private void updateWatermark(int color) {
+    private void updateWatermark(int color, int icon) {
         if (!(getParent() instanceof View)) return;
         View parent = (View) getParent();
         ImageView watermark = parent.findViewById(R.id.managerWatermark);
-        if (watermark != null) watermark.setColorFilter(color, android.graphics.PorterDuff.Mode.SRC_IN);
+        if (watermark == null) return;
+        watermark.setImageResource(icon);
+        watermark.setColorFilter(color, android.graphics.PorterDuff.Mode.SRC_IN);
+        FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) watermark.getLayoutParams();
+        lp.width = LayoutParams.MATCH_PARENT;
+        lp.height = LayoutParams.MATCH_PARENT;
+        lp.gravity = Gravity.END | Gravity.BOTTOM;
+        lp.setMargins(0, 0, 0, 0);
+        watermark.setLayoutParams(lp);
+        watermark.setScaleType(ImageView.ScaleType.FIT_END);
+        watermark.setAlpha(0.055f);
+        watermark.setClickable(false);
+        watermark.setFocusable(false);
     }
 
     private void showManagerPicker() {
@@ -160,12 +165,6 @@ public class RuntimeStatusView extends FrameLayout {
     private TextView text(int size, boolean bold) { TextView v = new TextView(getContext()); v.setTextSize(size); v.setTextColor(ContextCompat.getColor(getContext(), R.color.text_primary)); if (bold) v.setTypeface(null, android.graphics.Typeface.BOLD); return v; }
     private LinearLayout.LayoutParams margin(int w, int h, int l, int t, int r, int b) { LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(w, h); p.setMargins(dp(l), dp(t), dp(r), dp(b)); return p; }
     private GradientDrawable round(int color, int radius) { GradientDrawable d = new GradientDrawable(); d.setColor(color); d.setCornerRadius(dp(radius)); return d; }
-    private void setSurface(int colorRes) {
-        GradientDrawable surface = round(ContextCompat.getColor(getContext(), colorRes), 22);
-        if (getParent() instanceof View) {
-            View parent = (View) getParent();
-            parent.setBackground(surface);
-        }
-    }
+    private void setSurface(int colorRes) { GradientDrawable surface = round(ContextCompat.getColor(getContext(), colorRes), 22); if (getParent() instanceof View) ((View) getParent()).setBackground(surface); }
     private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
 }
