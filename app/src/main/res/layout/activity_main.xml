@@ -105,7 +105,6 @@
                         android:layout_height="48dp"
                         android:layout_marginStart="2dp"
                         android:background="?attr/selectableItemBackgroundBorderless"
-                        android:contentDescription="@string/action_theme_toggle"
                         android:padding="10dp" />
                 </LinearLayout>
             </LinearLayout>
@@ -123,17 +122,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
-                <ImageView
-                    android:id="@+id/managerWatermark"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="top|end"
-                    android:alpha="0.042"
-                    android:clickable="false"
-                    android:contentDescription="@null"
-                    android:importantForAccessibility="no"
-                    android:src="@drawable/ic_manager_status_unknown"
-                    android:tint="@color/text_secondary" />
             </FrameLayout>
 
             <com.google.android.material.card.MaterialCardView
