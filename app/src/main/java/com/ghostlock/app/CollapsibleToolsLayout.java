@@ -2,15 +2,19 @@ package com.ghostlock.app;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.graphics.drawable.GradientDrawable;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.core.content.ContextCompat;
+
+import com.google.android.material.button.MaterialButton;
 
 /**
  * Tools trigger that presents the existing utility controls in a floating
@@ -41,7 +45,25 @@ public class CollapsibleToolsLayout extends LinearLayout {
         LinearLayout panel = new LinearLayout(getContext()); panel.setOrientation(VERTICAL); panel.setPadding(dp(20), dp(12), dp(20), dp(16)); panel.setBackground(round(color(R.color.surface_container), 26));
         LinearLayout handleRow = new LinearLayout(getContext()); handleRow.setGravity(Gravity.CENTER); TextView handle = new TextView(getContext()); handle.setText("—"); handle.setTextColor(color(R.color.text_secondary)); handle.setTextSize(18); handle.setGravity(Gravity.CENTER); handleRow.addView(handle, new LinearLayout.LayoutParams(dp(48), dp(24))); panel.addView(handleRow, new LinearLayout.LayoutParams(-1, dp(28)));
         LinearLayout titleRow = new LinearLayout(getContext()); titleRow.setGravity(Gravity.CENTER_VERTICAL); TextView title = new TextView(getContext()); title.setText("Tools"); title.setTextColor(color(R.color.text_primary)); title.setTextSize(20); title.setTypeface(null, android.graphics.Typeface.BOLD); titleRow.addView(title, new LinearLayout.LayoutParams(0, dp(48), 1f));
-        TextView close = new TextView(getContext()); close.setText("×"); close.setTextColor(color(R.color.text_secondary)); close.setTextSize(28); close.setGravity(Gravity.CENTER); close.setClickable(true); close.setFocusable(true); close.setContentDescription("Close tools"); titleRow.addView(close, new LinearLayout.LayoutParams(dp(48), dp(48))); panel.addView(titleRow, new LinearLayout.LayoutParams(-1, dp(48)));
+
+        FrameLayout closeSlot = new FrameLayout(getContext());
+        MaterialButton close = new MaterialButton(getContext());
+        close.setText("");
+        close.setIcon(ContextCompat.getDrawable(getContext(), R.drawable.ic_close));
+        close.setIconSize(dp(14));
+        close.setIconPadding(0);
+        close.setIconTint(ColorStateList.valueOf(color(R.color.text_secondary)));
+        close.setInsetTop(0); close.setInsetBottom(0); close.setInsetLeft(0); close.setInsetRight(0);
+        close.setMinWidth(0); close.setMinHeight(0); close.setPadding(0, 0, 0, 0);
+        close.setCornerRadius(dp(18));
+        close.setBackgroundTintList(ColorStateList.valueOf(color(R.color.surface_container_low)));
+        close.setRippleColor(ColorStateList.valueOf(color(R.color.border)));
+        close.setContentDescription("Close tools");
+        FrameLayout.LayoutParams closeParams = new FrameLayout.LayoutParams(dp(36), dp(36), Gravity.CENTER);
+        closeSlot.addView(close, closeParams);
+        titleRow.addView(closeSlot, new LinearLayout.LayoutParams(dp(48), dp(48)));
+        panel.addView(titleRow, new LinearLayout.LayoutParams(-1, dp(48)));
+
         TextView subtitle = new TextView(getContext()); subtitle.setText("Utility actions for offsets and kernel images"); subtitle.setTextColor(color(R.color.text_secondary)); subtitle.setTextSize(12); panel.addView(subtitle, margin(-1, -2, 0, 0, 0, 14));
         contentParent.removeView(content); content.setVisibility(VISIBLE); panel.addView(content, new LinearLayout.LayoutParams(-1, -2));
         close.setOnClickListener(v -> dialog.dismiss()); dialog.setOnDismissListener(d -> { GhostLockModal.clear(dialog); restoreContent(dialog, panel); }); dialog.setContentView(panel); dialog.setOnShowListener(d -> configureWindow(dialog)); dialog.show(); configureWindow(dialog);
