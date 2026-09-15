@@ -1,6 +1,5 @@
 package com.ghostlock.app;
 
-import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Matrix;
@@ -20,7 +19,7 @@ import androidx.core.content.ContextCompat;
 public class RuntimeStatusView extends FrameLayout {
     private final TextView state, message, manager, action;
     private final LinearLayout content;
-    private ObjectAnimator watermarkBreath;
+    private ValueAnimator watermarkBreathing;
 
     public RuntimeStatusView(Context context) { this(context, null); }
     public RuntimeStatusView(Context context, android.util.AttributeSet attrs) {
@@ -34,8 +33,8 @@ public class RuntimeStatusView extends FrameLayout {
         refresh();
     }
     @Override protected void onAttachedToWindow() { super.onAttachedToWindow(); refresh(); }
-    @Override protected void onDetachedFromWindow() { stopWatermarkBreath(); super.onDetachedFromWindow(); }
-    @Override public void onWindowFocusChanged(boolean hasFocus) { super.onWindowFocusChanged(hasFocus); if (hasFocus) post(this::refresh); else stopWatermarkBreath(); }
+    @Override protected void onDetachedFromWindow() { stopWatermarkBreathing(); super.onDetachedFromWindow(); }
+    @Override public void onWindowFocusChanged(boolean hasFocus) { super.onWindowFocusChanged(hasFocus); if (hasFocus) { post(this::refresh); } else stopWatermarkBreathing(); }
 
     public void refresh() {
         ManagerCompatibility.Result result = ManagerCompatibility.evaluate(getContext());
@@ -69,47 +68,42 @@ public class RuntimeStatusView extends FrameLayout {
         if (!(getParent() instanceof View)) return;
         ImageView watermark = ((View) getParent()).findViewById(R.id.managerWatermark);
         if (watermark == null) return;
-        stopWatermarkBreath();
         watermark.setImageResource(icon); watermark.setColorFilter(color, android.graphics.PorterDuff.Mode.SRC_IN);
         FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) watermark.getLayoutParams(); lp.width = LayoutParams.MATCH_PARENT; lp.height = LayoutParams.MATCH_PARENT; lp.gravity = Gravity.TOP | Gravity.END; lp.setMargins(0, 0, 0, 0); watermark.setLayoutParams(lp);
         watermark.setScaleType(ImageView.ScaleType.MATRIX); watermark.setTranslationX(0); watermark.setTranslationY(0); watermark.setAlpha(0.026f); watermark.setClickable(false); watermark.setFocusable(false);
-        watermark.post(() -> { positionWatermark(watermark); startWatermarkBreath(watermark); });
-    }
-
-    private void startWatermarkBreath(ImageView watermark) {
-        if (!isAttachedToWindow() || !hasWindowFocus()) return;
-        watermarkBreath = ObjectAnimator.ofFloat(watermark, View.ALPHA, 0.026f, 0.052f);
-        watermarkBreath.setDuration(1900L);
-        watermarkBreath.setStartDelay(500L);
-        watermarkBreath.setInterpolator(new AccelerateDecelerateInterpolator());
-        watermarkBreath.setRepeatMode(ValueAnimator.REVERSE);
-        watermarkBreath.setRepeatCount(ValueAnimator.INFINITE);
-        watermarkBreath.start();
-    }
-
-    private void stopWatermarkBreath() {
-        if (watermarkBreath != null) { watermarkBreath.cancel(); watermarkBreath = null; }
-        if (getParent() instanceof View) {
-            ImageView watermark = ((View) getParent()).findViewById(R.id.managerWatermark);
-            if (watermark != null) watermark.setAlpha(0.026f);
-        }
+        watermark.post(() -> { positionWatermark(watermark); startWatermarkBreathing(watermark); });
     }
 
     private void positionWatermark(ImageView watermark) {
         Drawable drawable = watermark.getDrawable();
         if (drawable == null || watermark.getWidth() <= 0 || watermark.getHeight() <= 0) return;
-        float targetSize = dp(52);
+        float targetSize = dp(38);
         float intrinsicWidth = Math.max(1, drawable.getIntrinsicWidth());
         float intrinsicHeight = Math.max(1, drawable.getIntrinsicHeight());
         float scale = targetSize / Math.max(intrinsicWidth, intrinsicHeight);
         float visualWidth = intrinsicWidth * scale;
         float visualHeight = intrinsicHeight * scale;
-        float centerX = watermark.getWidth() - dp(28);
-        float centerY = dp(29);
+        float centerX = watermark.getWidth() - dp(26);
+        float centerY = dp(25);
         Matrix matrix = new Matrix();
         matrix.setScale(scale, scale);
         matrix.postTranslate(centerX - visualWidth / 2f, centerY - visualHeight / 2f);
         watermark.setImageMatrix(matrix);
+    }
+
+    private void startWatermarkBreathing(ImageView watermark) {
+        stopWatermarkBreathing();
+        watermarkBreathing = ValueAnimator.ofFloat(0.026f, 0.046f, 0.026f);
+        watermarkBreathing.setDuration(3600L);
+        watermarkBreathing.setStartDelay(450L);
+        watermarkBreathing.setInterpolator(new AccelerateDecelerateInterpolator());
+        watermarkBreathing.setRepeatCount(ValueAnimator.INFINITE);
+        watermarkBreathing.addUpdateListener(animation -> watermark.setAlpha((Float) animation.getAnimatedValue()));
+        watermarkBreathing.start();
+    }
+
+    private void stopWatermarkBreathing() {
+        if (watermarkBreathing != null) { watermarkBreathing.cancel(); watermarkBreathing = null; }
     }
 
     private void showManagerPicker() {
