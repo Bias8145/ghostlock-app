@@ -19,6 +19,7 @@ public class RuntimeStatusView extends FrameLayout {
 
     public RuntimeStatusView(Context context, android.util.AttributeSet attrs) {
         super(context, attrs);
+        setBackground(null);
 
         content = new LinearLayout(context);
         content.setOrientation(LinearLayout.VERTICAL);
@@ -159,6 +160,12 @@ public class RuntimeStatusView extends FrameLayout {
     private TextView text(int size, boolean bold) { TextView v = new TextView(getContext()); v.setTextSize(size); v.setTextColor(ContextCompat.getColor(getContext(), R.color.text_primary)); if (bold) v.setTypeface(null, android.graphics.Typeface.BOLD); return v; }
     private LinearLayout.LayoutParams margin(int w, int h, int l, int t, int r, int b) { LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(w, h); p.setMargins(dp(l), dp(t), dp(r), dp(b)); return p; }
     private GradientDrawable round(int color, int radius) { GradientDrawable d = new GradientDrawable(); d.setColor(color); d.setCornerRadius(dp(radius)); return d; }
-    private void setSurface(int colorRes) { setBackground(round(ContextCompat.getColor(getContext(), colorRes), 22)); }
+    private void setSurface(int colorRes) {
+        GradientDrawable surface = round(ContextCompat.getColor(getContext(), colorRes), 22);
+        if (getParent() instanceof View) {
+            View parent = (View) getParent();
+            parent.setBackground(surface);
+        }
+    }
     private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
 }
