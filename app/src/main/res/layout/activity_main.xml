@@ -113,42 +113,43 @@
                 android:id="@+id/managerPanel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
+                android:layout_marginBottom="10dp"
                 android:clipChildren="true"
                 android:clipToPadding="true">
-
                 <com.ghostlock.app.RuntimeStatusView
                     android:id="@+id/runtimeStatus"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
-
             </FrameLayout>
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
+                android:layout_marginBottom="10dp"
                 app:cardBackgroundColor="@color/surface_container_low"
-                app:cardCornerRadius="20dp"
+                app:cardCornerRadius="18dp"
                 app:cardElevation="0dp"
                 app:strokeWidth="0dp">
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:paddingStart="14dp"
+                    android:paddingTop="12dp"
+                    android:paddingEnd="14dp"
+                    android:paddingBottom="12dp">
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="DEVICE INFO"
                         android:textColor="@color/text_secondary"
-                        android:textSize="11sp"
+                        android:textSize="10sp"
                         android:textStyle="bold" />
                     <com.ghostlock.app.KernelInfoView
                         android:id="@+id/deviceInfo"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="5dp"
                         android:maxLines="2"
                         android:textColor="@color/text_primary"
                         android:textSize="12sp" />
@@ -158,25 +159,27 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="20dp"
+                android:layout_marginBottom="14dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
                 <com.ghostlock.app.CollapsibleToolsLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1.7"
+                    android:layout_weight="1.55"
                     android:layout_marginEnd="8dp">
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="56dp"
+                        android:layout_height="54dp"
                         android:background="@drawable/bg_tool_header"
+                        android:clickable="true"
+                        android:focusable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
-                        android:paddingStart="14dp"
+                        android:paddingStart="12dp"
                         android:paddingEnd="6dp">
                         <ImageView
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
+                            android:layout_width="34dp"
+                            android:layout_height="34dp"
                             android:padding="8dp"
                             android:src="@drawable/ic_tools"
                             android:tint="@color/icon_tint" />
@@ -184,7 +187,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:layout_marginStart="7dp"
+                            android:layout_marginStart="6dp"
                             android:text="Tools"
                             android:textColor="@color/text_primary"
                             android:textSize="14sp"
@@ -247,12 +250,12 @@
                 <com.ghostlock.app.ConfirmRunButton
                     android:id="@+id/runButton"
                     android:layout_width="0dp"
-                    android:layout_height="56dp"
+                    android:layout_height="54dp"
                     android:layout_weight="0.8"
                     android:background="@drawable/bg_tool_header"
                     android:elevation="0dp"
                     android:gravity="center"
-                    android:minHeight="56dp"
+                    android:minHeight="54dp"
                     android:paddingStart="8dp"
                     android:paddingEnd="8dp"
                     android:text="▶  Run"
@@ -266,7 +269,7 @@
                 android:id="@+id/installationProgress"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp" />
+                android:layout_marginBottom="12dp" />
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/logPanel"
@@ -276,17 +279,17 @@
                 android:layout_marginBottom="8dp"
                 android:minHeight="0dp"
                 app:cardBackgroundColor="@color/log_bg"
-                app:cardCornerRadius="20dp"
+                app:cardCornerRadius="18dp"
                 app:cardElevation="0dp"
                 app:strokeWidth="0dp">
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:orientation="vertical"
-                    android:padding="12dp">
+                    android:padding="10dp">
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="56dp"
+                        android:layout_height="50dp"
                         android:gravity="center_vertical">
                         <TextView
                             android:layout_width="0dp"
@@ -336,7 +339,7 @@
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
-                        android:layout_marginBottom="12dp"
+                        android:layout_marginBottom="10dp"
                         android:background="@color/log_divider" />
                     <com.ghostlock.app.LogScrollView
                         android:id="@+id/logScroll"
@@ -344,10 +347,10 @@
                         android:layout_height="0dp"
                         android:layout_weight="1"
                         android:fillViewport="false"
-                        android:fadeScrollbars="false"
+                        android:fadeScrollbars="true"
                         android:overScrollMode="always"
                         android:paddingBottom="10dp"
-                        android:scrollbars="vertical"
+                        android:scrollbars="none"
                         android:clipToPadding="false">
                         <TextView
                             android:id="@+id/logView"
