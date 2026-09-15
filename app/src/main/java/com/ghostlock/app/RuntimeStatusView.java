@@ -73,13 +73,13 @@ public class RuntimeStatusView extends FrameLayout {
     private void positionWatermark(ImageView watermark) {
         Drawable drawable = watermark.getDrawable();
         if (drawable == null || watermark.getWidth() <= 0 || watermark.getHeight() <= 0) return;
-        float targetSize = dp(96);
+        float targetSize = dp(84);
         float intrinsicWidth = Math.max(1, drawable.getIntrinsicWidth());
         float intrinsicHeight = Math.max(1, drawable.getIntrinsicHeight());
         float scale = targetSize / Math.max(intrinsicWidth, intrinsicHeight);
         float visualWidth = intrinsicWidth * scale;
         float visualHeight = intrinsicHeight * scale;
-        float centerX = watermark.getWidth() - dp(78);
+        float centerX = watermark.getWidth() - dp(82);
         float centerY = watermark.getHeight() - dp(24);
         Matrix matrix = new Matrix();
         matrix.setScale(scale, scale);
