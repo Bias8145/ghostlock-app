@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.drawable.GradientDrawable;
 import android.view.Gravity;
 import android.view.View;
+import android.view.Window;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -66,10 +67,53 @@ public class RuntimeStatusView extends FrameLayout {
     }
 
     private void showManagerPicker() {
-        final java.util.List<ManagerCompatibility.ManagerInfo> managers = ManagerCompatibility.registeredManagers(getContext()); final android.app.Dialog dialog = new android.app.Dialog(getContext()); LinearLayout box = new LinearLayout(getContext()); box.setOrientation(LinearLayout.VERTICAL); box.setPadding(dp(20), dp(18), dp(20), dp(14)); box.setBackground(round(ContextCompat.getColor(getContext(), R.color.surface), 24));
-        TextView title = text(19, true); title.setText("Install supported manager"); box.addView(title); TextView subtitle = text(12, false); subtitle.setText("Select a registered manager to continue."); box.addView(subtitle, margin(-1, -2, 0, 5, 0, 10));
-        for (ManagerCompatibility.ManagerInfo info : managers) { TextView row = text(14, true); row.setText(info.name + (info.installed ? "  ·  Installed" : "  ·  Not installed")); row.setGravity(Gravity.CENTER_VERTICAL); row.setPadding(dp(14), 0, dp(14), 0); row.setBackground(round(ContextCompat.getColor(getContext(), R.color.surface_container_low), 15)); row.setClickable(true); row.setFocusable(true); row.setOnClickListener(v -> { dialog.dismiss(); ManagerCompatibility.openInstaller(getContext(), info); }); box.addView(row, margin(-1, 50, 0, 0, 0, 7)); }
-        TextView cancel = text(13, true); cancel.setText("Cancel"); cancel.setGravity(Gravity.CENTER); cancel.setTextColor(ContextCompat.getColor(getContext(), R.color.accent)); cancel.setOnClickListener(v -> dialog.dismiss()); box.addView(cancel, margin(-1, 44, 0, 3, 0, 0)); dialog.setContentView(box); GhostLockModal.apply(dialog, false); dialog.setOnDismissListener(d -> GhostLockModal.clear(dialog)); dialog.show();
+        final java.util.List<ManagerCompatibility.ManagerInfo> managers = ManagerCompatibility.registeredManagers(getContext());
+        final android.app.Dialog dialog = new android.app.Dialog(getContext());
+        LinearLayout box = new LinearLayout(getContext());
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(dp(24), dp(22), dp(24), dp(18));
+        box.setBackground(round(ContextCompat.getColor(getContext(), R.color.surface), 26));
+
+        TextView title = text(20, true);
+        title.setText("Install supported manager");
+        box.addView(title);
+
+        TextView subtitle = text(13, false);
+        subtitle.setText("Select a registered manager to continue.");
+        subtitle.setLineSpacing(0f, 1.08f);
+        box.addView(subtitle, margin(-1, -2, 0, 6, 0, 16));
+
+        for (ManagerCompatibility.ManagerInfo info : managers) {
+            TextView row = text(15, true);
+            row.setText(info.name + (info.installed ? "  ·  Installed" : "  ·  Not installed"));
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setPadding(dp(18), 0, dp(18), 0);
+            row.setMinHeight(dp(60));
+            row.setBackground(round(ContextCompat.getColor(getContext(), R.color.surface_container_low), 17));
+            row.setClickable(true);
+            row.setFocusable(true);
+            row.setOnClickListener(v -> { dialog.dismiss(); ManagerCompatibility.openInstaller(getContext(), info); });
+            box.addView(row, margin(-1, 60, 0, 0, 0, 10));
+        }
+
+        TextView cancel = text(14, true);
+        cancel.setText("Cancel");
+        cancel.setGravity(Gravity.CENTER);
+        cancel.setTextColor(ContextCompat.getColor(getContext(), R.color.accent));
+        cancel.setMinHeight(dp(48));
+        cancel.setOnClickListener(v -> dialog.dismiss());
+        box.addView(cancel, margin(-1, 48, 0, 5, 0, 0));
+
+        dialog.setContentView(box);
+        GhostLockModal.apply(dialog, false);
+        dialog.setOnDismissListener(d -> GhostLockModal.clear(dialog));
+        dialog.show();
+
+        Window window = dialog.getWindow();
+        if (window != null) {
+            int width = Math.min((int) (getResources().getDisplayMetrics().widthPixels * 0.88f), dp(390));
+            window.setLayout(width, android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
     }
     private TextView text(int size, boolean bold) { TextView v = new TextView(getContext()); v.setTextSize(size); v.setTextColor(ContextCompat.getColor(getContext(), R.color.text_primary)); if (bold) v.setTypeface(null, android.graphics.Typeface.BOLD); return v; }
     private LinearLayout.LayoutParams margin(int w, int h, int l, int t, int r, int b) { LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(w, h); p.setMargins(dp(l), dp(t), dp(r), dp(b)); return p; }
