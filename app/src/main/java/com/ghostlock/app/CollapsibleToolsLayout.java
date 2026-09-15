@@ -2,17 +2,12 @@ package com.ghostlock.app;
 
 import android.app.Dialog;
 import android.content.Context;
-import android.content.res.ColorStateList;
-import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
-import android.graphics.drawable.RippleDrawable;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.widget.FrameLayout;
-import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.core.content.ContextCompat;
@@ -45,44 +40,11 @@ public class CollapsibleToolsLayout extends LinearLayout {
         final Dialog dialog = new Dialog(getContext()); toolsDialog = dialog;
         LinearLayout panel = new LinearLayout(getContext()); panel.setOrientation(VERTICAL); panel.setPadding(dp(20), dp(12), dp(20), dp(16)); panel.setBackground(round(color(R.color.surface_container), 26));
         LinearLayout handleRow = new LinearLayout(getContext()); handleRow.setGravity(Gravity.CENTER); TextView handle = new TextView(getContext()); handle.setText("—"); handle.setTextColor(color(R.color.text_secondary)); handle.setTextSize(18); handle.setGravity(Gravity.CENTER); handleRow.addView(handle, new LinearLayout.LayoutParams(dp(48), dp(24))); panel.addView(handleRow, new LinearLayout.LayoutParams(-1, dp(28)));
-        LinearLayout titleRow = new LinearLayout(getContext()); titleRow.setGravity(Gravity.CENTER_VERTICAL); TextView title = new TextView(getContext()); title.setText("Tools"); title.setTextColor(color(R.color.text_primary)); title.setTextSize(20); title.setTypeface(null, android.graphics.Typeface.BOLD); titleRow.addView(title, new LinearLayout.LayoutParams(0, dp(48), 1f));
-
-        FrameLayout closeSlot = new FrameLayout(getContext());
-        ImageButton close = new ImageButton(getContext());
-        Drawable closeIcon = ContextCompat.getDrawable(getContext(), R.drawable.ic_close);
-        if (closeIcon != null) {
-            closeIcon.setTint(color(R.color.text_secondary));
-            close.setImageDrawable(closeIcon);
-        }
-        close.setScaleType(ImageButton.ScaleType.CENTER);
-        close.setPadding(0, 0, 0, 0);
-        close.setBackground(createCloseBackground());
-        close.setContentDescription("Close tools");
-        close.setFocusable(true);
-        close.setClickable(true);
-
-        FrameLayout.LayoutParams closeParams = new FrameLayout.LayoutParams(dp(32), dp(32), Gravity.CENTER);
-        closeSlot.addView(close, closeParams);
-        titleRow.addView(closeSlot, new LinearLayout.LayoutParams(dp(48), dp(48)));
-        panel.addView(titleRow, new LinearLayout.LayoutParams(-1, dp(48)));
+        LinearLayout titleRow = new LinearLayout(getContext()); titleRow.setGravity(Gravity.CENTER_VERTICAL); TextView title = new TextView(getContext()); title.setText("Tools"); title.setTextColor(color(R.color.text_primary)); title.setTextSize(20); title.setTypeface(null, android.graphics.Typeface.BOLD); titleRow.addView(title, new LinearLayout.LayoutParams(-1, dp(48))); panel.addView(titleRow, new LinearLayout.LayoutParams(-1, dp(48)));
 
         TextView subtitle = new TextView(getContext()); subtitle.setText("Utility actions for offsets and kernel images"); subtitle.setTextColor(color(R.color.text_secondary)); subtitle.setTextSize(12); panel.addView(subtitle, margin(-1, -2, 0, 0, 0, 14));
         contentParent.removeView(content); content.setVisibility(VISIBLE); panel.addView(content, new LinearLayout.LayoutParams(-1, -2));
-        close.setOnClickListener(v -> dialog.dismiss()); dialog.setOnDismissListener(d -> { GhostLockModal.clear(dialog); restoreContent(dialog, panel); }); dialog.setContentView(panel); dialog.setOnShowListener(d -> configureWindow(dialog)); dialog.show(); configureWindow(dialog);
-    }
-
-    private RippleDrawable createCloseBackground() {
-        GradientDrawable normal = new GradientDrawable();
-        normal.setShape(GradientDrawable.OVAL);
-        normal.setColor(android.graphics.Color.TRANSPARENT);
-        GradientDrawable mask = new GradientDrawable();
-        mask.setShape(GradientDrawable.OVAL);
-        mask.setColor(android.graphics.Color.WHITE);
-        return new RippleDrawable(
-                ColorStateList.valueOf(color(R.color.accent_pressed)),
-                normal,
-                mask
-        );
+        dialog.setOnDismissListener(d -> { GhostLockModal.clear(dialog); restoreContent(dialog, panel); }); dialog.setContentView(panel); dialog.setOnShowListener(d -> configureWindow(dialog)); dialog.show(); configureWindow(dialog);
     }
 
     private void configureWindow(Dialog dialog) {
