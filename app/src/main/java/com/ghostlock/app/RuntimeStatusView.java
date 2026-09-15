@@ -63,7 +63,7 @@ public class RuntimeStatusView extends FrameLayout {
         ImageView watermark = ((View) getParent()).findViewById(R.id.managerWatermark);
         if (watermark == null) return;
         watermark.setImageResource(icon); watermark.setColorFilter(color, android.graphics.PorterDuff.Mode.SRC_IN);
-        FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) watermark.getLayoutParams(); lp.width = LayoutParams.MATCH_PARENT; lp.height = LayoutParams.MATCH_PARENT; lp.gravity = Gravity.END | Gravity.BOTTOM; lp.setMargins(0, 0, 0, 0); watermark.setLayoutParams(lp); watermark.setScaleType(ImageView.ScaleType.FIT_END); watermark.setAlpha(0.055f); watermark.setClickable(false); watermark.setFocusable(false);
+        FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) watermark.getLayoutParams(); lp.width = LayoutParams.MATCH_PARENT; lp.height = LayoutParams.MATCH_PARENT; lp.gravity = Gravity.END | Gravity.BOTTOM; lp.setMargins(0, 0, 0, 0); watermark.setLayoutParams(lp); watermark.setScaleType(ImageView.ScaleType.FIT_END); watermark.setTranslationX(-dp(30)); watermark.setTranslationY(0); watermark.setAlpha(0.055f); watermark.setClickable(false); watermark.setFocusable(false);
     }
 
     private void showManagerPicker() {
