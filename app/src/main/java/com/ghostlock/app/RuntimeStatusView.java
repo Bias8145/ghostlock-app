@@ -13,6 +13,7 @@ import androidx.core.content.ContextCompat;
 public class RuntimeStatusView extends FrameLayout {
     private final TextView state, message, manager, action;
     private final LinearLayout content;
+    private final ManagerWatermarkView watermark;
 
     public RuntimeStatusView(Context context) { this(context, null); }
 
@@ -21,8 +22,6 @@ public class RuntimeStatusView extends FrameLayout {
 
         content = new LinearLayout(context);
         content.setOrientation(LinearLayout.VERTICAL);
-        // Keep the same compact inset as the Device Info card now that the
-        // decorative glyph has been removed.
         content.setPadding(dp(16), dp(10), dp(16), dp(10));
         addView(content, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
@@ -45,6 +44,11 @@ public class RuntimeStatusView extends FrameLayout {
         action.setEllipsize(android.text.TextUtils.TruncateAt.END);
         action.setVisibility(View.GONE);
         content.addView(action, margin(-1, dp(40), 0, 0, 0, 0));
+
+        // Decorative overlay only. It fills the existing card without changing
+        // its measured height, padding, typography, or content spacing.
+        watermark = new ManagerWatermarkView(context);
+        addView(watermark, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
         refresh();
     }
 
@@ -54,20 +58,69 @@ public class RuntimeStatusView extends FrameLayout {
     public void refresh() {
         ManagerCompatibility.Result result = ManagerCompatibility.evaluate(getContext());
         boolean showInstall = false;
+        int watermarkState = -1;
+        int watermarkColor = 0;
         switch (result.state) {
             case READY:
-                state.setText("READY"); state.setTextColor(ContextCompat.getColor(getContext(), R.color.status_success)); message.setText("Compatible manager detected and verified"); setSurface(R.color.status_success_bg); break;
+                state.setText("READY");
+                state.setTextColor(ContextCompat.getColor(getContext(), R.color.status_success));
+                message.setText("Compatible manager detected and verified");
+                setSurface(R.color.status_success_bg);
+                watermarkState = 0;
+                watermarkColor = ContextCompat.getColor(getContext(), R.color.status_success);
+                break;
             case MANAGER_REQUIRED:
-                state.setText("MANAGER REQUIRED"); state.setTextColor(ContextCompat.getColor(getContext(), R.color.accent)); message.setText("Install a registered manager before running GhostLock"); setSurface(R.color.accent_container); showInstall = true; break;
+                state.setText("MANAGER REQUIRED");
+                state.setTextColor(ContextCompat.getColor(getContext(), R.color.accent));
+                message.setText("Install a registered manager before running GhostLock");
+                setSurface(R.color.accent_container);
+                showInstall = true;
+                watermarkState = 1;
+                watermarkColor = ContextCompat.getColor(getContext(), R.color.accent);
+                break;
             case KERNEL_UNSUPPORTED_MANAGER_REQUIRED:
-                state.setText("MANAGER NOT INSTALLED"); state.setTextColor(ContextCompat.getColor(getContext(), R.color.accent)); message.setText("No registered manager is installed"); setSurface(R.color.accent_container); showInstall = true; break;
+                state.setText("MANAGER NOT INSTALLED");
+                state.setTextColor(ContextCompat.getColor(getContext(), R.color.accent));
+                message.setText("No registered manager is installed");
+                setSurface(R.color.accent_container);
+                showInstall = true;
+                watermarkState = 2;
+                watermarkColor = ContextCompat.getColor(getContext(), R.color.accent);
+                break;
+            case KERNEL_UNSUPPORTED:
+                state.setText("KERNEL UNSUPPORTED");
+                state.setTextColor(ContextCompat.getColor(getContext(), R.color.status_error));
+                message.setText("The current kernel is not supported by GhostLock");
+                setSurface(R.color.status_error_bg);
+                watermarkState = 3;
+                watermarkColor = ContextCompat.getColor(getContext(), R.color.status_error);
+                break;
             case SPOOFED_MANAGER:
-                state.setText("IDENTITY MISMATCH"); state.setTextColor(ContextCompat.getColor(getContext(), R.color.status_error)); message.setText("The detected manager identity could not be verified"); setSurface(R.color.status_error_bg); break;
+                state.setText("IDENTITY MISMATCH");
+                state.setTextColor(ContextCompat.getColor(getContext(), R.color.status_error));
+                message.setText("The detected manager identity could not be verified");
+                setSurface(R.color.status_error_bg);
+                watermarkState = 5;
+                watermarkColor = ContextCompat.getColor(getContext(), R.color.status_error);
+                break;
             case UNSUPPORTED_MANAGER:
-                state.setText("UNSUPPORTED MANAGER"); state.setTextColor(ContextCompat.getColor(getContext(), R.color.status_error)); message.setText("The installed manager is not registered with GhostLock"); setSurface(R.color.status_error_bg); break;
+                state.setText("UNSUPPORTED MANAGER");
+                state.setTextColor(ContextCompat.getColor(getContext(), R.color.status_error));
+                message.setText("The installed manager is not registered with GhostLock");
+                setSurface(R.color.status_error_bg);
+                watermarkState = 4;
+                watermarkColor = ContextCompat.getColor(getContext(), R.color.status_error);
+                break;
             default:
-                state.setText("MANAGER STATUS UNAVAILABLE"); state.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary)); message.setText("Manager information could not be determined"); setSurface(R.color.surface_container); break;
+                state.setText("MANAGER STATUS UNAVAILABLE");
+                state.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
+                message.setText("Manager information could not be determined");
+                setSurface(R.color.surface_container);
+                watermarkColor = ContextCompat.getColor(getContext(), R.color.text_secondary);
+                break;
         }
+        watermark.setState(watermarkState, watermarkColor);
+
         String managerText = !result.manager.installed ? "Manager  ·  Not installed" : result.manager.spoofed ? "Manager  ·  " + result.manager.name + "  ·  Identity mismatch" : result.manager.identityVerified ? "Manager  ·  " + result.manager.name + "  ·  Verified" : "Manager  ·  " + result.manager.name + "  ·  Recognized";
         manager.setText(managerText);
         manager.setTextColor(ContextCompat.getColor(getContext(), result.manager.spoofed ? R.color.status_error : result.manager.installed ? R.color.text_primary : R.color.accent));
