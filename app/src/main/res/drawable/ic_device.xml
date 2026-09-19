@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Font Awesome Free: mobile-screen-button (fa-mobile-screen-button), CC BY 4.0 -->
-<!-- https://fontawesome.com/icons/mobile-screen-button -->
+<!-- Font Awesome Free: mobile-screen (fa-mobile-screen), CC BY 4.0 -->
+<!-- https://fontawesome.com/icons/mobile-screen -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
-    android:viewportWidth="384"
+    android:viewportWidth="576"
     android:viewportHeight="512">
     <path
         android:fillColor="@android:color/white"
-        android:pathData="M16,64C16,28.7 44.7,0 80,0H304C339.3,0 368,28.7 368,64V448C368,483.3 339.3,512 304,512H80C44.7,512 16,483.3 16,448V64zM224,448c0,-17.7 -14.3,-32 -32,-32s-32,14.3 -32,32s14.3,32 32,32s32,-14.3 32,-32zM304,64H80V384H304V64z" />
+        android:pathData="M96,0C60.7,0 32,28.7 32,64V448c0,35.3 28.7,64 64,64H480c35.3,0 64,-28.7 64,-64V64c0,-35.3 -28.7,-64 -64,-64H96zM112,64H464c8.8,0 16,7.2 16,16V432c0,8.8 -7.2,16 -16,16H112c-8.8,0 -16,-7.2 -16,-16V80c0,-8.8 7.2,-16 16,-16zM288,480a32,32 0,1 0,0 -64,32 32,0 1 0,0 64z" />
 </vector>
