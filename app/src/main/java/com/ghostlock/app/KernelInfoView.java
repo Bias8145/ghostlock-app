@@ -93,6 +93,9 @@ public class KernelInfoView extends LinearLayout {
         String[] lines = value.split("\n", 2);
 
         deviceName = lines.length > 0 ? lines[0].trim() : "";
+        if (deviceName.regionMatches(true, 0, "Device:", 0, "Device:".length())) {
+            deviceName = deviceName.substring("Device:".length()).trim();
+        }
         kernelVersion = lines.length > 1 ? lines[1].replace("Kernel:", "").trim() : "";
 
         updateDisplay();
