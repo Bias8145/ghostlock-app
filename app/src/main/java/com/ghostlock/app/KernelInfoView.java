@@ -48,7 +48,9 @@ public class KernelInfoView extends LinearLayout {
         ImageView deviceIcon = new ImageView(getContext());
         deviceIcon.setImageResource(R.drawable.ic_device);
         deviceIcon.setColorFilter(ContextCompat.getColor(getContext(), R.color.icon_tint));
-        LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(dp(20), dp(20));
+        deviceIcon.setScaleX(0.92f);
+        deviceIcon.setScaleY(0.92f);
+        LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(dp(17), dp(17));
         iconParams.rightMargin = dp(8);
         header.addView(deviceIcon, iconParams);
 
