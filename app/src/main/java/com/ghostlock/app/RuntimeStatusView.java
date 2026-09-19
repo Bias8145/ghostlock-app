@@ -15,7 +15,6 @@ import androidx.core.content.ContextCompat;
 public class RuntimeStatusView extends FrameLayout {
     private final LinearLayout content;
     private final LinearLayout statusBadge;
-    private final ImageView statusIcon;
     private final TextView statusLabel;
     private final TextView message;
     private final LinearLayout managerCard;
@@ -45,10 +44,7 @@ public class RuntimeStatusView extends FrameLayout {
         statusBadge.setPadding(dp(10), dp(6), dp(10), dp(6));
         statusBadge.setBackground(createRoundedBackground(ContextCompat.getColor(context, R.color.accent_container), 12));
 
-        statusIcon = new ImageView(context);
-        statusIcon.setLayoutParams(new LinearLayout.LayoutParams(dp(16), dp(16)));
-        statusBadge.addView(statusIcon);
-
+        // Status header intentionally uses text only; the manager card below carries the contextual icon.
         statusLabel = text(11, true);
         statusLabel.setPadding(dp(6), 0, 0, 0);
         statusBadge.addView(statusLabel, new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
@@ -124,7 +120,7 @@ public class RuntimeStatusView extends FrameLayout {
     public void refresh() {
         ManagerCompatibility.Result result = ManagerCompatibility.evaluate(getContext());
         boolean showInstall = false;
-        int statusColor, bgColor, iconRes;
+        int statusColor, bgColor;
         String statusText, messageText;
 
         switch (result.state) {
@@ -133,7 +129,6 @@ public class RuntimeStatusView extends FrameLayout {
                 messageText = "Manager verified and ready to use";
                 statusColor = R.color.status_success;
                 bgColor = R.color.status_success_bg;
-                iconRes = R.drawable.ic_shield_check;
                 break;
 
             case MANAGER_REQUIRED:
@@ -141,7 +136,6 @@ public class RuntimeStatusView extends FrameLayout {
                 messageText = "Install a supported manager to continue";
                 statusColor = R.color.accent;
                 bgColor = R.color.accent_container;
-                iconRes = R.drawable.ic_shield_alert;
                 showInstall = true;
                 break;
 
@@ -150,7 +144,6 @@ public class RuntimeStatusView extends FrameLayout {
                 messageText = "No supported manager detected on device";
                 statusColor = R.color.accent;
                 bgColor = R.color.accent_container;
-                iconRes = R.drawable.ic_shield_alert;
                 showInstall = true;
                 break;
 
@@ -159,7 +152,6 @@ public class RuntimeStatusView extends FrameLayout {
                 messageText = "Current kernel is not supported by GhostLock";
                 statusColor = R.color.status_error;
                 bgColor = R.color.status_error_bg;
-                iconRes = R.drawable.ic_shield_alert;
                 break;
 
             case SPOOFED_MANAGER:
@@ -167,7 +159,6 @@ public class RuntimeStatusView extends FrameLayout {
                 messageText = "Manager identity verification failed";
                 statusColor = R.color.status_error;
                 bgColor = R.color.status_error_bg;
-                iconRes = R.drawable.ic_shield_alert;
                 break;
 
             case UNSUPPORTED_MANAGER:
@@ -175,7 +166,6 @@ public class RuntimeStatusView extends FrameLayout {
                 messageText = "Installed manager is not registered";
                 statusColor = R.color.status_error;
                 bgColor = R.color.status_error_bg;
-                iconRes = R.drawable.ic_shield_half;
                 break;
 
             default:
@@ -183,15 +173,12 @@ public class RuntimeStatusView extends FrameLayout {
                 messageText = "Manager information unavailable";
                 statusColor = R.color.text_secondary;
                 bgColor = R.color.surface_container;
-                iconRes = R.drawable.ic_shield_half;
                 break;
         }
 
         // Update status badge
         statusLabel.setText(statusText);
         statusLabel.setTextColor(ContextCompat.getColor(getContext(), statusColor));
-        statusIcon.setImageResource(iconRes);
-        statusIcon.setColorFilter(ContextCompat.getColor(getContext(), statusColor));
         statusBadge.setBackground(createRoundedBackground(ContextCompat.getColor(getContext(), bgColor), 12));
 
         // Update message
