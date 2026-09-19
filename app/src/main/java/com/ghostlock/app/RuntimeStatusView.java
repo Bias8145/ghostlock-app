@@ -45,7 +45,7 @@ public class RuntimeStatusView extends FrameLayout {
         statusBadge.setBackground(createRoundedBackground(ContextCompat.getColor(context, R.color.accent_container), 12));
 
         // Status header intentionally uses text only; the manager card below carries the contextual icon.
-        statusLabel = text(11, true);
+        statusLabel = text(13, true);
         statusBadge.addView(statusLabel, new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
 
         content.addView(statusBadge, new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
