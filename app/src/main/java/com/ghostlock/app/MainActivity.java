@@ -122,6 +122,8 @@ public class MainActivity extends Activity {
     private Button parseButton;
     private Button exportButton;
     private View rootView;
+    private DashboardStatsView dashboardStats;
+    private AnalyticsManager analytics;
     private int cpuPairIndex;
     private boolean parseWantsXbl;
 
@@ -485,6 +487,9 @@ public class MainActivity extends Activity {
         kernelChip = findViewById(R.id.kernelChip);
         kernelChipText = findViewById(R.id.kernelChipText);
         cpuSpinner = findViewById(R.id.cpuSpinner);
+        dashboardStats = findViewById(R.id.dashboardStats);
+
+        analytics = new AnalyticsManager(this);
 
         applyWindowInsetsPadding();
         deviceInfo.setText(buildDeviceSummary());
@@ -1322,7 +1327,17 @@ public class MainActivity extends Activity {
                 ui.post(() -> {
                     running.set(false);
                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-                    if (finalCode == 0) {
+
+                    // Track analytics
+                    String kernel = System.getProperty("os.version", "");
+                    String cpuPair = cpuPairLabels.get(cpuPairIndex);
+                    boolean success = finalCode == 0;
+                    String errorMsg = success ? null : "Exit code: " + finalCode;
+
+                    analytics.recordRun(success, kernel, cpuPair, errorMsg);
+                    dashboardStats.refreshStats();
+
+                    if (success) {
                         setRunState(RunState.SUCCESS);
                     } else {
                         setRunState(RunState.FAILED);
