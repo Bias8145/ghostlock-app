@@ -156,6 +156,25 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/dashboardCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                app:cardBackgroundColor="@color/surface_container_low"
+                app:cardCornerRadius="18dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="0dp">
+                <com.ghostlock.app.DashboardStatsView
+                    android:id="@+id/dashboardStats"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="14dp"
+                    android:paddingTop="12dp"
+                    android:paddingEnd="14dp"
+                    android:paddingBottom="12dp" />
+            </com.google.android.material.card.MaterialCardView>
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -341,6 +360,11 @@
                         android:layout_height="1dp"
                         android:layout_marginBottom="10dp"
                         android:background="@color/log_divider" />
+                    <com.ghostlock.app.LogFilterView
+                        android:id="@+id/logFilter"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone" />
                     <com.ghostlock.app.LogScrollView
                         android:id="@+id/logScroll"
                         android:layout_width="match_parent"
