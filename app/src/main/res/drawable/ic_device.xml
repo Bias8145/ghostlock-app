@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Font Awesome Free: mobile-screen-button (fa-mobile-screen-button), CC BY 4.0 -->
+<!-- https://fontawesome.com/icons/mobile-screen-button -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
-    android:viewportWidth="24"
-    android:viewportHeight="24">
+    android:viewportWidth="384"
+    android:viewportHeight="512">
     <path
         android:fillColor="@android:color/white"
-        android:pathData="M17,10.5V7c0,-0.55 -0.45,-1 -1,-1H4c-0.55,0 -1,0.45 -1,1v10c0,0.55 0.45,1 1,1h12c0.55,0 1,-0.45 1,-1v-3.5l4,4v-11l-4,4z"/>
+        android:pathData="M16,64C16,28.7 44.7,0 80,0H304C339.3,0 368,28.7 368,64V448C368,483.3 339.3,512 304,512H80C44.7,512 16,483.3 16,448V64zM224,448c0,-17.7 -14.3,-32 -32,-32s-32,14.3 -32,32s14.3,32 32,32s32,-14.3 32,-32zM304,64H80V384H304V64z" />
 </vector>
