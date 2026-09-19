@@ -84,6 +84,10 @@ public class KernelInfoView extends LinearLayout {
         addView(chipsContainer, chipsParams);
     }
 
+    public void setText(CharSequence text) {
+        setText(text, TextView.BufferType.NORMAL);
+    }
+
     public void setText(CharSequence text, TextView.BufferType type) {
         String value = text == null ? "" : text.toString();
         String[] lines = value.split("\n", 2);
