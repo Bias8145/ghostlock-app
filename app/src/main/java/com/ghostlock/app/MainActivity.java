@@ -107,7 +107,7 @@ public class MainActivity extends Activity {
     private final List<int[]> cpuPairs = new ArrayList<>();
     private final List<String> cpuPairLabels = new ArrayList<>();
     private final Map<View, ValueAnimator> viewAnimators = new HashMap<>();
-    private TextView deviceInfo;
+    private KernelInfoView deviceInfo;
     private TextView logView;
     private LinearLayout kernelChip;
     private TextView kernelChipText;
