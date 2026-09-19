@@ -37,7 +37,7 @@ public class RuntimeStatusView extends FrameLayout {
         content.setPadding(dp(16), dp(14), dp(16), dp(14));
         addView(content, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
-        // Status badge with icon
+        // Status badge
         statusBadge = new LinearLayout(context);
         statusBadge.setOrientation(LinearLayout.HORIZONTAL);
         statusBadge.setGravity(Gravity.CENTER_VERTICAL);
@@ -46,7 +46,6 @@ public class RuntimeStatusView extends FrameLayout {
 
         // Status header intentionally uses text only; the manager card below carries the contextual icon.
         statusLabel = text(11, true);
-        statusLabel.setPadding(dp(6), 0, 0, 0);
         statusBadge.addView(statusLabel, new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
 
         content.addView(statusBadge, new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
