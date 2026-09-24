@@ -10,9 +10,9 @@
         android:layout_height="match_parent"
         android:fillViewport="true"
         android:clipToPadding="false"
-        android:paddingStart="16dp"
+        android:paddingStart="12dp"
         android:paddingTop="4dp"
-        android:paddingEnd="16dp"
+        android:paddingEnd="12dp"
         android:paddingBottom="28dp">
         <LinearLayout
             android:layout_width="match_parent"
@@ -20,7 +20,7 @@
             android:orientation="vertical">
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="40dp"
                 android:layout_marginBottom="8dp"
                 android:gravity="center_vertical">
                 <ImageView
@@ -130,11 +130,11 @@
                 android:id="@+id/anotherResourcePanel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
+                android:layout_marginBottom="2dp"
                 android:clickable="true"
                 android:focusable="true"
                 app:cardBackgroundColor="@color/surface_container_low"
-                app:cardCornerRadius="16dp"
+                app:cardCornerRadius="8dp"
                 app:strokeWidth="0dp">
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -142,36 +142,35 @@
                     android:orientation="vertical">
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="48dp"
+                        android:layout_height="40dp"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:paddingStart="16dp"
-                        android:paddingEnd="16dp"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
                         android:clickable="true"
                         android:focusable="true"
                         android:background="?attr/selectableItemBackgroundBorderless">
                         <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:src="@drawable/ic_telegram"
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:src="@drawable/ic_tools"
                             android:tint="@color/icon_tint"
-                            android:alpha="0.8" />
+                            android:alpha="0.4" />
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:layout_marginStart="12dp"
+                            android:layout_marginStart="8dp"
                             android:text="Another Resource"
-                            android:textColor="@color/text_primary"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp" />
                         <ImageView
                             android:id="@+id/anotherResourceChevron"
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
                             android:src="@drawable/ic_chevron_down"
                             android:tint="@color/icon_tint"
-                            android:alpha="0.8" />
+                            android:alpha="0.4" />
                     </LinearLayout>
                     <LinearLayout
                         android:id="@+id/anotherResourceDetails"
@@ -179,10 +178,10 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:visibility="gone"
-                        android:paddingStart="16dp"
-                        android:paddingEnd="16dp"
-                        android:paddingTop="12dp"
-                        android:paddingBottom="12dp">
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:paddingTop="8dp"
+                        android:paddingBottom="8dp">
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -213,11 +212,11 @@
                 android:id="@+id/telegramChannelPanel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
+                android:layout_marginBottom="2dp"
                 android:clickable="true"
                 android:focusable="true"
                 app:cardBackgroundColor="@color/surface_container_low"
-                app:cardCornerRadius="16dp"
+                app:cardCornerRadius="8dp"
                 app:strokeWidth="0dp">
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -225,36 +224,35 @@
                     android:orientation="vertical">
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="48dp"
+                        android:layout_height="40dp"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:paddingStart="16dp"
-                        android:paddingEnd="16dp"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
                         android:clickable="true"
                         android:focusable="true"
                         android:background="?attr/selectableItemBackgroundBorderless">
                         <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
                             android:src="@drawable/ic_telegram"
                             android:tint="@color/icon_tint"
-                            android:alpha="0.8" />
+                            android:alpha="0.4" />
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:layout_marginStart="12dp"
+                            android:layout_marginStart="8dp"
                             android:text="Khaliq"
-                            android:textColor="@color/text_primary"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp" />
                         <ImageView
                             android:id="@+id/telegramChannelChevron"
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
                             android:src="@drawable/ic_chevron_down"
                             android:tint="@color/icon_tint"
-                            android:alpha="0.8" />
+                            android:alpha="0.4" />
                     </LinearLayout>
                     <LinearLayout
                         android:id="@+id/telegramChannelDetails"
@@ -262,10 +260,10 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:visibility="gone"
-                        android:paddingStart="16dp"
-                        android:paddingEnd="16dp"
-                        android:paddingTop="12dp"
-                        android:paddingBottom="12dp">
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:paddingTop="8dp"
+                        android:paddingBottom="8dp">
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -296,11 +294,11 @@
                 android:id="@+id/developerGithubPanel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
+                android:layout_marginBottom="2dp"
                 android:clickable="true"
                 android:focusable="true"
                 app:cardBackgroundColor="@color/surface_container_low"
-                app:cardCornerRadius="16dp"
+                app:cardCornerRadius="8dp"
                 app:strokeWidth="0dp">
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -308,36 +306,35 @@
                     android:orientation="vertical">
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="48dp"
+                        android:layout_height="40dp"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:paddingStart="16dp"
-                        android:paddingEnd="16dp"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
                         android:clickable="true"
                         android:focusable="true"
                         android:background="?attr/selectableItemBackgroundBorderless">
                         <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
                             android:src="@drawable/ic_github"
                             android:tint="@color/icon_tint"
-                            android:alpha="0.8" />
+                            android:alpha="0.4" />
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:layout_marginStart="12dp"
+                            android:layout_marginStart="8dp"
                             android:text="Khaliq"
-                            android:textColor="@color/text_primary"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp" />
                         <ImageView
                             android:id="@+id/developerGithubChevron"
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
                             android:src="@drawable/ic_chevron_down"
                             android:tint="@color/icon_tint"
-                            android:alpha="0.8" />
+                            android:alpha="0.4" />
                     </LinearLayout>
                     <LinearLayout
                         android:id="@+id/developerGithubDetails"
@@ -345,10 +342,10 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:visibility="gone"
-                        android:paddingStart="16dp"
-                        android:paddingEnd="16dp"
-                        android:paddingTop="12dp"
-                        android:paddingBottom="12dp">
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:paddingTop="8dp"
+                        android:paddingBottom="8dp">
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -379,11 +376,11 @@
                 android:id="@+id/originalSourcePanel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
+                android:layout_marginBottom="2dp"
                 android:clickable="true"
                 android:focusable="true"
                 app:cardBackgroundColor="@color/surface_container_low"
-                app:cardCornerRadius="16dp"
+                app:cardCornerRadius="8dp"
                 app:strokeWidth="0dp">
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -391,36 +388,35 @@
                     android:orientation="vertical">
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="48dp"
+                        android:layout_height="40dp"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:paddingStart="16dp"
-                        android:paddingEnd="16dp"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
                         android:clickable="true"
                         android:focusable="true"
                         android:background="?attr/selectableItemBackgroundBorderless">
                         <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:src="@drawable/ic_github"
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:src="@drawable/ic_install_file_code"
                             android:tint="@color/icon_tint"
-                            android:alpha="0.8" />
+                            android:alpha="0.4" />
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:layout_marginStart="12dp"
+                            android:layout_marginStart="8dp"
                             android:text="Original GhostLock"
-                            android:textColor="@color/text_primary"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp" />
                         <ImageView
                             android:id="@+id/originalSourceChevron"
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
                             android:src="@drawable/ic_chevron_down"
                             android:tint="@color/icon_tint"
-                            android:alpha="0.8" />
+                            android:alpha="0.4" />
                     </LinearLayout>
                     <LinearLayout
                         android:id="@+id/originalSourceDetails"
@@ -428,10 +424,10 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:visibility="gone"
-                        android:paddingStart="16dp"
-                        android:paddingEnd="16dp"
-                        android:paddingTop="12dp"
-                        android:paddingBottom="12dp">
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:paddingTop="8dp"
+                        android:paddingBottom="8dp">
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
