@@ -122,7 +122,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
                 android:layout_marginBottom="8dp"
-                android:text="DEVELOPER & RESOURCES"
+                android:text="DEVELOPER &amp; RESOURCES"
                 android:textColor="@color/text_secondary"
                 android:textSize="11sp"
                 android:textStyle="bold" />
@@ -194,7 +194,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="Custom ROM & Google Pixel resources for Pixel 3, 3 XL, 4, 4 XL, 4a, 4a 5G and 5."
+                            android:text="Custom ROM &amp; Google Pixel resources for Pixel 3, 3 XL, 4, 4 XL, 4a, 4a 5G and 5."
                             android:textColor="@color/text_secondary"
                             android:textSize="11sp" />
                         <TextView
