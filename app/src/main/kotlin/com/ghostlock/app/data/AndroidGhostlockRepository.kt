@@ -532,6 +532,16 @@ class AndroidGhostlockRepository(context: Context) : GhostlockRepository {
             nativeLog.writeText("")
             val release = System.getProperty("os.version", "").orEmpty()
             val config = profileController.load(release, pair)
+            onLog(
+                "<k> profile: hasProfile=${config.hasProfile} " +
+                    "invalid=${config.invalidPaths.size} release=$release",
+            )
+            if (!config.hasProfile) {
+                error(
+                    "no profile matched $release; import its .conf and select it, " +
+                        "or pick a built-in release",
+                )
+            }
             if (config.invalidPaths.isNotEmpty()) {
                 error(
                     "profile has ${config.invalidPaths.size} invalid field(s): " +

@@ -369,4 +369,110 @@ class ControllerOverrideTest {
             root.deleteRecursively()
         }
     }
+
+    @Test
+    fun `pd2361 candidate profile resolves and serializes`() = runBlocking {
+        val release = "5.15.178-g3575c47dc7ce-dirty"
+        val report = """
+            release = "$release"
+            schema_version = 1
+            kernel_major = 5
+            recommend_shizuku = 0
+            kernel_phys_load = 0xA8000000
+            route {
+              multicast_waiter {
+                waiter_off = 80
+                buffer_size = 264
+                task_offset = 48
+                lock_offset = 56
+                fake_lock_offset = 4608
+                fake_task_offset = 12800
+                lock_slots_offset = 128
+                lock_slot_count = 12
+                lock_slot_stride = 8
+                compact_waiter = 1
+              }
+            }
+            fallback {
+              to = "none"
+            }
+            kernelsnitch {
+              collisions = 8
+              mm_struct_sz = 1024
+            }
+            task_struct {
+              prio = 124
+              normal_prio = 132
+              sched_task_group = 1024
+              pi_lock = 2180
+              pi_waiters = 2200
+              pi_top_task = 2216
+              pi_blocked_on = 2224
+              pid = 1496
+              tgid = 1500
+              atomic_flags = 1432
+              real_cred = 1936
+              cred = 1944
+              comm = 1960
+              tasks = 1232
+              seccomp = 2144
+            }
+            cred {
+              caps_offset = 48
+              copy_size = 176
+              usage_value = 256
+              caps_count = 3
+              caps_value = 2199023255551
+              ref0_offset = 128
+              ref1_offset = 136
+              ref2_offset = 144
+              ref3_offset = 152
+              ref_count = 4
+              ref0_image = -274696158080
+              ref1_image = -274694092912
+              ref2_image = -274696156688
+              ref3_image = -274696157912
+            }
+            offset {
+              init_task = 49024192
+              init_cred = 48733352
+              empty_zero_page = 50151424
+              mcast_fake_bss = 51394952
+              root_task_group = 50170688
+              selinux_enforcing = 51431184
+              selinux_blob_sizes = 36756024
+              security_hook_heads = 36746672
+              slide_nfulnl_logger = 47391328
+              slide_boot_id = 51545561
+              slide_loggers_0_1 = 47391120
+            }
+        """.trimIndent()
+        val root = Files.createTempDirectory("controller-pd2361").toFile()
+        try {
+            val store = UserProfileStore(
+                directory = root.resolve("user_profiles"),
+                assetLoader = AssetConfigLoader(context),
+            )
+            val parsed = HoconSupport.parseValue(report).asValueMap()
+            assertNotNull("candidate conf did not parse", parsed)
+            assertEquals(release, parsed!!["release"])
+            store.save("pd2361.conf", report)
+            assertNotNull("loadEntry returned null", store.loadEntry(release, "pd2361.conf"))
+            val controller = AndroidProfileConfigController(
+                context = context,
+                filesDir = root,
+                userProfiles = store,
+                preferences = context.getSharedPreferences("controller-pd2361", 0)
+                    .also { it.edit().clear().commit() },
+            )
+            val pair = CpuPair(primary = 0, consumer = 1)
+            controller.selectUserProfile("pd2361.conf", release, pair)
+            val config = controller.load(release, pair)
+            assertTrue("invalid=${config.invalidPaths}", config.invalidPaths.isEmpty())
+            assertTrue("profile did not resolve", config.hasProfile)
+            assertNotNull("no native document", controller.nativeDocument(config))
+        } finally {
+            root.deleteRecursively()
+        }
+    }
 }
