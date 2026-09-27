@@ -15,12 +15,10 @@ native.
 > - **Profile schema version**: the HOCON profile generation, carried by the
 >   `schema_version` field inside each profile (see section 2).
 > - **Binary wire version**: the GLK1 transport version after magic
->   `0x0D000721`. The current writer emits wire version `3` (component ids +
->   middleware section + options section); wire version `2` documents are still
->   decoded, but the v2 writer is gone.
-> - **v1 JSON import**: the remote/main-era `offsets.json`, converted once by
->   `src/core/legacy/` (`convert_legacy_offsets`) and Kotlin
->   `LegacyProfileConverter`.
+>   `0x0D000721`. The current writer emits wire version `2` (object sections,
+>   see section 9); it is the only version, and Kotlin/native are version-bound.
+> - **v1 JSON import**: the remote/main-era `offsets.json`, converted once on
+>   the Kotlin side by `LegacyProfileConverter`; native no longer parses v1.
 
 ## 0. File format (HOCON)
 
@@ -320,8 +318,8 @@ Validation happens in Kotlin (`AndroidProfileConfigController.validateProfileFie
 4. The home-screen **Run** button is disabled while `invalidPaths` is non-empty;
    tapping it asks you to fix the red entries. Even if you bypass that,
    `runExploit` blocks before starting native and writes to the log.
-5. Native no longer validates geometry; it only parses the v3 binary (v2 is
-   still decoded) and executes the component selection and fields it was given.
+5. Native no longer validates geometry; it only parses the v2 binary and
+   executes the component selection and fields it was given.
 
 ## 7. Load layers and storage locations
 

@@ -13,8 +13,9 @@ KernelSU 模块加载。内核按精确 `uname -r` 匹配 HOCON profile，未匹
 | Extractor | `tools/extract_rs/` | Rust；boot.img / OTA / URL → `--format conf`（flatten GLK profile）/ `--format json`（v1） |
 
 - Native 不是 JNI：`libghostlock.so` 是可执行 ELF，由 Kotlin `ProcessBuilder` 启动。
-  CLI：无参数（legacy `offsets.json`）/ `--ghostlock-app-call`（stdin GLK1）/
-  `--load-prebuilt-profile <bin>`。入口细节见 `docs/analysis/native-entrypoint-plan.md`（git 历史）。
+  CLI：`--ghostlock-app-call`（stdin GLK1）/ `--load-prebuilt-profile <bin>`
+  （无参数的 v1 `offsets.json` 入口已移除）。入口细节见
+  `docs/analysis/native-entrypoint-plan.md`（git 历史）。
 - 内置 profile 在 `app/src/main/assets/kernel_profiles/`：`index.conf` 索引、
   `<uname-r>.conf` 每 release 一份、`execution-*.conf` 公共/分 route 调参、
   `credential-6x.conf`、`kernelsnitch-6x.conf`。格式为 HOCON（支持 `include`）。
@@ -54,7 +55,7 @@ python3 tools/cmp_disasm.py <baseline-binary> build/native/ghostlock
 2. **Design**：S 级（注释/格式）直接改；M 级写清动机/影响文件/行为差异/验证计划；**L 级**
    （攻击关键路径、wire/profile 格式、跨 Native↔Kotlin 契约、公共数据结构、新增 route）
    必须先产出计划文档（模板见 `docs/development/documentation-standards.md`）并获用户认可，再写代码。
-3. **Implement**：最小改动，只碰设计列出的文件；不动 `kernelsnitch/`、legacy v1 路径与
+3. **Implement**：最小改动，只碰设计列出的文件；不动 `kernelsnitch/`、`LegacyProfileConverter.kt` 的 v1 转换与
    规范中的"明确保留"清单。
 4. **Verify**：按级别跑满 §1.3 门槛并保留证据；汇报时给出命令与结果，不写"应该没问题"。
 
@@ -66,7 +67,7 @@ python3 tools/cmp_disasm.py <baseline-binary> build/native/ghostlock
 
 - C++23、`-fno-rtti`、静态 libc++；`-Wall -Wextra -Wconversion -Wsign-conversion`，
   新代码不得引入告警。include 用相对 `src/core` 的路径（如 `#include "route/tcp_zerocopy_route.h"`）。
-- 命名空间分层：`ghostlock::{route,session,memory,attack,race,support,profile,legacy}`；
+- 命名空间分层：`ghostlock::{route,session,memory,attack,race,support,profile}`；
   `kernelsnitch/` 是上游原样移植代码，不要顺手重写。
 - 全局状态只允许 `g_exploit_session`（进程唯一 singleton）与启动期只读的
   `g_direct_map_end`；新代码不得再引入可变全局或引用别名。审计记录见
@@ -106,7 +107,8 @@ python3 tools/cmp_disasm.py <baseline-binary> build/native/ghostlock
 - 攻击关键路径（waiter/race/payload/route/exec 流程）改动：
   1. `tools/cmp_disasm.py` 对比 8 个攻击函数，要求 IDENTICAL (strict) 或已复核的注解差异；
   2. 真机门禁（冷机、固定 CPU 对、单 route、KernelSU 未加载的干净启动）；
-  3. 日志在设备 `Download/GhostLock/<时间>/*.log.txt`，确认 route 命中与写验证通过。
+  3. 日志在设备 `Download/ghostlock-debug-log/<时间>/*.log.txt`（同目录另有
+     `profile.conf`/`profile.bin`，记录本次生效配置与送入 native 的 GLK1 字节），确认 route 命中与写验证通过。
 - 真机结果按 `docs/analysis/device-gates/*.md` 的格式归档（git 历史中有整套
   S/CPP/U01/NS* 证据链样例）。
 - `KERNEL-PANIC-01` 是已知环境/时序问题：同构建可 PASS/panic/PASS，判定因果要求同构建

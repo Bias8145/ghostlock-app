@@ -18,7 +18,7 @@ Rows explicitly marked **Shizuku required** run through a shell UserService. Sta
 
 Open **GhostLock** and tap **Run**. KernelSU (`me.weishu.kernelsu`), ReSukiSU (`com.resukisu.resukisu`), or KowSU (`com.kowx712.supermanager`) provides `ksud` for module loading; without it, W1/W2 still grant uid 0 but no module is loaded.
 
-The execution chain is a pipeline of three components: a frontend (`root_child` startup/handoff), a backend (the CVE-2026-43499 futex primitive), and a middleware route. The catalogued combinations are instantiated at build time; the resolved profile selects which one runs. The route races two cores: on the 6.6/6.12 tree-waiter kernels the main thread hammers `select` while a consumer thread perturbs the waiter's priority; on the 6.1 compact-waiter kernels it drives `getsockopt(TCP_ZEROCOPY_RECEIVE)` through a punched-hole page; the 5.15 kernels use the multicast waiter. The CPU pair also comes from the resolved profile; the legacy no-argument entry still honors `GHOSTLOCK_TCP_ROUTE=0` (force pselect) and `GHOSTLOCK_CORE` / `GHOSTLOCK_CONSUMER_CORE`.
+The execution chain is a pipeline of three components: a frontend (`root_child` startup/handoff), a backend (the CVE-2026-43499 futex primitive), and a middleware route. The catalogued combinations are instantiated at build time; the resolved profile selects which one runs. The route races two cores: on the 6.6/6.12 tree-waiter kernels the main thread hammers `select` while a consumer thread perturbs the waiter's priority; on the 6.1 compact-waiter kernels it drives `getsockopt(TCP_ZEROCOPY_RECEIVE)` through a punched-hole page; the 5.15 kernels use the multicast waiter. The CPU pair also comes from the resolved profile.
 
 ## Command-Line Debugging
 
@@ -26,9 +26,11 @@ adb/shell has no seccomp filter, so W3 is skipped - handy for quick verification
 
 ```powershell
 make -C src ghostlock
+./gradlew exportKernelProfiles
 adb push build/native/ghostlock /data/local/tmp/ghostlock
+adb push build/kernel-profiles/<release>.bin /data/local/tmp/profile.bin
 adb shell chmod 755 /data/local/tmp/ghostlock
-adb shell /data/local/tmp/ghostlock
+adb shell /data/local/tmp/ghostlock --load-prebuilt-profile /data/local/tmp/profile.bin
 ```
 
 ## Offset Extraction
@@ -68,11 +70,11 @@ adb shell /data/local/tmp/ghostlock-extract /sdcard/OTA.zip
 
 New kernels no longer need an app rebuild: tap **Import offsets.conf (HOCON)**
 and pick the extractor's flattened `.conf`, or use **Import offsets.json (v1)**
-for an older JSON report. A `.json` pushed to `<GHOSTLOCK_HOME>/offsets.json`
-(default `/data/local/tmp`) is still accepted by the native no-argument
-entrypoint. At startup native matches the current `uname -r` against imported
-entries before rejecting the kernel. Imports merge across files; a release
-already stored prompts before overwrite.
+for an older JSON report. v1 JSON is converted in-app, so nothing has to be
+pushed to the device: native always starts from the GLK1 document the app sends
+on stdin, and matches the current `uname -r` against the resolved profile
+before rejecting the kernel. Imports merge across files; a release already
+stored prompts before overwrite.
 
 The app can also generate the profile itself — **Parse OTA link** (full OTA ZIP
 URL) and **Parse image** (`boot.img` + optional `xbl_config.img`) run the

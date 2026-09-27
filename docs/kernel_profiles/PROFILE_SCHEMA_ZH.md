@@ -8,10 +8,10 @@
 
 > **三个"版本"是彼此独立的东西**（不要当成同一条版本序列）：
 > - **Profile schema 版本**：HOCON 配置代际，由每份 profile 里的 `schema_version` 字段表达（见第 2 节）。
-> - **Binary wire 版本**：magic `0x0D000721` 之后的 GLK1 传输版本。当前 writer 写 wire version `3`
->   （组件 id + middleware 节 + options 节）；wire version `2` 文档仍可解码，但 v2 writer 已移除。
-> - **v1 JSON 导入**：remote/main 时代的 `offsets.json`，由 `src/core/legacy/`
->   （`convert_legacy_offsets`）与 Kotlin `LegacyProfileConverter` 一次性转换。
+> - **Binary wire 版本**：magic `0x0D000721` 之后的 GLK1 传输版本。当前 writer 写 wire version `2`
+>   （对象分段，见第 9 节）；它是唯一版本，Kotlin 与 native 版本绑定。
+> - **v1 JSON 导入**：remote/main 时代的 `offsets.json`，只在 Kotlin 侧由
+>   `LegacyProfileConverter` 一次性转换；native 不再解析 v1。
 
 ## 0. 文件格式（HOCON）
 
@@ -250,7 +250,7 @@ cred
 2. 参数覆盖页与高级参数覆盖中，非法项以红色 label 显示（未填写同样标红）；已覆盖且合法项为黄色。
 3. `fallback.to` 必须是 `"none"` 或合法路由名；声明回退时，目标分支的必填字段同样会被校验（如回退 `select_stack` 需要 `fallback.route.select_stack.waiter_shift` 存在，0 合法）。
 4. 主页“执行”按钮在 `invalidPaths` 非空时置灰，点击提示修正红色项；即使绕过，`runExploit` 也会在启动 native 前拦截并写入日志。
-5. native 不再做几何校验，只解析 v3 二进制（v2 仍可解码）并按组件选择与字段执行。
+5. native 不再做几何校验，只解析 v2 二进制并按组件选择与字段执行。
 
 ## 7. 加载层次与存储位置
 

@@ -18,7 +18,7 @@
 
 打开 **GhostLock** 点击 **执行**。需先装 KernelSU（`me.weishu.kernelsu`）、ReSukiSU（`com.resukisu.resukisu`）或 KowSU（`com.kowx712.supermanager`）以提供 `ksud`；缺 `ksud` 时 W1/W2 仍可拿到 uid 0，但不会加载模块。
 
-执行链由三类组件构成：frontend（`root_child` 启动/交接）、backend（CVE-2026-43499 futex 原语）与 middleware 路线。**编目组合在构建期实例化，具体运行哪一个由解析后的 profile 选择**。路线是双核竞争：6.6/6.12 树形 waiter 内核上主线程跑 `select` 爆破、consumer 线程扰动 waiter 优先级；6.1 紧凑 waiter 内核上主线程改走 `getsockopt(TCP_ZEROCOPY_RECEIVE)` 打洞页写入；5.15 内核走 multicast waiter 路线。CPU 对同样由解析后的 profile 决定；无参数 legacy 入口仍兼容 `GHOSTLOCK_TCP_ROUTE=0`（强制 pselect）与 `GHOSTLOCK_CORE` / `GHOSTLOCK_CONSUMER_CORE`。
+执行链由三类组件构成：frontend（`root_child` 启动/交接）、backend（CVE-2026-43499 futex 原语）与 middleware 路线。**编目组合在构建期实例化，具体运行哪一个由解析后的 profile 选择**。路线是双核竞争：6.6/6.12 树形 waiter 内核上主线程跑 `select` 爆破、consumer 线程扰动 waiter 优先级；6.1 紧凑 waiter 内核上主线程改走 `getsockopt(TCP_ZEROCOPY_RECEIVE)` 打洞页写入；5.15 内核走 multicast waiter 路线。CPU 对同样由解析后的 profile 决定。
 
 ## 命令行调试
 
@@ -26,9 +26,11 @@ adb/shell 环境无 seccomp 过滤，会跳过 W3，适合快速验证：
 
 ```powershell
 make -C src ghostlock
+./gradlew exportKernelProfiles
 adb push build/native/ghostlock /data/local/tmp/ghostlock
+adb push build/kernel-profiles/<release>.bin /data/local/tmp/profile.bin
 adb shell chmod 755 /data/local/tmp/ghostlock
-adb shell /data/local/tmp/ghostlock
+adb shell /data/local/tmp/ghostlock --load-prebuilt-profile /data/local/tmp/profile.bin
 ```
 
 ## 偏移量提取
@@ -64,7 +66,7 @@ adb shell /data/local/tmp/ghostlock-extract /sdcard/OTA.zip
 
 ### 外部导入偏移，免去重新构建应用
 
-新增内核不再需要重新打包 App：点击 **导入 offsets.conf (HOCON)** 选择提取器产出的扁平 `.conf`；旧 JSON 报告仍可通过 **导入 offsets.json (v1)** 导入，推送到 `<GHOSTLOCK_HOME>/offsets.json`（默认 `/data/local/tmp`）的 `.json` 也仍由 native 无参数入口接受。启动时 native 会先按当前 `uname -r` 匹配导入条目，匹配成功则顶部状态变为受支持。多次导入会合并；新文件含已存内核时，App 会先询问是否覆盖。
+新增内核不再需要重新打包 App：点击 **导入 offsets.conf (HOCON)** 选择提取器产出的扁平 `.conf`，旧 JSON 报告仍可通过 **导入 offsets.json (v1)** 导入。v1 JSON 由 App 侧转成 GLK1，无需再把文件推到设备；native 始终只接收 App 经 stdin 传入的 GLK1 文档，并先按当前 `uname -r` 匹配解析后的 profile，匹配成功才视为受支持。多次导入会合并；新文件含已存内核时，App 会先询问是否覆盖。
 
 App 也能直接生成这份 profile：**解析完整包链接**（完整 OTA zip 的 `http(s)` 链接）与 **解析镜像**（`boot.img` + 可选 `xbl_config.img`）都在 App 进程内跑提取器，成功后把一份扁平 `.conf` 写入 App 数据目录：
 

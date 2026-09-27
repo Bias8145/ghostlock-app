@@ -84,7 +84,7 @@ src/core/ (C++23 可执行 ELF)          tools/extract_rs/ (Rust 离线提取器
   必须经 profile 或文件，不得发明新环境变量（§3.1）。
 - Kotlin 分层：`ui → domain → data`；平台 I/O 只允许在 `data/`；`shizuku/` 是执行入口的变体，
   不承载业务规则。
-- Native 命名空间分层：`ghostlock::{route,session,memory,attack,race,support,profile,legacy}`；
+- Native 命名空间分层：`ghostlock::{route,session,memory,attack,race,support,profile}`；
   include 一律相对 `src/core`（`#include "route/..."`），让所有权在调用点可见。
 
 ### 2.2 route 结构（本项目核心扩展点）
@@ -117,8 +117,8 @@ src/core/ (C++23 可执行 ELF)          tools/extract_rs/ (Rust 离线提取器
 
 - `kernelsnitch/`（含 `futex_hash.h`、`utils.h` 的 `pr_*` 宏）是上游原样移植：**不重写、不顺手现代化**；
   确需改动时单独立项并说明理由。
-- v1（旧 `offsets.json`）路径只由 `legacy/` 与 `LegacyProfileConverter.kt` 处理。新 route/新字段
-  **不得**修改 legacy 路径；兼容输入只做一次性转换。
+- v1（旧 `offsets.json`）只在 Kotlin 侧由 `LegacyProfileConverter.kt` 转换；native 不再解析 v1。新 route/新字段
+  **不得**修改 legacy 转换；兼容输入只做一次性转换。
 
 ---
 
@@ -209,8 +209,8 @@ setup → W1（SELinux）→ W2（凭据）→ W3（seccomp）→ handoff（root
 
 ### 5.1 内核 ABI 结构（最高风险区）
 
-- `profile/model.h` 字段表 / GLK1 wire 格式是**布局权威**：字段顺序、类型、截断语义一经发布不可改；
-  只能**追加**新字段并同步 `kVersion`/`FieldCount` 与 Kotlin 侧。
+- `profile/binary.cpp` 的 GLK1 wire v2 section/key 表是**契约权威**：字段名、类型与位型一经发布不可改；
+  新增字段 = 在该 section 追加一个条目（section/entry 顺序无关），并与 Kotlin `NativeProfile.kt` 同步。
 - Kotlin↔Native 双侧注册表（`RouteKind`、字段表）由测试锁定（`route_catalog_test` /
   `RouteCatalogAgreementTest`）；键名逐字一致，顺序逐项一致。
 - 枚举带显式 wire 值并写入合同注释（`0` 值语义特殊时不得被当普通值使用，如 `kRouteAuto` 不出现在 Kotlin）。
@@ -320,7 +320,7 @@ python3 tools/cmp_disasm.py <baseline-binary> build/native/ghostlock
 **前置**：冷机、固定 CPU 对、单 route、KernelSU 未加载的干净启动、设备状态记录（uptime）。
 **判定**：`route_done status=0 clean=1/1`、`child is root!`、`exploit complete`、handoff `KernelSU ready`、
 无 kernel panic；至少重复运行并记录次数。
-**归档**：按 `documentation-standards.md` 的模板写记录；日志对应设备 `Download/GhostLock/<时间>/`。
+**归档**：按 `documentation-standards.md` 的模板写记录；日志对应设备 `Download/ghostlock-debug-log/<时间>/`。
 
 ### 8.4 归因纪律
 
@@ -342,7 +342,7 @@ python3 tools/cmp_disasm.py <baseline-binary> build/native/ghostlock
 - [ ] 确认不变量（profile 权威、全局状态清单、wire 兼容、保留清单）
 
 **实施中**
-- [ ] 最小改动；不碰设计外文件；不动 kernelsnitch/legacy/保留清单
+- [ ] 最小改动；不碰设计外文件；不动 kernelsnitch/`LegacyProfileConverter.kt`/保留清单
 - [ ] 双侧同步：Native↔Kotlin 注册表与字段表逐字一致；文档同步（含 `_ZH`）
 - [ ] 新代码零告警；显式类型转换；RAII 所有权；不可变性优先
 
