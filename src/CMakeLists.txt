@@ -66,7 +66,6 @@ set(SOURCES
         core/session/runtime_config.cpp
         core/support/util.cpp
         core/session/exploit_session.cpp
-        core/route/exploit_procedure.cpp
         core/session/handoff_probe.cpp
         core/session/victim_process.cpp
         core/session/victim_context.cpp
