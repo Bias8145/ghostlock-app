@@ -1,6 +1,7 @@
 package com.ghostlock.app.ui
 
 import android.net.Uri
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ghostlock.app.R
@@ -30,8 +31,6 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import androidx.core.net.toUri
-import kotlin.time.Duration.Companion.milliseconds
 
 sealed interface GhostlockEffect {
     data class PickDocument(val request: DocumentRequest) : GhostlockEffect
@@ -206,6 +205,7 @@ class GhostlockViewModel(
         mutableState.update {
             it.copy(
                 advancedScreenVisible = true,
+                aboutVisible = false,
                 parametersVisible = false,
                 loadConfigVisible = false,
                 builtinScreenVisible = false,
@@ -230,6 +230,7 @@ class GhostlockViewModel(
         mutableState.update {
             it.copy(
                 advancedScreenVisible = false,
+                aboutVisible = false,
                 parametersVisible = false,
                 loadConfigVisible = false,
                 builtinScreenVisible = false,
@@ -567,7 +568,7 @@ class GhostlockViewModel(
          * replaces the whole override entry, so the drafts must be merged in or
          * the general edits would be dropped. */
         val drafts = mutableState.value.profileOverrideEditing +
-            mutableState.value.executionEditing
+                mutableState.value.executionEditing
         val advanced = drafts.mapNotNull { (path, text) ->
             text.trim().toLongOrNull()?.let { value -> path to value }
         }.toMap()
@@ -842,6 +843,7 @@ class GhostlockViewModel(
             !state.executionHasProfile -> R.string.run_blocked_no_profile
             state.shizukuEnabled && state.shizukuStatus != ShizukuStatus.READY ->
                 R.string.run_blocked_shizuku
+
             else -> R.string.profile_invalid
         }
         send(GhostlockEffect.Toast(messageRes))
@@ -857,7 +859,7 @@ class GhostlockViewModel(
             ShizukuStatus.PERMISSION_REQUIRED -> repository.requestShizukuPermission()
             ShizukuStatus.NOT_REQUIRED,
             ShizukuStatus.READY,
-            -> Unit
+                -> Unit
         }
     }
 
@@ -1093,7 +1095,7 @@ class GhostlockViewModel(
                 appendLog("result: offsets imported successfully")
                 val deviceRelease = state.value.kernelRelease
                 val matchesDevice = deviceRelease.isEmpty() ||
-                    result.releases.any { it == deviceRelease }
+                        result.releases.any { it == deviceRelease }
                 send(
                     GhostlockEffect.Toast(
                         if (matchesDevice) R.string.import_success else R.string.import_no_match,
@@ -1105,6 +1107,7 @@ class GhostlockViewModel(
                 appendLog("result: offsets already present")
                 send(GhostlockEffect.Toast(R.string.offsets_already_exist))
             }
+
             is OffsetImportResult.MissingIncludes -> {
                 appendLog("import offsets missing includes: ${result.files.joinToString()}")
                 appendLog("result: import failed")
@@ -1263,7 +1266,7 @@ class GhostlockViewModel(
                     if (result.missing.isNotEmpty()) {
                         appendLog(
                             "warning: missing ${result.missing.joinToString()}; " +
-                                "attach xbl_config.img or uefi.img to fill it",
+                                    "attach xbl_config.img or uefi.img to fill it",
                         )
                         send(GhostlockEffect.Toast(R.string.parse_missing_phys_hint))
                     }
@@ -1273,6 +1276,7 @@ class GhostlockViewModel(
                     appendLog("result: offsets already present")
                     send(GhostlockEffect.Toast(R.string.offsets_already_exist))
                 }
+
                 is ParseResult.Failed -> {
                     result.reason?.let { appendLog("parse failed: $it") }
                     appendLog("result: ${parseFailureResult(result.code)}")

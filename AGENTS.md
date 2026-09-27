@@ -6,10 +6,10 @@ KernelSU 模块加载。内核按精确 `uname -r` 匹配 HOCON profile，未匹
 
 ## 三层架构
 
-| 层 | 位置 | 说明 |
-|---|---|---|
-| Android | `app/` | Kotlin/Compose UI、HOCON profile 解析/合并/覆盖、Shizuku UserService、日志 |
-| Native | `src/core/` | C++23 攻击 runtime，产物 `build/native/ghostlock` |
+| 层        | 位置                | 说明                                                                                       |
+| --------- | ------------------- | ------------------------------------------------------------------------------------------ |
+| Android   | `app/`              | Kotlin/Compose UI、HOCON profile 解析/合并/覆盖、Shizuku UserService、日志                 |
+| Native    | `src/core/`         | C++23 攻击 runtime，产物 `build/native/ghostlock`                                          |
 | Extractor | `tools/extract_rs/` | Rust；boot.img / OTA / URL → `--format conf`（flatten GLK profile）/ `--format json`（v1） |
 
 - Native 不是 JNI：`libghostlock.so` 是可执行 ELF，由 Kotlin `ProcessBuilder` 启动。
@@ -110,7 +110,7 @@ python3 tools/cmp_disasm.py <baseline-binary> build/native/ghostlock
   3. 日志在设备 `Download/ghostlock-debug-log/<时间>/*.log.txt`（同目录另有
      `profile.conf`/`profile.bin`，记录本次生效配置与送入 native 的 GLK1 字节），确认 route 命中与写验证通过。
 - 真机结果按 `docs/analysis/device-gates/*.md` 的格式归档（git 历史中有整套
-  S/CPP/U01/NS* 证据链样例）。
+  S/CPP/U01/NS\* 证据链样例）。
 - `KERNEL-PANIC-01` 是已知环境/时序问题：同构建可 PASS/panic/PASS，判定因果要求同构建
   复现 + 冷机复跑，不要仅凭一次 panic 归因代码。
 - 现实状态：Multicast（5.15）是主验证路径；TCP/Select 仅主机固定测试，无对应设备前
@@ -132,7 +132,7 @@ python3 tools/cmp_disasm.py <baseline-binary> build/native/ghostlock
   - `docs/analysis/`：架构/迁移/解耦分析（routes、native-functions、native-cpp-current-uml、
     native-global-state、native-entrypoint-plan、environment-convergence-plan 等）
   - `docs/analysis/device-gates/`：S04–S15、CPP00–CPP17、U01、NSFUNC/NSMOD/NSMOD2、
-    PROFILE-* 门禁证据链
+    PROFILE-\* 门禁证据链
   - 根目录：`ARCHITECTURE.md`、`DECOUPLING_PLAN.md`、`DECOUPLING_LOG.md`、
     `PR_DESCRIPTION.md`、`RELEASE_NOTE.md`；`docs/pr-note-*`、`docs/release-note-v1.*`、
     `docs/development/native-modernization-plan.md`

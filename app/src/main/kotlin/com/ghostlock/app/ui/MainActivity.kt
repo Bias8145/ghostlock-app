@@ -86,13 +86,16 @@ class MainActivity : ComponentActivity() {
                 val mimeTypes = when (effect.request) {
                     DocumentRequest.ImportOffsetsHocon ->
                         arrayOf("text/plain", "application/octet-stream")
+
                     DocumentRequest.ImportOffsetsJson ->
                         arrayOf("application/json", "text/plain", "application/octet-stream")
+
                     else -> arrayOf("*/*")
                 }
                 when (effect.request) {
                     DocumentRequest.ImportOffsetsHocon, DocumentRequest.ImportOffsetsJson ->
                         documentsPicker.launch(mimeTypes)
+
                     else -> documentPicker.launch(mimeTypes)
                 }
             }
@@ -175,12 +178,14 @@ private fun GhostlockRoute(
             override fun onImportOffsetsJson() = viewModel.importOffsetsJson()
             override fun onDocumentsResult(request: DocumentRequest, uris: List<String>) =
                 viewModel.onDocumentsResult(request, uris)
+
             override fun onParseOta() = viewModel.promptParseUrl()
             override fun onParseImage() = viewModel.parseOffsets()
             override fun onCpuPairSelected(index: Int) = viewModel.selectCpuPair(index)
             override fun onSafeModeChanged(enabled: Boolean) = viewModel.toggleSafeMode(enabled)
             override fun onForceAttackTestChanged(enabled: Boolean) =
                 viewModel.toggleForceAttackTest(enabled)
+
             override fun onShizukuChanged(enabled: Boolean) = viewModel.toggleShizuku(enabled)
             override fun onDialogItemSelected(index: Int) = viewModel.onDialogItemSelected(index)
             override fun onDialogInputChange(value: String) = viewModel.onDialogInputChange(value)
@@ -191,6 +196,7 @@ private fun GhostlockRoute(
             override fun onOverwriteDismiss() = viewModel.onOverwriteDismiss()
             override fun onExecutionFieldChanged(path: String, value: String) =
                 viewModel.updateExecutionField(path, value)
+
             override fun onRouteChanged(index: Int) = viewModel.onRouteChanged(index)
             override fun onFallbackChanged(index: Int) = viewModel.onFallbackChanged(index)
             override fun onExportProfile() = viewModel.onExportProfile()
@@ -206,12 +212,14 @@ private fun GhostlockRoute(
             override fun onDebugExportLocationPick() = viewModel.onDebugExportLocationPick()
             override fun onDebugKernelLogChanged(enabled: Boolean) =
                 viewModel.onDebugKernelLogChanged(enabled)
+
             override fun onOpenParameters() = viewModel.onOpenParameters()
             override fun onCloseParameters() = viewModel.onCloseParameters()
             override fun onOpenLoadConfig() = viewModel.onOpenLoadConfig()
             override fun onCloseLoadConfig() = viewModel.onCloseLoadConfig()
             override fun onOpenUserProfileDetail(name: String) =
                 viewModel.onOpenUserProfileDetail(name)
+
             override fun onCloseUserProfileDetail() = viewModel.onCloseUserProfileDetail()
             override fun onLoadUserProfile(name: String) = viewModel.onLoadUserProfile(name)
             override fun onUnloadUserProfile() = viewModel.onUnloadUserProfile()
@@ -226,6 +234,7 @@ private fun GhostlockRoute(
             override fun onCloseBuiltinProfiles() = viewModel.onCloseBuiltinProfiles()
             override fun onSelectBuiltinProfile(release: String?) =
                 viewModel.onSelectBuiltinProfile(release)
+
             override fun onOpenProfileOverrides() = viewModel.onOpenProfileOverrides()
             override fun onCloseProfileOverrides() = viewModel.onCloseProfileOverrides()
             override fun onOpenAdvancedOverrides() = viewModel.onOpenAdvancedOverrides()
