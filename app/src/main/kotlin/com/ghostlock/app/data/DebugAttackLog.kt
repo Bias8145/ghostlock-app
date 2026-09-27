@@ -38,14 +38,37 @@ internal class DebugAttackLog private constructor(
         writer.flush()
     }
 
+    /**
+     * Writes an extra file next to the attempt log (e.g. the resolved runtime
+     * profile), through MediaStore so it is visible without a storage permission.
+     */
+    @Synchronized
+    fun writeSidecar(name: String, bytes: ByteArray): Boolean {
+        val values = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, name)
+            put(MediaStore.MediaColumns.MIME_TYPE, "application/octet-stream")
+            put(MediaStore.MediaColumns.RELATIVE_PATH, folderPath)
+        }
+        val uri = context.contentResolver
+            .insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values) ?: return false
+        return runCatching {
+            context.contentResolver.openOutputStream(uri, "w")?.use { output ->
+                output.write(bytes)
+                output.flush()
+            }
+            MediaScannerConnection.scanFile(
+                context, arrayOf(File(folderFile, name).absolutePath), null, null,
+            )
+        }.isSuccess
+    }
+
     @Synchronized
     override fun close() {
         writer.close()
         publishSidecars()
     }
 
-    /** Ask MediaStore to index the root-written dumps so file managers show them. */
-    private fun publishSidecars() {
+    /** Ask MediaStore to index the root-written dumps so file managers show them. */    private fun publishSidecars() {
         val paths = buildList {
             for (name in SidecarNames) {
                 val file = File(folderFile, name)

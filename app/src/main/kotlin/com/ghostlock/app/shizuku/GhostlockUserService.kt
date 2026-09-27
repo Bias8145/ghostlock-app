@@ -44,11 +44,11 @@ class GhostlockUserService(private val context: Context) : IGhostlockUserService
                     "Shizuku UserService is still seccomp-filtered"
                 }
                 val release = System.getProperty("os.version", "").orEmpty()
-                require(profileBlob.size >= 12) { "profile blob is too short" }
+                require(profileBlob.size >= 16) { "profile blob is too short" }
                 // PROFILE-SUGGEST-01: recommend_shizuku is a suggestion; the
-                // blob's header carries it, and the app already chose the
+                // blob's meta section carries it, and the app already chose the
                 // Shizuku path, so it is logged, never a gate.
-                if (profileBlob[8].toInt() != 1) {
+                if (NativeProfileDocument.fromBinary(profileBlob)?.recommendShizuku != 1u) {
                     callback.onLog("<s> kernel does not require Shizuku; running on user request")
                 }
 
@@ -65,10 +65,12 @@ class GhostlockUserService(private val context: Context) : IGhostlockUserService
                 // never satisfy the handoff probe; the native process receives
                 // the resolved path via GHOSTLOCK_KSU_LOG.
                 val ksuLog = File(workDir, "ghostlock-ksu-${System.currentTimeMillis()}.log")
-                // v2: safe_mode is the last common slot (little-endian); the
-                // route section follows it, so the offset comes from the header.
-                if (safeMode) {
-                    NativeProfileDocument.safeModeOffset(profileBlob)?.let { profileBlob[it] = 1 }
+                // v2: safe_mode lives in the meta section; there is no fixed
+                // slot offset, so the blob is rescanned and rewritten.
+                val effectiveBlob = if (safeMode) {
+                    NativeProfileDocument.patchSafeMode(profileBlob) ?: profileBlob
+                } else {
+                    profileBlob
                 }
                 val argv = mutableListOf(
                     binary.absolutePath,
@@ -97,7 +99,7 @@ class GhostlockUserService(private val context: Context) : IGhostlockUserService
                         val stdinOut = process.outputStream
                         /* Length-prefixed GLK1; stdin stays open for the ACK. */
                         runCatching {
-                            val length = profileBlob.size
+                            val length = effectiveBlob.size
                             stdinOut.write(
                                 byteArrayOf(
                                     (length ushr 24).toByte(),
@@ -106,7 +108,7 @@ class GhostlockUserService(private val context: Context) : IGhostlockUserService
                                     length.toByte(),
                                 ),
                             )
-                            stdinOut.write(profileBlob)
+                            stdinOut.write(effectiveBlob)
                             stdinOut.flush()
                         }
                         // The native process writes its log to a file and this

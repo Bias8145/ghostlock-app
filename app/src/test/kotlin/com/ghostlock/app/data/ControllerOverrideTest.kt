@@ -467,4 +467,64 @@ class ControllerOverrideTest {
             root.deleteRecursively()
         }
     }
+
+    @Test
+    fun `out of range unsigned route field is reported invalid and not clamped`() = runBlocking {
+        val deviceRelease = "6.12.38-android16-5-gbe6292a1543d-ab14525421-4k"
+        val report = """
+            schema_version = 1
+            release = "$deviceRelease"
+            kernel_major = 6
+            route {
+              multicast_waiter {
+                waiter_off = 80
+                buffer_size = 4294967296
+                task_offset = 48
+                lock_offset = 56
+                compact_waiter = 1
+              }
+            }
+            fallback { to = "none" }
+            task_struct {
+              prio = 148
+              pi_lock = 2540
+              pi_waiters = 2560
+              pi_blocked_on = 2584
+              cred = 2304
+              seccomp = 2504
+            }
+            offset {
+              init_task = 37801728
+              init_cred = 37891184
+              root_task_group = 40097152
+              selinux_enforcing = 40408272
+            }
+        """.trimIndent()
+        val root = Files.createTempDirectory("controller-oor").toFile()
+        try {
+            val store = UserProfileStore(
+                directory = root.resolve("user_profiles"),
+                assetLoader = AssetConfigLoader(context),
+            )
+            store.save("oor.conf", report)
+            val controller = AndroidProfileConfigController(
+                context = context,
+                filesDir = root,
+                userProfiles = store,
+                preferences = context.getSharedPreferences("controller-oor", 0)
+                    .also { it.edit().clear().commit() },
+            )
+            val pair = CpuPair(primary = 0, consumer = 1)
+            controller.selectUserProfile("oor.conf", deviceRelease, pair)
+
+            val config = controller.load(deviceRelease, pair)
+            assertTrue("profile did not resolve", config.hasProfile)
+            assertTrue(
+                "buffer_size was not surfaced: ${config.invalidPaths}",
+                "route.multicast_waiter.buffer_size" in config.invalidPaths,
+            )
+        } finally {
+            root.deleteRecursively()
+        }
+    }
 }

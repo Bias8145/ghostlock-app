@@ -7,7 +7,11 @@
 
 namespace ghostlock::profile {
     inline uint32_t kernelsnitch_collisions() {
-        return symbol_u32(&kernel_offsets::kernelsnitch_collisions, 4);
+        return symbol_u32(
+            [](const kernel_offsets &v) {
+                return v.misc.kernelsnitch_collisions.value_or(0);
+            },
+            4);
     }
 
     inline uintptr_t slide_nfulnl_logger() {

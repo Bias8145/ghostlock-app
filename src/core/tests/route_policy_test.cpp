@@ -32,7 +32,7 @@ namespace {
         static profile::kernel_offsets values;
         values = {};
         values.route = route;
-        values.fallback_route = fallback;
+        values.meta.fallback_route = fallback;
         return profile::TargetProfile::from(&values);
     }
 } // namespace

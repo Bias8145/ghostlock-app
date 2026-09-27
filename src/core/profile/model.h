@@ -6,6 +6,7 @@
 
 #include <array>
 #include <cstring>
+#include <optional>
 #include <string_view>
 #include <utility>
 
@@ -72,41 +73,66 @@ namespace ghostlock::profile {
         return kRouteAuto;
     }
 
-    /* Native transport representation of one Kotlin-resolved profile.
-     * S08 wraps this compatibility layout in an immutable TargetProfile. */
+    /* Wire v2 model objects, one per transport section. Signedness/width mirror
+     * Kotlin (uint8_t->UByte, uint32_t->UInt, uint64_t->ULong, int32_t->Int).
+     * Fields with a runtime fallback are std::optional: absence means "not
+     * provided", distinct from a provided 0 (kernel_phys_load = 0 is
+     * meaningful). The wire carries presence by key occurrence. */
+    struct ProfileMeta {
+        uint8_t kernel_major = 0;
+        uint8_t recommend_shizuku = 0;
+        uint8_t fallback_route = 0;
+        uint8_t safe_mode = 0;
+    };
+
+    struct TaskStructOffsets {
+        uint32_t prio = 0, normal_prio = 0, sched_task_group = 0;
+        uint32_t pi_lock = 0, pi_waiters = 0, pi_top_task = 0, pi_blocked_on = 0;
+        uint32_t pid = 0, tgid = 0, atomic_flags = 0;
+        uint32_t real_cred = 0, cred = 0, comm = 0, tasks = 0, seccomp = 0;
+    };
+
+    struct CredTemplate {
+        uint32_t copy_size = 0, usage_offset = 0, usage_value = 0;
+        uint32_t caps_offset = 0, caps_count = 0;
+        uint64_t caps_value = 0;
+        uint32_t ref_count = 0;
+        uint32_t ref0_offset = 0, ref1_offset = 0, ref2_offset = 0, ref3_offset = 0;
+        uint64_t ref0_image = 0, ref1_image = 0, ref2_image = 0, ref3_image = 0;
+    };
+
+    struct KernelOffsets {
+        uint64_t init_task = 0, init_cred = 0, empty_zero_page = 0;
+        uint64_t root_task_group = 0, selinux_enforcing = 0;
+        uint64_t selinux_blob_sizes = 0, security_hook_heads = 0;
+        uint64_t slide_nfulnl_logger = 0, slide_loggers_0_1 = 0, slide_boot_id = 0;
+    };
+
+    struct KernelMisc {
+        std::optional<uint64_t> kernel_phys_load;
+        std::optional<uint8_t> compact_waiter;
+        std::optional<uint32_t> kernelsnitch_collisions;
+        std::optional<uint32_t> mm_struct_sz;
+    };
+
+    struct RouteGeometry {
+        std::optional<int32_t> pselect_waiter_shift;
+        std::optional<int32_t> mcast_waiter_off;
+        std::optional<uint32_t> mcast_buffer_size;
+        std::optional<uint32_t> mcast_task_offset;
+        std::optional<uint32_t> mcast_lock_offset;
+    };
+
+    /* Native transport representation of one Kotlin-resolved profile. */
     struct kernel_offsets {
         const char *uname_r;
-        uint8_t kernel_major;
-        uint8_t recommend_shizuku;
         uint8_t route;
-        /* Declared fallback route ("fallback_to": "none"/"<route>"); kRouteAuto
-       * means none. tcp_zerocopy currently falls back to select_stack. */
-        uint8_t fallback_route;
-        uint64_t kernel_phys_load;
-        int32_t pselect_waiter_shift;
-        int32_t mcast_waiter_off;
-        uint32_t mcast_buffer_size, mcast_task_offset, mcast_lock_offset;
-        uint32_t kernelsnitch_collisions;
-        uint64_t off_init_task, off_init_cred, off_empty_zero_page;
-        uint64_t off_root_task_group, off_selinux_enforcing;
-        uint64_t off_selinux_blob_sizes, off_security_hook_heads;
-        uint64_t off_slide_nfulnl_logger, off_slide_loggers_0_1, off_slide_boot_id;
-        uint32_t cred_copy_size, cred_usage_offset, cred_usage_value;
-        uint32_t cred_caps_offset, cred_caps_count;
-        uint64_t cred_caps_value;
-        uint32_t cred_ref_count;
-        uint32_t cred_ref0_offset, cred_ref1_offset;
-        uint32_t cred_ref2_offset, cred_ref3_offset;
-        uint64_t cred_ref0_image, cred_ref1_image;
-        uint64_t cred_ref2_image, cred_ref3_image;
-        uint32_t task_prio, task_normal_prio, task_sched_task_group;
-        uint32_t task_pi_lock, task_pi_waiters, task_pi_top_task, task_pi_blocked_on;
-        uint32_t task_pid, task_tgid, task_atomic_flags;
-        uint32_t task_real_cred, task_cred, task_comm, task_tasks, task_seccomp;
-        uint8_t compact_waiter;
-        /* Execution flags resolved from the profile (v2). */
-        uint8_t safe_mode;
-        uint32_t mm_struct_sz;
+        ProfileMeta meta;
+        TaskStructOffsets task;
+        CredTemplate credential;
+        KernelOffsets offsets;
+        KernelMisc misc;
+        RouteGeometry geometry;
         struct execution_settings execution;
 
         /* Typed view of the wire route field so callers need no cast. */
@@ -116,17 +142,19 @@ namespace ghostlock::profile {
     };
 
     struct MulticastWaiterLayout {
-        size_t waiter_offset, buffer_size, task_offset, lock_offset;
+        std::optional<int32_t> waiter_offset;
+        std::optional<uint32_t> buffer_size, task_offset, lock_offset;
     };
 
     struct SelectStackLayout {
-        int32_t waiter_shift;
-        int32_t compact_waiter;
+        std::optional<int32_t> waiter_shift;
+        std::optional<uint8_t> compact_waiter;
     };
 
     struct TcpZerocopyLayout {
-        int32_t compact_waiter;
+        std::optional<uint8_t> compact_waiter;
     };
+
 
     /* Immutable runtime snapshot copied from the transport representation.
      * The C++ value owns uname_r and rebinds the transport pointer after every
@@ -177,7 +205,7 @@ namespace ghostlock::profile {
         }
 
         [[nodiscard]] RouteKind fallback_route() const noexcept {
-            return loaded_ ? static_cast<RouteKind>(values_.fallback_route) : RouteKind::Auto;
+            return loaded_ ? static_cast<RouteKind>(values_.meta.fallback_route) : RouteKind::Auto;
         }
 
         [[nodiscard]] bool supports(RouteKind kind) const noexcept {
@@ -234,20 +262,20 @@ namespace ghostlock::profile {
 #undef GHOSTLOCK_EXEC_U32
 
         [[nodiscard]] bool has_compact_waiter() const noexcept {
-            return loaded_ && values_.compact_waiter;
+            return loaded_ && values_.misc.compact_waiter.value_or(0) != 0;
         }
 
         [[nodiscard]] bool safe_mode() const noexcept {
-            return loaded_ && values_.safe_mode;
+            return loaded_ && values_.meta.safe_mode;
         }
 
         [[nodiscard]] MulticastWaiterLayout multicast_layout() const noexcept {
             return loaded_
                        ? (MulticastWaiterLayout){
-                           .waiter_offset = static_cast<size_t>(values_.mcast_waiter_off),
-                           .buffer_size = values_.mcast_buffer_size,
-                           .task_offset = values_.mcast_task_offset,
-                           .lock_offset = values_.mcast_lock_offset,
+                           .waiter_offset = values_.geometry.mcast_waiter_off,
+                           .buffer_size = values_.geometry.mcast_buffer_size,
+                           .task_offset = values_.geometry.mcast_task_offset,
+                           .lock_offset = values_.geometry.mcast_lock_offset,
                        }
                        : MulticastWaiterLayout{};
         }
@@ -255,14 +283,14 @@ namespace ghostlock::profile {
         [[nodiscard]] SelectStackLayout select_stack_layout() const noexcept {
             return loaded_
                        ? (SelectStackLayout){
-                           .waiter_shift = values_.pselect_waiter_shift,
-                           .compact_waiter = values_.compact_waiter,
+                           .waiter_shift = values_.geometry.pselect_waiter_shift,
+                           .compact_waiter = values_.misc.compact_waiter,
                        }
                        : SelectStackLayout{};
         }
 
         [[nodiscard]] TcpZerocopyLayout tcp_zerocopy_layout() const noexcept {
-            return (TcpZerocopyLayout){.compact_waiter = has_compact_waiter()};
+            return (TcpZerocopyLayout){.compact_waiter = values_.misc.compact_waiter};
         }
 
         [[nodiscard]] uint32_t or_default(uint32_t value, uint32_t fallback)
@@ -271,7 +299,7 @@ namespace ghostlock::profile {
         }
 
         [[nodiscard]] uint32_t mm_struct_stride(uint32_t fallback) const noexcept {
-            return or_default(loaded_ ? values_.mm_struct_sz : 0, fallback);
+            return or_default(loaded_ ? values_.misc.mm_struct_sz.value_or(0) : 0, fallback);
         }
 
         [[nodiscard]] uint64_t image(uint64_t offset, uint64_t image_base,

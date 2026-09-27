@@ -6,15 +6,16 @@ using namespace ghostlock;
 
 int32_t main(void) {
     profile::kernel_offsets decoded = {
-        .kernel_major = 5,
         .route = ghostlock::profile::kRouteMulticastWaiter,
-        .pselect_waiter_shift = 16,
-        .mcast_waiter_off = 32,
-        .mcast_buffer_size = 128,
-        .mcast_task_offset = 40,
-        .mcast_lock_offset = 48,
-        .compact_waiter = 1,
-        .mm_struct_sz = 0x580,
+        .meta = {.kernel_major = 5},
+        .misc = {.compact_waiter = 1, .mm_struct_sz = 0x580},
+        .geometry = {
+            .pselect_waiter_shift = 16,
+            .mcast_waiter_off = 32,
+            .mcast_buffer_size = 128,
+            .mcast_task_offset = 40,
+            .mcast_lock_offset = 48,
+        },
         .execution = {
             .recommended_main_cpu = 2,
             .recommended_consumer_cpu = 3,
@@ -22,7 +23,7 @@ int32_t main(void) {
         },
     };
     ghostlock::profile::TargetProfile profile = ghostlock::profile::TargetProfile::from(&decoded);
-    decoded.kernel_major = 6;
+    decoded.meta.kernel_major = 6;
     decoded.execution.heap_prepare_max_attempts = 99;
 
     ghostlock::profile::MulticastWaiterLayout multicast =
@@ -35,9 +36,11 @@ int32_t main(void) {
     if (!profile.supports(ghostlock::profile::RouteKind::MulticastWaiter) ||
         profile.supports(ghostlock::profile::RouteKind::TcpZerocopy) ||
         profile.supports(ghostlock::profile::RouteKind::SelectStack) ||
-        multicast.buffer_size != 128 || multicast.waiter_offset != 32 ||
-        select.waiter_shift != 16 ||
-        !select.compact_waiter || !tcp.compact_waiter ||
+        multicast.buffer_size.value_or(0) != 128 ||
+        multicast.waiter_offset.value_or(0) != 32 ||
+        select.waiter_shift.value_or(0) != 16 ||
+        select.compact_waiter.value_or(0) == 0 ||
+        tcp.compact_waiter.value_or(0) == 0 ||
         !execution || execution->heap_prepare_max_attempts != 7 ||
         profile.mm_struct_stride(0x500) != 0x580) {
         fputs("target profile snapshot/accessor test failed\n", stderr);
@@ -63,7 +66,7 @@ int32_t main(void) {
     }
 
     /* A zero profile field and an unloaded profile both use the fallback. */
-    decoded.mm_struct_sz = 0;
+    decoded.misc.mm_struct_sz = 0;
     ghostlock::profile::TargetProfile zero_stride = ghostlock::profile::TargetProfile::from(&decoded);
     ghostlock::profile::TargetProfile unloaded{};
     if (zero_stride.mm_struct_stride(0x500) != 0x500 ||

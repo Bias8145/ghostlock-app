@@ -7,14 +7,14 @@ import com.ghostlock.app.data.route.SelectConfig
 
 /** Read-only multicast waiter geometry, mirroring native `MulticastWaiterLayout`. */
 internal data class MulticastWaiterLayout(
-    val waiterOffset: ULong,
-    val bufferSize: ULong,
-    val taskOffset: ULong,
-    val lockOffset: ULong,
+    val waiterOffset: Int?,
+    val bufferSize: UInt?,
+    val taskOffset: UInt?,
+    val lockOffset: UInt?,
 )
 
 /** Read-only select-stack geometry, mirroring native `SelectStackLayout`. */
-internal data class SelectStackLayout(val waiterShift: Long, val compactWaiter: Boolean)
+internal data class SelectStackLayout(val waiterShift: Int?, val compactWaiter: Boolean)
 
 /** Read-only TCP-zerocopy geometry, mirroring native `TcpZerocopyLayout`. */
 internal data class TcpZerocopyLayout(val compactWaiter: Boolean)
@@ -24,9 +24,7 @@ internal data class TcpZerocopyLayout(val compactWaiter: Boolean)
  *
  * The semantic identity (route enum, capabilities, layout views) lives here,
  * while [NativeProfileDocument] remains the v2 codec so the verified byte
- * layout stays authoritative. `toBinary()` must stay byte-identical to the
- * previous direct `NativeProfileDocument.toBinary()` output.
-
+ * layout stays authoritative.
  */
 internal data class Profile(
     val document: NativeProfileDocument,
@@ -48,27 +46,27 @@ internal data class Profile(
     val kernelOffsets: KernelOffsetTable get() = document.kernelOffset
     val multicast: MulticastGeometry
         get() = (document.routeConfig as? MulticastConfig)?.geometry
-            ?: MulticastGeometry(0L, 0u, 0u, 0u)
+            ?: MulticastGeometry(null, null, null, null)
     val execution: ExecutionTuning get() = document.execution
-    val kernelPhysLoad: ULong get() = document.kernelPhysLoad
-    val compactWaiter: Boolean get() = document.compactWaiter != 0u
-    val pselectWaiterShift: Long
-        get() = (document.routeConfig as? SelectConfig)?.waiterShift ?: 0L
-    val kernelsnitchCollisions: UInt get() = document.kernelsnitchCollisions
-    val mmStructSz: UInt get() = document.mmStructSz
+    val kernelPhysLoad: ULong? get() = document.kernelPhysLoad
+    val compactWaiter: Boolean get() = (document.compactWaiter?.toInt() ?: 0) != 0
+    val pselectWaiterShift: Int?
+        get() = (document.routeConfig as? SelectConfig)?.waiterShift
+    val kernelsnitchCollisions: UInt? get() = document.kernelsnitchCollisions
+    val mmStructSz: UInt? get() = document.mmStructSz
 
     fun supports(candidate: RouteKind): Boolean = route == candidate
 
     fun hasCompactWaiter(): Boolean = compactWaiter
 
     /** mm_struct stride; a missing or zero value uses [fallback]. */
-    fun mmStructStride(fallback: UInt): UInt = if (mmStructSz != 0u) mmStructSz else fallback
+    fun mmStructStride(fallback: UInt): UInt = mmStructSz?.takeIf { it != 0u } ?: fallback
 
     fun multicastLayout(): MulticastWaiterLayout = MulticastWaiterLayout(
-        waiterOffset = multicast.waiterOff.toULong(),
-        bufferSize = multicast.bufferSize.toULong(),
-        taskOffset = multicast.taskOffset.toULong(),
-        lockOffset = multicast.lockOffset.toULong(),
+        waiterOffset = multicast.waiterOff,
+        bufferSize = multicast.bufferSize,
+        taskOffset = multicast.taskOffset,
+        lockOffset = multicast.lockOffset,
     )
 
     fun selectStackLayout(): SelectStackLayout =
@@ -78,7 +76,7 @@ internal data class Profile(
 
     fun toNativeDocument(): NativeProfileDocument = document
 
-    fun toBinary(): ByteArray = document.toBinaryV3()
+    fun toBinary(): ByteArray = document.toBinary()
 
     companion object {
         /** Wraps a decoded document, rejecting an unresolved route. */

@@ -142,11 +142,16 @@ internal class AndroidProfileConfigController(
                 val compact = value("$routePrefix.compact_waiter")
                 if (compact == null || compact == 0L) {
                     invalid += "$routePrefix.compact_waiter"
+                } else if (compact < 0L || compact > 0xffL) {
+                    invalid += "$routePrefix.compact_waiter"
                 }
             }
 
             "select_stack" -> {
-                if (value("$routePrefix.waiter_shift") == null) {
+                val shift = value("$routePrefix.waiter_shift")
+                if (shift == null ||
+                    shift < Int.MIN_VALUE.toLong() || shift > Int.MAX_VALUE.toLong()
+                ) {
                     invalid += "$routePrefix.waiter_shift"
                 }
             }
@@ -154,10 +159,16 @@ internal class AndroidProfileConfigController(
             "multicast_waiter" -> {
                 for (field in RouteMulticastFields) {
                     val current = value("$routePrefix.$field")
-                    if (current == null || current == 0L) invalid += "$routePrefix.$field"
+                    if (current == null || current == 0L) {
+                        invalid += "$routePrefix.$field"
+                    } else if (current < 0L || current > UInt.MAX_VALUE.toLong()) {
+                        invalid += "$routePrefix.$field"
+                    }
                 }
                 val compact = value("$routePrefix.compact_waiter")
                 if (compact == null || compact == 0L) {
+                    invalid += "$routePrefix.compact_waiter"
+                } else if (compact < 0L || compact > 0xffL) {
                     invalid += "$routePrefix.compact_waiter"
                 }
                 requireNonZero(
@@ -167,13 +178,14 @@ internal class AndroidProfileConfigController(
                 )
                 if (copySize != null && copySize < 0xa0L) invalid += "cred.copy_size"
                 val waiterOff = value("$routePrefix.waiter_off")
-                if (waiterOff == null || waiterOff <= 0L) {
+                if (waiterOff == null || waiterOff <= 0L || waiterOff > Int.MAX_VALUE.toLong()) {
                     invalid += "$routePrefix.waiter_off"
                 }
                 val bufferSize = value("$routePrefix.buffer_size")
                 val lockOffset = value("$routePrefix.lock_offset")
-                if (waiterOff != null && waiterOff > 0L &&
-                    bufferSize != null && lockOffset != null &&
+                if (waiterOff != null && waiterOff > 0L && waiterOff <= Int.MAX_VALUE.toLong() &&
+                    bufferSize != null && bufferSize in 0L..UInt.MAX_VALUE.toLong() &&
+                    lockOffset != null && lockOffset in 0L..UInt.MAX_VALUE.toLong() &&
                     waiterOff + lockOffset + SizeofU64 > bufferSize
                 ) {
                     invalid += "$routePrefix.waiter_off"
@@ -190,11 +202,16 @@ internal class AndroidProfileConfigController(
                     val compact = value("$fallbackPrefix.compact_waiter")
                     if (compact == null || compact == 0L) {
                         invalid += "$fallbackPrefix.compact_waiter"
+                    } else if (compact < 0L || compact > 0xffL) {
+                        invalid += "$fallbackPrefix.compact_waiter"
                     }
                 }
 
                 "select_stack" -> {
-                    if (value("$fallbackPrefix.waiter_shift") == null) {
+                    val shift = value("$fallbackPrefix.waiter_shift")
+                    if (shift == null ||
+                        shift < Int.MIN_VALUE.toLong() || shift > Int.MAX_VALUE.toLong()
+                    ) {
                         invalid += "$fallbackPrefix.waiter_shift"
                     }
                 }
@@ -202,7 +219,11 @@ internal class AndroidProfileConfigController(
                 "multicast_waiter" -> {
                     for (field in RouteMulticastFields) {
                         val current = value("$fallbackPrefix.$field")
-                        if (current == null || current == 0L) invalid += "$fallbackPrefix.$field"
+                        if (current == null || current == 0L) {
+                            invalid += "$fallbackPrefix.$field"
+                        } else if (current < 0L || current > UInt.MAX_VALUE.toLong()) {
+                            invalid += "$fallbackPrefix.$field"
+                        }
                     }
                 }
             }
@@ -394,6 +415,15 @@ internal class AndroidProfileConfigController(
         view["execution"].asValueMap()?.remove("selected_cpus")
         fillRouteExecutionDefaults(view)
         trimRouteTuning(view)
+        return HoconSupport.render(view)
+    }
+
+    /** Renders the resolved profile verbatim (no trimming) for debug dumps. */
+    fun renderResolvedForDebug(release: String, pair: CpuPair): String? {
+        val resolved = resolveCurrent(
+            release, pair, readAdvancedOverride(release), includeImported = true,
+        ) ?: return null
+        val view = resolved.copyValue().asValueMap() ?: return null
         return HoconSupport.render(view)
     }
 

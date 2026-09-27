@@ -276,13 +276,15 @@ cred
 
 ## 9. native 传输与解析
 
-运行时的配置传输是**类型化二进制结构体**（v3），不再是 JSON 文本；v2 文档仍可解码以兼容。
+运行时的配置传输是**类型化二进制结构体**（v2，对象分段），不再是 JSON 文本。v2 是唯一版本：Kotlin 与 native 版本绑定，不做旧版本兼容解码。
 
-- Kotlin 侧由 `NativeProfileDocument`（data class，与 native `struct kernel_offsets` 一一对应）经 `toBinaryV3()` 序列化：
-  `u32 magic(0x0D000721) + u16 version(3) + u16 frontend_id + u16 backend_id + u16 middleware_id + u8 kernel_major + u8 fallback_route + u16 release_length + release + 68×u64 core 槽 + u16 middleware 条目数 + N×(u8 key_length + key + i64) + u16 option 条目数 + M×(u8 key_length + key + i64) 小端`；`middleware_id` 承载 route，`recommend_shizuku` 仅属 App、不再上 wire。字段顺序见 `NativeProfile.kt`（`flattenCommon` / per-route `RouteConfig`）与 `profile/binary.cpp`（`kCommonFields` / `kTcp/kSelect/kMulticastFields`），两侧必须同步修改。
+- Kotlin 侧由 `NativeProfileDocument` 经 `toBinary()` 序列化：先是 16 字节小端头
+  `u32 magic(0x0D000721) + u16 version(2) + u16 frontend + u16 backend + u16 middleware + u16 release_len + u16 reserved`，
+  随后是 `release` 文本、`u16 section_count`，每个 section 为 `u8 name_len + name + u32 entry_count`，每个条目为 `u8 key_len + key + u64 value`。
+  presence 由键是否出现表达（缺席 ≠ 提供的 0）；值为 u64 原始位型（有符号为二补数），不做 clamp；只写/接受**当前 route** 的 `route.*` section；未知 section/键忽略；重复键 last-wins。`middleware` 承载 route。权威 section/键表在 `profile/binary.cpp`（`kSections`），`NativeProfile.kt` 的对象 section 必须逐字对齐。
 - 传输路径：direct 与 Shizuku 都把 profile 以 **stdin** 交给 native（`--ghostlock-app-call`），不再落盘 `active-profile.bin`、也不再使用 `--profile`。
-- native 只有一条解码路径：`profile/entry.cpp` 把 stdin（或文件）字节交给 `profile/binary.cpp::parse`。它不检测 magic 之外的格式，也没有 JSON 回退——v1 JSON 只在导入转换（`legacy/offsets_json.cpp`）里解析。
-- 内部存储与“导出配置”均为 HOCON（人类可读）；JSON 只出现在 v1 转换（旧 `offsets.json`、`ghostlock-extract --format json`）。
+- native 只有一条解码路径：`profile/entry.cpp` 把 stdin（或文件）字节交给 `profile/binary.cpp::parse`。它不检测 magic 之外的格式，也没有 JSON 回退；native 侧 v1 `legacy/` JSON 解析器已删除。
+- 内部存储与“导出配置”均为 HOCON（人类可读）；旧 v1 `offsets.json` 只在 Kotlin 侧由 `LegacyProfileConverter.kt` 转成 v2，`ghostlock-extract --format json` 仍按 v1 JSON 形状输出给外部工具。
 - 运行时路由与能力判断（`TargetProfile::route()`、`TargetProfile::supports()`、`route_capability`）全部基于解析后的 route。
 
 ## 10. 修改配置的检查清单

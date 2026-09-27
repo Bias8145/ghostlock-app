@@ -3,25 +3,20 @@ package com.ghostlock.app.data.route
 /**
  * Route-specific configuration. One subtype per route, each owning the wire
  * key names of its v2 route section. Never part of the shared document.
+ *
+ * Entries carry the wire's raw 64-bit bit-pattern: unsigned fields use their
+ * exact bits, signed fields use two's complement. Typed fields are restored
+ * with explicit bit casts and never clamped; out-of-range values are rejected
+ * by the validation pass instead of being silently rewritten.
  */
 sealed interface RouteConfig {
-    fun entries(): List<Pair<String, Long>>
+    fun entries(): List<Pair<String, ULong>>
 
-    fun apply(key: String, value: Long): RouteConfig
+    fun apply(key: String, value: ULong): RouteConfig
 }
 
 object NoRouteConfig : RouteConfig {
-    override fun entries(): List<Pair<String, Long>> = emptyList()
+    override fun entries(): List<Pair<String, ULong>> = emptyList()
 
-    override fun apply(key: String, value: Long): RouteConfig = this
+    override fun apply(key: String, value: ULong): RouteConfig = this
 }
-
-/**
- * Narrows a transport `Long` into the unsigned 32-bit range native stores every
- * duration/attempt field in. A hand-edited HOCON/JSON value that is negative or
- * overflows the slot clamps instead of wrapping into an enormous wait.
- */
-fun Long.toConfigUInt(): UInt = coerceIn(0L, UInt.MAX_VALUE.toLong()).toUInt()
-
-/** Same as [toConfigUInt] for the 64-bit unsigned profile slots. */
-fun Long.toConfigULong(): ULong = coerceAtLeast(0L).toULong()

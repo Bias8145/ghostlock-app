@@ -54,8 +54,6 @@ set(SOURCES
         core/main.cpp
         core/attack/ops.cpp
         core/profile/entry.cpp
-        core/legacy/legacy_profile_converter.cpp
-        core/legacy/legacy_entrypoint_starter.cpp
         core/memory/address_space.cpp
         core/memory/heap_context.cpp
         core/race/pi_race.cpp
@@ -66,7 +64,6 @@ set(SOURCES
         core/route/multicast_waiter_route.cpp
         core/memory/payload_builder.cpp
         core/session/runtime_config.cpp
-        core/legacy/offsets_json.cpp
         core/support/util.cpp
         core/session/exploit_session.cpp
         core/route/exploit_procedure.cpp

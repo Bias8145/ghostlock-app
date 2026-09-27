@@ -3,40 +3,41 @@ package com.ghostlock.app.data.route
 data class MulticastConfig(
     val geometry: MulticastGeometry,
 ) : RouteConfig {
-    override fun entries(): List<Pair<String, Long>> = listOf(
-        "mcast_waiter_off" to geometry.waiterOff,
-        "mcast_buffer_size" to geometry.bufferSize.toLong(),
-        "mcast_task_offset" to geometry.taskOffset.toLong(),
-        "mcast_lock_offset" to geometry.lockOffset.toLong(),
-    )
+    override fun entries(): List<Pair<String, ULong>> = buildList {
+        geometry.waiterOff?.let { add("waiter_off" to it.toLong().toULong()) }
+        geometry.bufferSize?.let { add("buffer_size" to it.toULong()) }
+        geometry.taskOffset?.let { add("task_offset" to it.toULong()) }
+        geometry.lockOffset?.let { add("lock_offset" to it.toULong()) }
+    }
 
-    override fun apply(key: String, value: Long): RouteConfig = when (key) {
-        "mcast_waiter_off" -> copy(geometry = geometry.copy(waiterOff = value))
-        "mcast_buffer_size" -> copy(geometry = geometry.copy(bufferSize = value.toConfigUInt()))
-        "mcast_task_offset" -> copy(geometry = geometry.copy(taskOffset = value.toConfigUInt()))
-        "mcast_lock_offset" -> copy(geometry = geometry.copy(lockOffset = value.toConfigUInt()))
+    override fun apply(key: String, value: ULong): RouteConfig = when (key) {
+        "waiter_off" -> copy(geometry = geometry.copy(waiterOff = value.toLong().toInt()))
+        "buffer_size" -> copy(geometry = geometry.copy(bufferSize = value.toUInt()))
+        "task_offset" -> copy(geometry = geometry.copy(taskOffset = value.toUInt()))
+        "lock_offset" -> copy(geometry = geometry.copy(lockOffset = value.toUInt()))
         else -> this
     }
 
     companion object {
         val EMPTY = MulticastConfig(
-            geometry = MulticastGeometry(0L, 0u, 0u, 0u),
+            geometry = MulticastGeometry(null, null, null, null),
         )
 
-        fun from(value: (String) -> Long): MulticastConfig = MulticastConfig(
+        fun from(value: (String) -> Long?): MulticastConfig = MulticastConfig(
             geometry = MulticastGeometry(
-                waiterOff = value("mcast.waiter_off"),
-                bufferSize = value("mcast.buffer_size").toConfigUInt(),
-                taskOffset = value("mcast.task_offset").toConfigUInt(),
-                lockOffset = value("mcast.lock_offset").toConfigUInt(),
+                waiterOff = value("mcast.waiter_off")?.toInt(),
+                bufferSize = value("mcast.buffer_size")?.toUInt(),
+                taskOffset = value("mcast.task_offset")?.toUInt(),
+                lockOffset = value("mcast.lock_offset")?.toUInt(),
             ),
         )
     }
 }
 
+/** Mirrors native `RouteGeometry`'s multicast members (all `std::optional`). */
 data class MulticastGeometry(
-    val waiterOff: Long,
-    val bufferSize: UInt,
-    val taskOffset: UInt,
-    val lockOffset: UInt,
+    val waiterOff: Int?,
+    val bufferSize: UInt?,
+    val taskOffset: UInt?,
+    val lockOffset: UInt?,
 )

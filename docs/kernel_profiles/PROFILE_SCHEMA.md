@@ -360,22 +360,32 @@ via SAF.
 
 ## 9. Native transport and parsing
 
-Runtime configuration crosses as a **typed binary struct** (v3), no longer JSON
-text. v2 documents are still decoded for compatibility.
+Runtime configuration crosses as a **typed binary struct** (v2, object sections),
+no longer JSON text. v2 is the only version: Kotlin and native are version-bound
+and there is no legacy decode.
 
-- Kotlin serializes it from `NativeProfileDocument` (a data class matching
-  native's `struct kernel_offsets`) via `toBinaryV3()`:
-  `u32 magic(0x0D000721) + u16 version(3) + u16 frontend_id + u16 backend_id + u16 middleware_id + u8 kernel_major + u8 fallback_route + u16 release_length + release + 68×u64 core slots + u16 middleware entry count + N×(u8 key_length + key + i64) + u16 option count + M×(u8 key_length + key + i64)`, little-endian. `middleware_id` carries the route; `recommend_shizuku` is App-only and absent from the wire. The field order lives in `NativeProfile.kt` (`flattenCommon` / per-route `RouteConfig`) and `profile/binary.cpp` (`kCommonFields` / `kTcp/kSelect/kMulticastFields`); the two sides must change together.
+- Kotlin serializes it from `NativeProfileDocument` via `toBinary()`:
+  a 16-byte little-endian header
+  `u32 magic(0x0D000721) + u16 version(2) + u16 frontend + u16 backend + u16 middleware + u16 release_len + u16 reserved`,
+  then the `release` text, then `u16 section_count`, then per section
+  `u8 name_len + name + u32 entry_count`, then per entry `u8 key_len + key + u64 value`.
+  Presence is carried by key occurrence (an omitted field differs from a provided 0),
+  values are raw u64 bit patterns (signed values use two's complement) and are never
+  clamped, only the active route's `route.*` section is written or accepted, unknown
+  sections/keys are ignored and duplicate keys are last-wins. `middleware` carries the
+  route. The authoritative section/key tables are `profile/binary.cpp` (`kSections`);
+  the Kotlin object sections in `NativeProfile.kt` must follow them exactly.
 - Transport path: direct and Shizuku both hand the profile to native on
   **stdin** (`--ghostlock-app-call`); nothing is written to `active-profile.bin`
   and `--profile` no longer exists.
 - Native has exactly one decode path: `profile/entry.cpp` hands the stdin (or
   file) bytes to `profile/binary.cpp::parse`. It detects no format other than
-  the magic and has no JSON fallback — v1 JSON is parsed only during import
-  conversion (`legacy/offsets_json.cpp`).
-- Internal storage and "export config" are HOCON (human-readable); JSON only
-  appears in the v1 conversion (old `offsets.json`, `ghostlock-extract
-  --format json`).
+  the magic and has no JSON fallback; the native v1 `legacy/` JSON parser was
+  removed.
+- Internal storage and "export config" are HOCON (human-readable); the legacy
+  v1 `offsets.json` is converted to v2 only on the Kotlin side
+  (`LegacyProfileConverter.kt`), and `ghostlock-extract --format json` still
+  emits the v1 JSON shape for external tools.
 - Runtime route and capability decisions (`TargetProfile::route()`,
   `TargetProfile::supports()`, `route_capability`) are all based on the decoded
   route.

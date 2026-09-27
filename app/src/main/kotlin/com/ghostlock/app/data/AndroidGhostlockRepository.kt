@@ -388,12 +388,12 @@ class AndroidGhostlockRepository(context: Context) : GhostlockRepository {
     }
 
     override suspend fun runExploit(pair: CpuPair, onLog: (String) -> Unit): Int =
-        withDebugAttackLog("direct", onLog) { archivedLog, debugDir ->
-            runExploitBinary(pair, "libghostlock.so", archivedLog, debugDir)
+        withDebugAttackLog("direct", onLog) { archivedLog, debugDir, writeSidecar ->
+            runExploitBinary(pair, "libghostlock.so", archivedLog, debugDir, writeSidecar)
         }
 
     override suspend fun runExploitWithShizuku(pair: CpuPair, onLog: (String) -> Unit): Int {
-        return withDebugAttackLog("shizuku", onLog) { archivedLog, debugDir ->
+        return withDebugAttackLog("shizuku", onLog) { archivedLog, debugDir, writeSidecar ->
             archivedLog("<s> resolving profile")
             val release = System.getProperty("os.version", "").orEmpty()
             val config = profileController.load(release, pair)
@@ -417,6 +417,14 @@ class AndroidGhostlockRepository(context: Context) : GhostlockRepository {
                 }
 
                 else -> {
+                    /* Mirror the UserService patch so the dumped blob is the
+                     * effective one native will actually receive. */
+                    val runtimeBlob = if (safeModeEnabled) {
+                        NativeProfileDocument.patchSafeMode(profileBlob) ?: profileBlob
+                    } else {
+                        profileBlob
+                    }
+                    dumpRuntimeProfile(archivedLog, writeSidecar, release, pair, runtimeBlob)
                     archivedLog("<b> starting UserService")
                     resetRunState()
                     shizukuRunner.run(
@@ -493,18 +501,21 @@ class AndroidGhostlockRepository(context: Context) : GhostlockRepository {
     private suspend fun withDebugAttackLog(
         entry: String,
         onLog: (String) -> Unit,
-        run: suspend ((String) -> Unit, String?) -> Int,
+        run: suspend ((String) -> Unit, String?, (String, ByteArray) -> Boolean) -> Int,
     ): Int {
         val settings = debugSettings()
-        if (!settings.exportEnabled) return run(onLog, null)
+        if (!settings.exportEnabled) return run(onLog, null) { _, _ -> false }
         val archive = DebugAttackLog.open(appContext, entry, settings.exportLocation)
         if (archive == null) {
             onLog("<k> warning: cannot create ${settings.exportLocation} debug log")
-            return run(onLog, null)
+            return run(onLog, null) { _, _ -> false }
         }
         val archivedLog: (String) -> Unit = { line ->
             runCatching { archive.append(line) }
             onLog(line)
+        }
+        val writeSidecar: (String, ByteArray) -> Boolean = { name, bytes ->
+            runCatching { archive.writeSidecar(name, bytes) }.getOrDefault(false)
         }
         return try {
             /* First line of every archived run log: which app build produced it. */
@@ -514,9 +525,35 @@ class AndroidGhostlockRepository(context: Context) : GhostlockRepository {
             )
             archivedLog("<k> debug log: ${archive.folderPath}/${archive.displayName}")
             archivedLog("<k> debug dump dir: ${archive.folderFile.absolutePath}")
-            run(archivedLog, if (settings.kernelLogEnabled) archive.folderFile.absolutePath else null)
+            run(
+                archivedLog,
+                if (settings.kernelLogEnabled) archive.folderFile.absolutePath else null,
+                writeSidecar,
+            )
         } finally {
             runCatching { archive.close() }
+        }
+    }
+
+    /**
+     * Writes the effective runtime profile into the attempt folder: the resolved
+     * HOCON (`profile.conf`) and the exact GLK1 v2 bytes handed to native
+     * (`profile.bin`). No-op when debug export is disabled.
+     */
+    private fun dumpRuntimeProfile(
+        log: (String) -> Unit,
+        writeSidecar: (String, ByteArray) -> Boolean,
+        release: String,
+        pair: CpuPair,
+        blob: ByteArray?,
+    ) {
+        val conf = runCatching { profileController.renderResolvedForDebug(release, pair) }.getOrNull()
+        val confWritten = conf?.let {
+            writeSidecar("profile.conf", it.toByteArray(StandardCharsets.UTF_8))
+        } ?: false
+        val blobWritten = blob?.let { writeSidecar("profile.bin", it) } ?: false
+        if (confWritten || blobWritten) {
+            log("<k> runtime profile written: profile.conf/profile.bin")
         }
     }
 
@@ -530,6 +567,7 @@ class AndroidGhostlockRepository(context: Context) : GhostlockRepository {
         binaryName: String,
         onLog: (String) -> Unit,
         debugDir: String?,
+        writeSidecar: (String, ByteArray) -> Boolean,
     ): Int {
         val workDir = filesDir
         return try {
@@ -559,13 +597,14 @@ class AndroidGhostlockRepository(context: Context) : GhostlockRepository {
                         config.invalidPaths.take(6).joinToString(),
                 )
             }
-            val profileBlob = profileController.nativeDocument(config)
+            var profileBlob = profileController.nativeDocument(config)
                 ?: error("profile is unavailable for $release")
-            // v2: safe_mode is the last common slot (little-endian); the route
-            // section follows it, so the offset comes from the header.
+            // v2: safe_mode lives in the meta section; there is no fixed slot
+            // offset, so the blob is rescanned and rewritten.
             if (safeModeEnabled) {
-                NativeProfileDocument.safeModeOffset(profileBlob)?.let { profileBlob[it] = 1 }
+                profileBlob = NativeProfileDocument.patchSafeMode(profileBlob) ?: profileBlob
             }
+            dumpRuntimeProfile(onLog, writeSidecar, release, pair, profileBlob)
             val ksuOffset = AtomicLong()
             val nativeOffset = AtomicLong()
             val processRef = AtomicReference<Process?>(null)

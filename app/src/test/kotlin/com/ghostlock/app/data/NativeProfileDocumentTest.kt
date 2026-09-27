@@ -1,5 +1,7 @@
 package com.ghostlock.app.data
 
+import com.ghostlock.app.data.route.MulticastConfig
+import com.ghostlock.app.data.route.SelectConfig
 import com.ghostlock.app.data.route.TcpConfig
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -8,9 +10,9 @@ import org.junit.Assert.fail
 import org.junit.Test
 
 /**
- * White-box tests for the v2 transport layout shared with native
- * (`profile/binary.cpp`): exact header bytes, the 68 common slot indices, the
- * per-route section keys, and rejection of malformed documents.
+ * White-box tests for the v2 object-section transport shared with native
+ * (`profile/binary.cpp`): exact header bytes, section/entry framing, the
+ * per-route short keys, presence semantics and malformed-document rejection.
  */
 class NativeProfileDocumentTest {
     private val release = "6.1.0-layout-test"
@@ -31,23 +33,36 @@ class NativeProfileDocumentTest {
             acc or ((bytes[offset + i].toLong() and 0xff) shl (8 * i))
         }
 
-    private fun releaseLength(bytes: ByteArray): Int = readU16(bytes, 10)
+    private fun releaseLength(bytes: ByteArray): Int = readU16(bytes, 12)
 
-    private fun commonBase(bytes: ByteArray): Int = 12 + releaseLength(bytes)
+    private data class RawSection(val name: String, val entries: List<Pair<String, Long>>)
 
-    private fun routeEntries(bytes: ByteArray): List<Pair<String, Long>> {
-        var p = commonBase(bytes) + 68 * 8
-        val count = bytes[p++].toInt() and 0xff
-        val entries = mutableListOf<Pair<String, Long>>()
+    private fun sections(bytes: ByteArray): List<RawSection> {
+        var p = 16 + releaseLength(bytes)
+        val count = readU16(bytes, p)
+        p += 2
+        val out = mutableListOf<RawSection>()
         repeat(count) {
-            val keyLength = bytes[p++].toInt() and 0xff
-            val key = String(bytes, p, keyLength, Charsets.UTF_8)
-            p += keyLength
-            entries += key to readLong(bytes, p)
-            p += 8
+            val nameLength = bytes[p++].toInt() and 0xff
+            val name = String(bytes, p, nameLength, Charsets.UTF_8)
+            p += nameLength
+            val entryCount = readU32(bytes, p).toInt()
+            p += 4
+            val entries = mutableListOf<Pair<String, Long>>()
+            repeat(entryCount) {
+                val keyLength = bytes[p++].toInt() and 0xff
+                val key = String(bytes, p, keyLength, Charsets.UTF_8)
+                p += keyLength
+                entries += key to readLong(bytes, p)
+                p += 8
+            }
+            out += RawSection(name, entries)
         }
-        return entries
+        return out
     }
+
+    private fun entriesOf(bytes: ByteArray, section: String): List<Pair<String, Long>> =
+        sections(bytes).firstOrNull { it.name == section }?.entries ?: emptyList()
 
     @Test
     fun `header uses the agreed magic and version`() {
@@ -56,83 +71,95 @@ class NativeProfileDocumentTest {
         assertEquals(2, NativeProfileDocument.Version.toInt())
         assertEquals(0x0D000721L, readU32(bytes, 0))
         assertEquals(2, readU16(bytes, 4))
-        assertEquals(2, bytes[6].toInt() and 0xff) // select_stack
-        assertEquals(0, bytes[7].toInt() and 0xff) // kernel_major
-        assertEquals(0, bytes[8].toInt() and 0xff) // recommend_shizuku
-        assertEquals(0, bytes[9].toInt() and 0xff) // fallback_route
+        assertEquals(1, readU16(bytes, 6)) // frontend root_child
+        assertEquals(1, readU16(bytes, 8)) // backend cve_2026_43499
+        assertEquals(2, readU16(bytes, 10)) // select_stack
         assertEquals(release.length, releaseLength(bytes))
-        assertEquals(release, String(bytes, 12, releaseLength(bytes), Charsets.UTF_8))
+        assertEquals(release, String(bytes, 16, releaseLength(bytes), Charsets.UTF_8))
     }
 
     @Test
-    fun `route section carries exactly the route's keys`() {
+    fun `route section carries exactly the route's short keys`() {
         assertEquals(
-            listOf("tcp_attempts", "tcp_arm_sequence", "tcp_post_receive_hold_iterations"),
-            routeEntries(doc("tcp_zerocopy").toBinary()).map { it.first },
+            listOf("attempts", "arm_sequence", "post_receive_hold_iterations"),
+            entriesOf(doc("tcp_zerocopy").toBinary(), "route.tcp_zerocopy").map { it.first },
         )
         assertEquals(
-            listOf("pselect_waiter_shift", "select_enter_delay_us", "select_timeout_us"),
-            routeEntries(doc("select_stack").toBinary()).map { it.first },
+            listOf("waiter_shift", "compact_waiter", "enter_delay_us", "timeout_us"),
+            entriesOf(
+                doc(
+                    "select_stack",
+                    mapOf(
+                        "pselect_waiter_shift" to -2L,
+                        "compact_waiter" to 1L,
+                        "execution.routes.select_stack.enter_delay_us" to 50000L,
+                        "execution.routes.select_stack.timeout_us" to 1000L,
+                    ),
+                ).toBinary(),
+                "route.select_stack",
+            ).map { it.first },
         )
         assertEquals(
-            listOf(
-                "mcast_waiter_off", "mcast_buffer_size", "mcast_task_offset",
-                "mcast_lock_offset",
-            ),
-            routeEntries(doc("multicast_waiter").toBinary()).map { it.first },
+            listOf("waiter_off", "buffer_size", "task_offset", "lock_offset"),
+            entriesOf(
+                doc(
+                    "multicast_waiter",
+                    mapOf(
+                        "mcast.waiter_off" to 264L,
+                        "mcast.buffer_size" to 512L,
+                        "mcast.task_offset" to 0x40L,
+                        "mcast.lock_offset" to 0x50L,
+                    ),
+                ).toBinary(),
+                "route.multicast_waiter",
+            ).map { it.first },
         )
-        /* An unresolved route emits no section at all. */
+        /* An unresolved route emits no route section. */
         val unresolved = doc(route = null).toBinary()
-        assertEquals(0, unresolved[6].toInt() and 0xff)
-        assertTrue(routeEntries(unresolved).isEmpty())
+        assertEquals(0, readU16(unresolved, 10))
+        assertTrue(sections(unresolved).none { it.name.startsWith("route.") })
     }
 
     @Test
-    fun `document size is header plus 68 common slots plus the route section`() {
-        val bytes = doc("select_stack").toBinary()
-        val routeBytes = routeEntries(bytes).sumOf { 1 + it.first.toByteArray().size + 8 } + 1
-        assertEquals(12 + release.length + 68 * 8 + routeBytes, bytes.size)
-    }
-
-    @Test
-    fun `common slots keep their agreed indices`() {
+    fun `optional fields are omitted while presence is carried by keys`() {
         val bytes = doc(
-            "select_stack",
+            "multicast_waiter",
             mapOf(
-                "task_struct.prio" to 0x20L,
-                "cred.copy_size" to 0x88L,
-                "offset.init_task" to 0x1000L,
-                "execution.routes.select_stack.consumer_max_calls" to 1L,
-                "execution.routes.select_stack.consumer_burst_calls" to 1L,
+                "mcast.waiter_off" to 264L,
+                "mcast.buffer_size" to 0L, // provided 0 must still appear
             ),
         ).toBinary()
-        val base = commonBase(bytes)
-        assertEquals(0x20L, readLong(bytes, base + 0 * 8)) // task_prio
-        assertEquals(0x88L, readLong(bytes, base + 15 * 8)) // cred_copy_size
-        assertEquals(0x1000L, readLong(bytes, base + 30 * 8)) // off_init_task
-        assertEquals(1L, readLong(bytes, base + 65 * 8)) // consumer_max_calls
-        assertEquals(1L, readLong(bytes, base + 66 * 8)) // consumer_burst_calls
-        assertEquals(0L, readLong(bytes, base + 67 * 8)) // safe_mode (patched later)
-        assertEquals(base + 67 * 8, NativeProfileDocument.safeModeOffset(bytes))
+        val route = entriesOf(bytes, "route.multicast_waiter")
+        assertEquals(listOf("waiter_off", "buffer_size"), route.map { it.first })
+        assertEquals(264L, route.toMap()["waiter_off"])
+        assertEquals(0L, route.toMap()["buffer_size"])
+        /* Nothing in `kernel` was provided, so the section is absent. */
+        assertTrue(entriesOf(bytes, "kernel").isEmpty())
+
+        val decoded = NativeProfileDocument.fromBinary(bytes)!!
+        val geometry = (decoded.routeConfig as MulticastConfig).geometry
+        assertEquals(264, geometry.waiterOff)
+        assertEquals(0u, geometry.bufferSize)
+        assertNull(decoded.kernelPhysLoad)
+        assertNull(decoded.compactWaiter)
     }
 
     @Test
-    fun `v3 carries route done timeout as a compatible named option`() {
-        val document = doc(
-            "select_stack",
-            mapOf("execution.race.route_done_timeout_ms" to 300000L),
-        )
-        val decoded = NativeProfileDocument.fromBinary(document.toBinaryV3())!!
-        assertEquals(300000u, decoded.execution.raceRouteDoneTimeoutMs)
-
-        /* v2 has no option section; Native applies its runtime default. */
-        val legacy = NativeProfileDocument.fromBinary(document.toBinary())!!
-        assertEquals(0u, legacy.execution.raceRouteDoneTimeoutMs)
+    fun `signed values keep their two's complement bits`() {
+        val bytes = doc("select_stack", mapOf("pselect_waiter_shift" to -2L)).toBinary()
+        assertEquals(-2L, entriesOf(bytes, "route.select_stack").toMap()["waiter_shift"]!!)
+        val decoded = NativeProfileDocument.fromBinary(bytes)!!
+        assertEquals(-2, (decoded.routeConfig as SelectConfig).waiterShift)
     }
 
     @Test
-    fun `safe mode offset rejects a truncated blob`() {
-        assertNull(NativeProfileDocument.safeModeOffset(ByteArray(8)))
+    fun `unsigned values round trip exactly without clamping`() {
+        val bytes = doc(
+            "tcp_zerocopy",
+            mapOf("execution.routes.tcp_zerocopy.attempts" to 0xFFFFFFFFL),
+        ).toBinary()
+        val decoded = NativeProfileDocument.fromBinary(bytes)!!
+        assertEquals(0xFFFFFFFFu, (decoded.routeConfig as TcpConfig).attempts)
     }
 
     @Test
@@ -144,8 +171,9 @@ class NativeProfileDocumentTest {
                 "execution.routes.tcp_zerocopy.arm_sequence" to 7L,
             ),
         ).toBinary()
-        val marker = "tcp_attempts".toByteArray(Charsets.UTF_8)
-        val at = bytes.indexOfSubsequence(marker)
+        val marker = "attempts".toByteArray(Charsets.UTF_8)
+        /* Route sections come last, so the trailing match is the route key. */
+        val at = bytes.lastIndexOfSubsequence(marker)
         assertTrue(at > 0)
         bytes[at] = 'x'.code.toByte() // same length, unknown key
 
@@ -156,12 +184,31 @@ class NativeProfileDocumentTest {
     }
 
     @Test
+    fun `patch safe mode rewrites the meta entry`() {
+        val bytes = doc("select_stack", mapOf("kernel_major" to 6L)).toBinary()
+        assertEquals(0L, entriesOf(bytes, "meta").toMap()["safe_mode"])
+        val patched = NativeProfileDocument.patchSafeMode(bytes)!!
+        assertEquals(1L, entriesOf(patched, "meta").toMap()["safe_mode"])
+        assertEquals(1u, NativeProfileDocument.fromBinary(patched)!!.safeMode)
+        /* Original input is untouched. */
+        assertEquals(0L, entriesOf(bytes, "meta").toMap()["safe_mode"])
+        assertNull(NativeProfileDocument.patchSafeMode(ByteArray(8)))
+    }
+
+    @Test
     fun `decoder rejects a wrong version or magic`() {
         val bytes = doc("select_stack").toBinary()
-        val badVersion = bytes.copyOf().also { it[4] = 3 }
+        val badVersion = bytes.copyOf().also { it[4] = 9 }
         assertNull(NativeProfileDocument.fromBinary(badVersion))
         val badMagic = bytes.copyOf().also { it[0] = 'X'.code.toByte() }
         assertNull(NativeProfileDocument.fromBinary(badMagic))
+    }
+
+    @Test
+    fun `decoder rejects an unknown route id`() {
+        val bytes = doc("select_stack").toBinary()
+        val badRoute = bytes.copyOf().also { it[10] = 99 }
+        assertNull(NativeProfileDocument.fromBinary(badRoute))
     }
 
     @Test
@@ -174,8 +221,8 @@ class NativeProfileDocumentTest {
         }
     }
 
-    private fun ByteArray.indexOfSubsequence(needle: ByteArray): Int {
-        outer@ for (i in 0..size - needle.size) {
+    private fun ByteArray.lastIndexOfSubsequence(needle: ByteArray): Int {
+        outer@ for (i in size - needle.size downTo 0) {
             for (j in needle.indices) {
                 if (this[i + j] != needle[j]) continue@outer
             }

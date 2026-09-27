@@ -348,7 +348,7 @@ namespace ghostlock::session::backend {
             } else {
                 const profile::MulticastWaiterLayout mcast = session.profile.multicast_layout();
                 const uintptr_t w1_scratch_poison =
-                        (session.heap.current.base) + mcast.buffer_size;
+                        (session.heap.current.base) + mcast.buffer_size.value_or(0);
                 if (!support::quarantine_reclaim_sockets()) {
                     pr_warning("W1 scratch page quarantine failed\n");
                     return false;

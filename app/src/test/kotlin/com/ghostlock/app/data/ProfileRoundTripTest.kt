@@ -3,7 +3,6 @@ package com.ghostlock.app.data
 import com.ghostlock.app.data.route.RouteKind
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
 
@@ -29,15 +28,20 @@ class ProfileRoundTripTest {
         "execution.routes.select_stack.consumer_burst_calls" to 1L,
     )
     private val tcpValues = common + mapOf(
+        "execution.routes.tcp_zerocopy.attempts" to 10L,
         "execution.routes.tcp_zerocopy.arm_sequence" to 1L,
+        "execution.routes.tcp_zerocopy.post_receive_hold_iterations" to 2L,
     )
     private val selectValues = common + mapOf(
         "pselect_waiter_shift" to -2L,
         "execution.routes.select_stack.enter_delay_us" to 50000L,
+        "execution.routes.select_stack.timeout_us" to 1000L,
     )
     private val multicastValues = common + mapOf(
         "mcast.waiter_off" to 264L,
         "mcast.buffer_size" to 512L,
+        "mcast.task_offset" to 0x40L,
+        "mcast.lock_offset" to 0x50L,
     )
 
     private fun document(
@@ -73,7 +77,7 @@ class ProfileRoundTripTest {
 
     @Test
     fun `multicast round trip exposes route semantics`() {
-        val bytes = document("multicast_waiter", "select_stack", multicastValues).toBinaryV3()
+        val bytes = document("multicast_waiter", "select_stack", multicastValues).toBinary()
         val profile = Profile.fromBinary(bytes)!!
 
         assertEquals(RouteKind.MULTICAST_WAITER, profile.route)
@@ -84,8 +88,8 @@ class ProfileRoundTripTest {
         assertEquals(false, profile.supports(RouteKind.TCP_ZEROCOPY))
         assertEquals(true, profile.hasCompactWaiter())
         assertEquals(0x4000u, profile.mmStructStride(fallback = 1u))
-        assertEquals(264uL, profile.multicastLayout().waiterOffset)
-        /* Consumer cadence rides the common slot, not the multicast section. */
+        assertEquals(264, profile.multicastLayout().waiterOffset)
+        /* Consumer cadence rides its own execution section, not the multicast one. */
         val decoded = NativeProfileDocument.fromBinary(bytes)!!
         assertEquals(1u, decoded.execution.consumerMaxCalls)
         assertEquals(1u, decoded.execution.consumerBurstCalls)
@@ -95,21 +99,19 @@ class ProfileRoundTripTest {
 
     @Test
     fun `select round trip exposes waiter shift`() {
-        val bytes = document("select_stack", null, selectValues).toBinaryV3()
+        val bytes = document("select_stack", null, selectValues).toBinary()
         val profile = Profile.fromBinary(bytes)!!
         assertEquals(RouteKind.SELECT_STACK, profile.route)
-        assertEquals(-2L, profile.selectStackLayout().waiterShift)
+        assertEquals(-2, profile.selectStackLayout().waiterShift)
         assertArrayEquals(bytes, profile.toBinary())
     }
 
     @Test
-    fun `safe mode patch targets the trailing common slot`() {
+    fun `patch safe mode lands on the meta entry`() {
         val original = document("multicast_waiter", null, multicastValues)
         val bytes = original.toBinary()
-        val offset = NativeProfileDocument.safeModeOffset(bytes)!!
-        bytes[offset] = 1
-
-        val decoded = NativeProfileDocument.fromBinary(bytes)!!
+        val patched = NativeProfileDocument.patchSafeMode(bytes)!!
+        val decoded = NativeProfileDocument.fromBinary(patched)!!
         assertEquals(1u, decoded.safeMode)
         assertEquals(original.copy(safeMode = 1u), decoded)
     }
@@ -137,36 +139,6 @@ class ProfileRoundTripTest {
         )!!
         assertEquals(RouteKind.TCP_ZEROCOPY, profile.route)
         assertNull(profile.fallback)
-        assertArrayEquals(document("tcp_zerocopy", null, tcpValues).toBinaryV3(), profile.toBinary())
-    }
-
-    @Test
-    fun `v3 decode rejects unknown component ids`() {
-        val bytes = document("select_stack", null, selectValues).toBinaryV3()
-        fun patched(frontend: Int, backend: Int, middleware: Int): ByteArray {
-            val copy = bytes.copyOf()
-            copy[6] = frontend.toByte(); copy[7] = (frontend shr 8).toByte()
-            copy[8] = backend.toByte(); copy[9] = (backend shr 8).toByte()
-            copy[10] = middleware.toByte(); copy[11] = (middleware shr 8).toByte()
-            return copy
-        }
-        assertNotNull(NativeProfileDocument.fromBinary(patched(1, 1, 2)))
-        /* Known-but-unavailable ids decode; the orchestrator rejects them. */
-        assertNotNull(NativeProfileDocument.fromBinary(patched(2, 1, 2)))
-        assertNotNull(NativeProfileDocument.fromBinary(patched(1, 2, 2)))
-        assertNull(NativeProfileDocument.fromBinary(patched(9, 1, 2)))
-        assertNull(NativeProfileDocument.fromBinary(patched(1, 9, 2)))
-        assertNull(NativeProfileDocument.fromBinary(patched(1, 1, 99)))
-    }
-
-    @Test
-    fun `v3 safe mode patch lands on the core slot`() {
-        val original = document("select_stack", null, selectValues)
-        val bytes = original.toBinaryV3()
-        val offset = NativeProfileDocument.safeModeOffset(bytes)!!
-        bytes[offset] = 1
-        val decoded = NativeProfileDocument.fromBinary(bytes)!!
-        assertEquals(1u, decoded.safeMode)
-        assertEquals(original.copy(safeMode = 1u), decoded)
+        assertArrayEquals(document("tcp_zerocopy", null, tcpValues).toBinary(), profile.toBinary())
     }
 }

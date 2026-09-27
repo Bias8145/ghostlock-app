@@ -67,22 +67,22 @@ namespace ghostlock::memory {
     int32_t ResolvedAddresses::init_for_soc(const profile::TargetProfile *profile,
                                         SocFamily family) {
         const profile::kernel_offsets *values = profile->values();
-        if (!values || !values->uname_r || !values->off_init_cred) {
+        if (!values || !values->uname_r || !values->offsets.init_cred) {
             errno = EINVAL;
             return -1;
         }
         *this = ResolvedAddresses{};
         soc = family;
         const auto image = target::KernelAddress<target::ImageAddressDomain>(kernel::KIMAGE_TEXT_BASE)
-                .checked_add(values->off_init_cred);
+                .checked_add(values->offsets.init_cred);
         if (!image) {
             errno = ERANGE;
             return -1;
         }
         init_cred_image = *image;
-        if (values->kernel_phys_load) {
+        if (values->misc.kernel_phys_load.value_or(0)) {
             kernel_phys_load = target::KernelAddress<target::PhysicalAddressDomain>(
-                values->kernel_phys_load);
+                values->misc.kernel_phys_load.value_or(0));
         } else if (soc == SocFamily::Mtk || soc == SocFamily::Google) {
             /* Tensor G4/G5 (zumapro) loads the Image at the DRAM base like MTK. */
             kernel_phys_load = target::KernelAddress<target::PhysicalAddressDomain>(
@@ -129,9 +129,9 @@ namespace ghostlock::memory {
         if (soc == SocFamily::Xring) return "xring";
         const profile::kernel_offsets *values = profile->values();
         if (soc == SocFamily::Google) {
-            return values && values->kernel_phys_load ? "google/tensor" : "tensor";
+            return values && values->misc.kernel_phys_load.value_or(0) ? "google/tensor" : "tensor";
         }
-        return values && !values->kernel_phys_load && values->uname_r &&
+        return values && !values->misc.kernel_phys_load.value_or(0) && values->uname_r &&
                std::string_view(values->uname_r).starts_with("6.12.")
                    ? "qcom/6.12"
                    : "qcom/other";

@@ -153,11 +153,11 @@ object ProfileResolver {
             taskStruct = document.taskStruct,
             cred = document.cred,
             offsets = document.kernelOffset,
-            kernelPhysLoad = document.kernelPhysLoad,
+            kernelPhysLoad = document.kernelPhysLoad ?: 0uL,
             route = RouteKind.fromWire(document.routeKind),
             fallback = RouteKind.fromWire(document.fallbackRoute),
-            kernelsnitchCollisions = document.kernelsnitchCollisions,
-            mmStructSz = document.mmStructSz,
+            kernelsnitchCollisions = document.kernelsnitchCollisions ?: 0u,
+            mmStructSz = document.mmStructSz ?: 0u,
             recommendations = SparseExecutionValues(executionFromMerged(profile)),
         )
     }
@@ -172,7 +172,7 @@ object ProfileResolver {
                 val path = if (prefix.isEmpty()) key else "$prefix.$key"
                 when (value) {
                     is Map<*, *> -> walk(path, value)
-                    is Number -> out[path] = value.toLong().coerceAtLeast(0L).toULong()
+                    is Number -> out[path] = value.toLong().toULong()
                 }
             }
         }

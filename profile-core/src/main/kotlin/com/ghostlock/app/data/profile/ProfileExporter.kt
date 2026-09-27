@@ -80,7 +80,7 @@ object ProfileExporter {
                 release = actualRelease,
                 route = RouteKind.fromToken(route)?.token,
                 fallbackTo = RouteKind.fromToken(fallbackTo)?.token,
-            ) { path -> ProfileResolver.nativeValue(merged, route, fallbackTo, path) }.toBinaryV3()
+            ) { path -> ProfileResolver.nativeValue(merged, route, fallbackTo, path) }.toBinary()
             File(staging, "$actualRelease.bin").writeBytes(bytes)
             count++
             println("exportKernelProfiles: $actualRelease (${bytes.size} bytes)")

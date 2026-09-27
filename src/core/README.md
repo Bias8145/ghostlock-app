@@ -48,11 +48,10 @@ Where the pieces live:
   per-field ownership contract), runtime configuration, the frontend handoff
   (`root_child_frontend.*`), stage types, handoff probes and the victim pipe
   context.
-- `profile/`: the current v3 profile transport (`binary.cpp`; the v2 writer has
-  been replaced, v2 documents are still decoded), accessors and entry points.
+- `profile/`: the GLK1 v2 transport (object sections: `binary.cpp` / `model.h`),
+  its typed model, accessors and entry points.
 - `kernel/`: target ABI, constants and offset tables.
 - `support/`: generic C++ result/RAII helpers, time and the fatal-error type.
-- `legacy/`: v1 (old JSON `offsets.json`) conversion.
 - `kernelsnitch/`: kernel-address discovery implementation.
 - `tests/`: host-side fixed-vector and lifecycle tests, including the C/C++
   link probe; test-only probe code is not linked into the production binary.

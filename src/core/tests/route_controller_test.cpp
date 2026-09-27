@@ -48,8 +48,8 @@ int32_t main(void) {
     /* The optional fallback field is present: tcp failure falls back to select. */
     profile::kernel_offsets values = {
         .route = ghostlock::profile::kRouteTcpZerocopy,
-        .fallback_route = ghostlock::profile::kRouteSelectStack,
-        .compact_waiter = 1,
+        .meta = {.fallback_route = ghostlock::profile::kRouteSelectStack},
+        .misc = {.compact_waiter = 1},
     };
     ghostlock::profile::TargetProfile profile = ghostlock::profile::TargetProfile::from(&values);
     route::RouteController controller;
@@ -68,7 +68,7 @@ int32_t main(void) {
     /* Without the fallback field the tcp failure is returned unchanged. */
     profile::kernel_offsets no_fallback = {
         .route = ghostlock::profile::kRouteTcpZerocopy,
-        .compact_waiter = 1,
+        .misc = {.compact_waiter = 1},
     };
     ghostlock::profile::TargetProfile no_fallback_profile = ghostlock::profile::TargetProfile::from(&no_fallback);
     controller.init(&race, &no_fallback_profile);

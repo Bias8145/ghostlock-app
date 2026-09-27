@@ -23,8 +23,6 @@ CXX_SRCS := \
   core/main.cpp \
   core/attack/ops.cpp \
   core/profile/entry.cpp \
-  core/legacy/legacy_profile_converter.cpp \
-  core/legacy/legacy_entrypoint_starter.cpp \
   core/memory/address_space.cpp \
   core/memory/heap_context.cpp \
   core/race/pi_race.cpp \
@@ -36,7 +34,6 @@ CXX_SRCS := \
   core/route/multicast_waiter_route.cpp \
   core/memory/payload_builder.cpp \
   core/session/runtime_config.cpp \
-  core/legacy/offsets_json.cpp \
   core/profile/binary.cpp \
   core/support/util.cpp \
   core/session/exploit_session.cpp \
@@ -122,7 +119,7 @@ NATIVE_HOST_TESTS := \
   kernelsnitch_scan_bounds_test route_controller_test pi_race_test \
   tcp_zerocopy_route_test select_stack_route_test \
   target_constants_test native_resource_test \
-  offsets_json_test profile_binary_test futex_hash_test number_parse_test \
+  profile_binary_test futex_hash_test number_parse_test \
   runtime_paths_test handoff_probe_test victim_context_test \
   run_state_test cpp_link_probe_test
 
@@ -230,10 +227,6 @@ $(HOST_BUILD_DIR)/tcp_zerocopy_route_test: core/tests/tcp_zerocopy_route_test.cp
 $(HOST_BUILD_DIR)/select_stack_route_test: core/tests/select_stack_route_test.cpp core/route/select_stack_route.cpp core/route/select_stack_route.h core/race/pi_race.cpp core/support/native_resource.cpp core/support/native_resource.hpp
 	@mkdir -p $(HOST_BUILD_DIR)
 	$(HOST_CXX) $(HOST_CXXFLAGS) -pthread -Icore core/tests/select_stack_route_test.cpp core/route/select_stack_route.cpp core/race/pi_race.cpp core/support/native_resource.cpp -o $@
-
-$(HOST_BUILD_DIR)/offsets_json_test: core/tests/offsets_json_test.cpp core/legacy/offsets_json.cpp core/memory/address_space.cpp core/support/native_resource.cpp
-	@mkdir -p $(HOST_BUILD_DIR)
-	$(HOST_CXX) $(HOST_CXXFLAGS) -Icore core/tests/offsets_json_test.cpp core/legacy/offsets_json.cpp core/profile/binary.cpp core/memory/address_space.cpp core/support/native_resource.cpp -o $@
 
 $(HOST_BUILD_DIR)/futex_hash_test: core/tests/futex_hash_test.cpp core/kernelsnitch/futex_hash.h
 	@mkdir -p $(HOST_BUILD_DIR)

