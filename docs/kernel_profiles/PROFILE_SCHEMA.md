@@ -163,7 +163,7 @@ retained only as a guarded inference of the local format).
 | `kernel_major` ∈ {5,6}, `cred.copy_size`, `cred.caps_count`, and the credential-template bounds | required | | | |
 | `route.tcp_zerocopy.compact_waiter` / `route.multicast_waiter.compact_waiter` | | required | | required |
 | `route.select_stack.waiter_shift` | | | required (0 is valid) | |
-| `route.multicast_waiter.waiter_off` (>0), `route.multicast_waiter.buffer_size`, `route.multicast_waiter.task_offset`, `route.multicast_waiter.lock_offset`, `route.multicast_waiter.fake_lock_offset`, `route.multicast_waiter.fake_task_offset`, `route.multicast_waiter.lock_slots_offset`, `route.multicast_waiter.lock_slot_count`, `route.multicast_waiter.lock_slot_stride`, `offset.mcast_fake_bss`, `offset.empty_zero_page`, `kernelsnitch.mm_struct_sz`, `cred.ref_count` (>0) | | | | required |
+| `route.multicast_waiter.waiter_off` (>0), `route.multicast_waiter.buffer_size`, `route.multicast_waiter.task_offset`, `route.multicast_waiter.lock_offset`, `offset.empty_zero_page`, `kernelsnitch.mm_struct_sz`, `cred.ref_count` (>0) | | | | required |
 
 Credential-template bounds (general): `cred.usage_offset + 4 ≤ cred.copy_size`;
 `cred.caps_offset + cred.caps_count × 8 ≤ cred.copy_size`; `cred.ref_count ≤ 4`;
@@ -206,9 +206,7 @@ cred
 ```
 forged multicast object (multicast_waiter route)
 ├── waiter start     → route.multicast_waiter.waiter_off
-├── task / lock      → route.multicast_waiter.task_offset / lock_offset
-├── fake_lock / task → route.multicast_waiter.fake_lock_offset / fake_task_offset
-└── lock slots       → route.multicast_waiter.lock_slots_offset / count / stride
+└── task / lock      → route.multicast_waiter.task_offset / lock_offset
 ```
 
 The `offset` namespace holds kernel-image symbol offsets (`init_task`,
@@ -264,9 +262,6 @@ addresses.
 | `route.multicast_waiter.waiter_off` | Offset of the waiter in the multicast buffer (must be > 0) |
 | `route.multicast_waiter.buffer_size` | Forged buffer size |
 | `route.multicast_waiter.task_offset` / `route.multicast_waiter.lock_offset` | Task / lock field offsets in the buffer |
-| `route.multicast_waiter.fake_lock_offset` / `route.multicast_waiter.fake_task_offset` | Forged lock / task object offsets |
-| `route.multicast_waiter.lock_slots_offset` / `route.multicast_waiter.lock_slot_count` / `route.multicast_waiter.lock_slot_stride` | Lock-slot array offset / count / stride |
-| `offset.mcast_fake_bss` | Kernel-image offset of the forged BSS page |
 | `offset.empty_zero_page` | `empty_zero_page` offset |
 
 ### 4.6 KernelSnitch values (`kernelsnitch`)

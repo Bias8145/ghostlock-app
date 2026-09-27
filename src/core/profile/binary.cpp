@@ -123,18 +123,6 @@ namespace ghostlock::binary_profile {
             {"mcast_buffer_size", FIELD(mcast_buffer_size)},
             {"mcast_task_offset", FIELD(mcast_task_offset)},
             {"mcast_lock_offset", FIELD(mcast_lock_offset)},
-            {"mcast_fake_lock_offset", FIELD(mcast_fake_lock_offset)},
-            {"mcast_fake_task_offset", FIELD(mcast_fake_task_offset)},
-            {"mcast_lock_slots_offset", FIELD(mcast_lock_slots_offset)},
-            {"mcast_lock_slot_count", FIELD(mcast_lock_slot_count)},
-            {"mcast_lock_slot_stride", FIELD(mcast_lock_slot_stride)},
-            {"off_mcast_fake_bss", FIELD(off_mcast_fake_bss)},
-            {"multicast_resident", FIELD(multicast_resident)},
-            {"multicast_ready_timeout_ms", FIELD(execution.multicast_ready_timeout_ms)},
-            {"multicast_post_requeue_settle_us",
-             FIELD(execution.multicast_post_requeue_settle_us)},
-            {"multicast_post_adjust_settle_us",
-             FIELD(execution.multicast_post_adjust_settle_us)},
         };
 #undef FIELD
 

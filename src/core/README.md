@@ -22,7 +22,7 @@ Where the pieces live:
   concepts and the identity registry (`for_each_backend`).
 - `route/frontend_contract.hpp` - the declared frontend ids and reasons.
 - `route/route_policy.hpp` - the middleware policies: compile-time capabilities
-  plus the static route hooks (`resident_write`, W1/W2 repairs); a policy that
+  plus the static route hooks (`w2_fast_repair_*`); a policy that
   needs different behavior redeclares the hook and the Android-only definition
   lives in that middleware's route unit. `MiddlewarePolicy` is the contract.
 - `route/pipeline.hpp` - `Pipeline<F, B, M>`: the only execution entry. It

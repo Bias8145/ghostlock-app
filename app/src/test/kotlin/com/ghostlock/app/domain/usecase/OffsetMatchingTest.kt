@@ -33,7 +33,7 @@ class OffsetMatchingTest {
 
     @Test
     fun `scalar absent from the builtin does not block a match`() {
-        val entry = offsets(scalars = mapOf("mcast.lock_slots_offset" to 128L))
+        val entry = offsets(scalars = mapOf("mcast.lock_offset" to 128L))
         val builtins = mapOf("5.15.0-test" to emptyMap<String, Long>())
 
         assertTrue(OffsetMatching.matchesBuiltin(entry, builtins))

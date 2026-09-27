@@ -18,7 +18,7 @@ GhostLock 的执行链由 `Pipeline<Frontend, Backend, Middleware>` 在编译期
 - 执行入口：`route/pipeline.hpp` 的 `Pipeline<F,B,M>::run`，编译期校验 `catalogued`、
   `MiddlewarePolicy<M>`、`FrontendExecution<F>` 与 `BackendExecution<B,M>`，返回 `RunResult`。
 - 绑定方式：backend 步骤模板化在 middleware 上（`Cve2026_43499Policy::run<M>` / `attack_write<M>`），
-  以 `M::resident_write` 等静态 hook 直接调用，无虚表；hook 边界 `[[gnu::noinline]]`。
+  以 `M::w2_fast_repair_prebuild` 等静态 hook 直接调用，无虚表；hook 边界 `[[gnu::noinline]]`。
 
 新增组件属 L 级改动：先读 `design-philosophy.md` 与 `engineering-standards.md`，产出计划并获认可，
 再按本文改动。
@@ -66,9 +66,8 @@ GhostLock 的执行链由 `Pipeline<Frontend, Backend, Middleware>` 在编译期
 
 - **能力**（`static constexpr bool`，编译期）：`multicast`、`w2_fast_repair`、`w3_exact_target`、
   `tcp_payload_layout`、`allows_fallback`。只写需要为 `true` 的，其余继承默认。
-- **有副作用的 hook**：`resident_write(session, request)`、`w1_resident_repair(session)`、
-  `w2_fast_repair_prebuild/activate(session)`。默认由 `RoutePolicyDefaults` 提供；覆写时在该 unit
-  提供定义并让声明带 `[[gnu::noinline]]`（防止 LTO 把 route 实现内联进攻击函数）。
+- **有副作用的 hook**：`w2_fast_repair_prebuild/activate(session)`。默认由 `RoutePolicyDefaults`
+  提供；覆写时在该 unit 提供定义并让声明带 `[[gnu::noinline]]`（防止 LTO 把 route 实现内联进攻击函数）。
 - **纯查询**（如一次性 route 的 W1 重试上限、是否需要 scratch 修复、W3 是否精确命中）：不需要 hook，
   在 backend 步骤内用 `if constexpr (M::…)` + profile 运行时值表达。
 

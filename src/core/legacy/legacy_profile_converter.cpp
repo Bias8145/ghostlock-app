@@ -49,12 +49,10 @@ namespace ghostlock::legacy {
         }
 
         /* remote/main selected the route from kernel geometry; documents written
- * before the explicit field keep behaving the same way. */
+     * before the explicit field keep behaving the same way. */
         void infer_route(profile::kernel_offsets *out) {
             if (out->route != profile::kRouteAuto) return;
-            if (out->kernel_major == 5 && out->mcast_waiter_off > 0) {
-                out->route = profile::kRouteMulticastWaiter;
-            } else if (out->compact_waiter) {
+            if (out->compact_waiter) {
                 out->route = profile::kRouteTcpZerocopy;
             } else {
                 out->route = profile::kRouteSelectStack;

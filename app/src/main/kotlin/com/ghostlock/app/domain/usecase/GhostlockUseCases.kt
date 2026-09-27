@@ -20,9 +20,10 @@ class ParseSourceUseCase(private val repository: GhostlockRepository) {
     suspend operator fun invoke(
         input: String,
         xblPath: String? = null,
+        uefiPath: String? = null,
         overwrite: Boolean = false,
         onLog: (String) -> Unit = {},
-    ) = repository.parseSource(input, xblPath, overwrite, onLog)
+    ) = repository.parseSource(input, xblPath, uefiPath, overwrite, onLog)
 }
 
 class RunExploitUseCase(private val repository: GhostlockRepository) {

@@ -12,8 +12,8 @@
 namespace ghostlock::session::backend {
     /* Batch 4 (D1=B) cve_2026_43499 backend: the setup stage plus the W1/W2/W3
      * step sequence. The sequence is owned by this backend, and the middleware
-     * policy is a template parameter: every route hook (resident_write, W1/W2
-     * repairs) and capability (multicast / w3_exact_target) comes from
+     * policy is a template parameter: every route hook (W2 repairs) and
+     * capability (multicast / w3_exact_target) comes from
      * `Middleware`, so each catalogued middleware instantiates its own backend
      * code and produces a different pipeline by construction. Statement order
      * and log text are the pre-Batch-4 sequence, unchanged.

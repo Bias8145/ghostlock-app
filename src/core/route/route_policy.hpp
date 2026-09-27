@@ -65,15 +65,6 @@ namespace ghostlock::route {
          * these directly through the middleware policy template parameter
          * (route/pipeline.hpp), so no vtable or runtime dispatch enters the
          * path. */
-        static std::optional<Status> resident_write(
-            session::ExploitSession &, const memory::WriteRequest &) noexcept {
-            return std::nullopt;
-        }
-
-        static bool w1_resident_repair(session::ExploitSession &) noexcept {
-            return true;
-        }
-
         static bool w2_fast_repair_prebuild(session::ExploitSession &) noexcept {
             return true;
         }
@@ -127,15 +118,8 @@ namespace ghostlock::route {
         /* Route-hook overrides: declared here, defined in
          * multicast_waiter_route.cpp (Android-only implementation). noinline is
          * the explicit middleware boundary: the backend steps call these
-         * directly, and without it LTO inlines the whole route body (resident
-         * worker startup included) into the attack functions. */
-        [[gnu::noinline]] static std::optional<Status> resident_write(
-            session::ExploitSession &exploit_session,
-            const memory::WriteRequest &request) noexcept;
-
-        [[gnu::noinline]] static bool w1_resident_repair(
-            session::ExploitSession &exploit_session) noexcept;
-
+         * directly, and without it LTO inlines the whole route body into the
+         * attack functions. */
         [[gnu::noinline]] static bool w2_fast_repair_prebuild(
             session::ExploitSession &exploit_session) noexcept;
 
@@ -151,8 +135,6 @@ namespace ghostlock::route {
     concept MiddlewarePolicy = RoutePolicy<P> &&
         requires(session::ExploitSession &exploit_session,
                  const memory::WriteRequest &request) {
-            { P::resident_write(exploit_session, request) } -> std::same_as<std::optional<Status>>;
-            { P::w1_resident_repair(exploit_session) } -> std::same_as<bool>;
             { P::w2_fast_repair_prebuild(exploit_session) } -> std::same_as<bool>;
             { P::w2_fast_repair_activate(exploit_session) } -> std::same_as<bool>;
         };

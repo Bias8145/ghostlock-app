@@ -49,16 +49,10 @@
 <tr><td><code>route.multicast_waiter.buffer_size</code></td><td><code>264</code></td><td>伪造缓冲区大小，即注入字节串的长度。</td></tr>
 <tr><td><code>route.multicast_waiter.task_offset</code></td><td><code>48</code></td><td>缓冲区中任务字段的偏移。</td></tr>
 <tr><td><code>route.multicast_waiter.lock_offset</code></td><td><code>56</code></td><td>缓冲区中锁字段的偏移。</td></tr>
-<tr><td><code>route.multicast_waiter.fake_lock_offset</code></td><td><code>4608</code></td><td>伪造锁对象的偏移。</td></tr>
-<tr><td><code>route.multicast_waiter.fake_task_offset</code></td><td><code>12800</code></td><td>伪造任务对象的偏移。</td></tr>
-<tr><td><code>route.multicast_waiter.lock_slots_offset</code></td><td><code>128</code></td><td>锁槽数组的偏移。</td></tr>
-<tr><td><code>route.multicast_waiter.lock_slot_count</code></td><td><code>12</code></td><td>锁槽数量。</td></tr>
-<tr><td><code>route.multicast_waiter.lock_slot_stride</code></td><td><code>8</code></td><td>锁槽之间的步长。</td></tr>
 <tr><td><code>kernelsnitch.collisions</code></td><td><code>8</code></td><td>KernelSnitch 需要的 futex 碰撞数量。</td></tr>
-<tr><th rowspan="11">内核相对符号</th><td><code>offset.init_task</code></td><td></td><td><code>init_task</code> 相对内核镜像基址的偏移。</td><td rowspan="11">错误值会改变目标选择、结构边界或竞态时序，可能导致失败、死锁、内存破坏、黑屏或重启。</td><td rowspan="11">该值保持 5.x 已验证基线，但不是稳定 ABI；新设备必须用同一目标镜像逐项复核。</td></tr>
+<tr><th rowspan="10">内核相对符号</th><td><code>offset.init_task</code></td><td></td><td><code>init_task</code> 相对内核镜像基址的偏移。</td><td rowspan="11">错误值会改变目标选择、结构边界或竞态时序，可能导致失败、死锁、内存破坏、黑屏或重启。</td><td rowspan="11">该值保持 5.x 已验证基线，但不是稳定 ABI；新设备必须用同一目标镜像逐项复核。</td></tr>
 <tr><td><code>offset.init_cred</code></td><td></td><td><code>init_cred</code> 偏移；W2 修复会写它的 +8。</td></tr>
 <tr><td><code>offset.empty_zero_page</code></td><td></td><td><code>empty_zero_page</code> 偏移。</td></tr>
-<tr><td><code>offset.mcast_fake_bss</code></td><td></td><td>multicast 伪造锁对象在镜像中的偏移；与 <code>fake_lock_offset</code> 相加后对齐。</td></tr>
 <tr><td><code>offset.root_task_group</code></td><td></td><td><code>root_task_group</code> 偏移。</td></tr>
 <tr><td><code>offset.selinux_enforcing</code></td><td></td><td><code>selinux_state.enforcing</code> 偏移；W1 写 0。</td></tr>
 <tr><td><code>offset.selinux_blob_sizes</code></td><td></td><td><code>selinux_blob_sizes</code> 偏移。</td></tr>
@@ -89,9 +83,6 @@
 <tr><td><code>execution.routes.select_stack.timeout_us</code></td><td><code>200000</code></td><td>单次 select 超时。</td><td>太短提前退出，太长拖慢失败恢复。</td><td>保持原 200 毫秒。</td></tr>
 <tr><td><code>execution.routes.select_stack.consumer_max_calls</code></td><td><code>1</code></td><td>消费者最大调用数。</td><td>多次调用改变原单次触发布局。</td><td>当前稳定路径只调用一次。</td></tr>
 <tr><td><code>execution.routes.select_stack.consumer_burst_calls</code></td><td><code>1</code></td><td>每批消费者调用数。</td><td>增大批量会改变调度和栈存活时间。</td><td>维持单调用批次。</td></tr>
-<tr><th rowspan="3">多播等待者路线</th><td><code>execution.routes.multicast_waiter.ready_timeout_ms</code></td><td><code>10000</code></td><td>多播等待者就绪超时。</td><td>太短误判慢调度，太长延迟清理。</td><td>原上限 10 秒。</td></tr>
-<tr><td><code>execution.routes.multicast_waiter.post_requeue_settle_us</code></td><td><code>200000</code></td><td>重新入队后稳定等待。</td><td>影响等待者链稳定性；缩短可能过早改写。</td><td>保留原 200 毫秒。</td></tr>
-<tr><td><code>execution.routes.multicast_waiter.post_adjust_settle_us</code></td><td><code>100000</code></td><td>调整等待者后等待。</td><td>影响后续读写观察到的结构状态。</td><td>保留原 100 毫秒。</td></tr>
 <tr><th rowspan="5">提权交接</th><td><code>execution.handoff.pre_dispatch_settle_ms</code></td><td><code>2000</code></td><td>向 KernelSU 交接前等待。</td><td>太短可能在权限/SELinux 状态未稳定时启动。</td><td>原流程等待 2 秒。</td></tr>
 <tr><td><code>execution.handoff.module_poll_attempts</code></td><td><code>30</code></td><td>模块加载状态轮询次数。</td><td>与间隔共同决定 3 秒总窗口。</td><td>30×100 毫秒保持原 3 秒。</td></tr>
 <tr><td><code>execution.handoff.module_poll_interval_ms</code></td><td><code>100</code></td><td>模块轮询间隔。</td><td>更小增加唤醒，更大降低响应。</td><td>原粒度 100 毫秒。</td></tr>

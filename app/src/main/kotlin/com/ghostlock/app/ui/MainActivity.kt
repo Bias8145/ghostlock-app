@@ -50,7 +50,10 @@ class MainActivity : ComponentActivity() {
     }
 
     private val profileDocumentCreator =
-        registerForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri: Uri? ->
+        /* octet-stream, not text/plain: SAF appends ".txt" to a text/plain
+         * document whose name is not a recognised text extension, which turned
+         * "…conf" into "…conf.txt". */
+        registerForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")) { uri: Uri? ->
             viewModel.onExportProfileDocumentPicked(uri?.toString())
         }
 

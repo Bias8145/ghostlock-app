@@ -237,9 +237,7 @@ class ControllerOverrideTest {
             )
             assertTrue(multicast.hasProfile)
             val multicastPaths = multicast.general.map { it.path }
-            assertTrue(
-                multicastPaths.any { it.startsWith("execution.routes.multicast_waiter.") },
-            )
+            assertTrue(multicastPaths.none { it.startsWith("execution.routes.multicast_waiter.") })
             assertTrue(multicastPaths.none { it.startsWith("execution.routes.select_stack.") })
             assertTrue(multicastPaths.none { it.startsWith("execution.routes.tcp_zerocopy.") })
 
@@ -385,11 +383,6 @@ class ControllerOverrideTest {
                 buffer_size = 264
                 task_offset = 48
                 lock_offset = 56
-                fake_lock_offset = 4608
-                fake_task_offset = 12800
-                lock_slots_offset = 128
-                lock_slot_count = 12
-                lock_slot_stride = 8
                 compact_waiter = 1
               }
             }
@@ -437,7 +430,6 @@ class ControllerOverrideTest {
               init_task = 49024192
               init_cred = 48733352
               empty_zero_page = 50151424
-              mcast_fake_bss = 51394952
               root_task_group = 50170688
               selinux_enforcing = 51431184
               selinux_blob_sizes = 36756024

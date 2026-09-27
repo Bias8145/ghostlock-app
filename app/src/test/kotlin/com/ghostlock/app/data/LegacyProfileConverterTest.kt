@@ -142,16 +142,6 @@ class LegacyProfileConverterTest {
     }
 
     @Test
-    fun `5x report gets its major but no 6x credential template`() {
-        val entry = valueMapOf("release" to "5.15.189-android13-8-test")
-
-        LegacyProfileConverter.convertValue(entry)
-
-        assertEquals(5L, entry["kernel_major"])
-        assertFalse(entry.containsKey("cred"))
-    }
-
-    @Test
     fun `v2 profile is not seeded and keeps its missing fields`() {
         val entry = valueMapOf("release" to "6.12.38-test", "schema_version" to 1)
 

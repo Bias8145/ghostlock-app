@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 
 use crate::derive::Cred5x;
 use crate::error::{ExtractError, Result};
-use crate::symbols::{OPTIONAL_SYMBOLS, kernel_device_geometry_verified, kernel_layout_verified};
+use crate::symbols::{OPTIONAL_SYMBOLS, kernel_layout_verified};
 
 pub fn pselect_waiter_shift_for(release: Option<&str>) -> Option<i64> {
     if !kernel_layout_verified(release) {
@@ -93,11 +93,10 @@ const CONF_TASK_FIELDS: &[(&str, &str)] = &[
 ];
 
 /// Extra `offset.*` keys the extractor resolves outside the `off_*` symbol
-/// table (kallsyms-only symbols). Both keep their bundled-profile position.
+/// table (kallsyms-only symbols). Kept in its bundled-profile position.
 #[derive(Debug, Clone, Default)]
 pub struct ConfExtraOffsets {
     pub empty_zero_page: Option<u64>,
-    pub mcast_fake_bss: Option<u64>,
 }
 
 /// The shared 6.x credential template (`credential-6x.conf`), in the bundled
@@ -165,25 +164,20 @@ pub fn conf_route_geometry(
         {
             vec![("compact_waiter", 1)]
         }
-        // A verified 5.x train gets the corroborated geometry; the
-        // device-measured forged-object placement is emitted only for the exact
-        // validated release. An unverified release keeps just the BTF-derived
-        // waiter/lock offsets.
+        // The 5.x one-shot multicast branch runs entirely from probe-derived
+        // constants (waiter_off / buffer_size), BTF-derived rt_mutex_waiter
+        // task/lock offsets and the fixed 5.x waiter-layout flag. Emit all of
+        // them for every 5.x kernel so the generated profile runs without
+        // manual edits; a kernel without BTF omits only the task/lock keys.
         "multicast_waiter" if major == Some(5) => {
-            if !kernel_layout_verified(Some(release)) {
-                crate::derive::multicast_geometry_btf_only(structs)
-            } else if kernel_device_geometry_verified(Some(release)) {
-                crate::derive::multicast_geometry_5x(structs)
-            } else {
-                crate::derive::multicast_geometry_corroborated(structs)
-            }
+            crate::derive::multicast_geometry_corroborated(structs)
         }
         _ => Vec::new(),
     }
 }
 
-/// `offset` keys in the bundled profiles' order; `empty_zero_page` and
-/// `mcast_fake_bss` come from kallsyms instead of an `off_*` symbol.
+/// `offset` keys in the bundled profiles' order; `empty_zero_page` comes from
+/// kallsyms instead of an `off_*` symbol.
 fn conf_offsets(
     symbols: &BTreeMap<String, Option<u64>>,
     extra: &ConfExtraOffsets,
@@ -201,10 +195,6 @@ fn conf_offsets(
         (
             "empty_zero_page",
             extra.empty_zero_page.map(|v| v.to_string()),
-        ),
-        (
-            "mcast_fake_bss",
-            extra.mcast_fake_bss.map(|v| v.to_string()),
         ),
         ("root_task_group", symbol("off_root_task_group")),
         ("selinux_enforcing", symbol("off_selinux_enforcing")),
@@ -281,10 +271,11 @@ pub fn render_conf(input: &ConfInputs<'_>) -> String {
         &[("to".to_string(), "\"none\"".to_string())],
     );
 
-    // KernelSnitch defaults are emitted only for a verified train; an
-    // unverified release omits them rather than inheriting a neighbour's value.
+    // KernelSnitch defaults are emitted for a verified train, and for every
+    // 5.x kernel (the android13-5.15 measured defaults are 5.x-wide and are
+    // required for the profile to run). An unverified release omits them.
     let mut snitch = Vec::new();
-    if kernel_layout_verified(Some(release)) {
+    if kernel_layout_verified(Some(release)) || major == Some(5) {
         match major {
             Some(6) => {
                 // = kernelsnitch-6x.conf
@@ -362,7 +353,7 @@ pub fn optional_struct_fields() -> BTreeSet<&'static str> {
 #[cfg(test)]
 mod tests {
     use super::{
-        ConfExtraOffsets, ConfInputs, build_report, conf_cred_5x, conf_cred_6x,
+        CONF_TASK_FIELDS, ConfExtraOffsets, ConfInputs, build_report, conf_cred_5x, conf_cred_6x,
         conf_route_geometry, pselect_waiter_shift_for, render_conf,
     };
     use crate::derive::Cred5x;
@@ -461,14 +452,12 @@ mod tests {
             cred: &conf_cred_5x(&cred, 176),
             extra_offsets: &ConfExtraOffsets {
                 empty_zero_page: Some(47_529_984),
-                mcast_fake_bss: Some(47_849_664),
             },
         });
         assert!(out.contains("multicast_waiter {\n    waiter_off = 96"));
         assert!(out.contains("buffer_size = 264"));
         assert!(out.contains("task_offset = 48"));
         assert!(out.contains("lock_offset = 56"));
-        assert!(out.contains("fake_task_offset = 12800"));
         assert!(out.contains("compact_waiter = 1"));
         assert!(out.contains("collisions = 8"));
         assert!(out.contains("mm_struct_sz = 1024"));
@@ -481,7 +470,6 @@ mod tests {
         assert!(out.contains("ref0_image = -274698454400"));
         assert!(out.contains("ref3_image = -274698454232"));
         assert!(out.contains("empty_zero_page = 47529984"));
-        assert!(out.contains("mcast_fake_bss = 47849664"));
     }
 
     #[test]
@@ -514,11 +502,6 @@ mod tests {
                 ("buffer_size", 264),
                 ("task_offset", 48),
                 ("lock_offset", 56),
-                ("fake_lock_offset", 4608),
-                ("fake_task_offset", 12800),
-                ("lock_slots_offset", 128),
-                ("lock_slot_count", 12),
-                ("lock_slot_stride", 8),
                 ("compact_waiter", 1),
             ]
         );
@@ -539,8 +522,9 @@ mod tests {
             conf_route_geometry("select_stack", "6.7.1-generic", Some(-1), &structs),
             vec![("waiter_shift", -1)]
         );
-        // Unverified 5.x multicast keeps only BTF-derived waiter offsets; the
-        // proven Xperia constants are withheld.
+        // Every 5.x multicast profile carries the full one-shot geometry so it
+        // runs without manual edits, even when the release string carries no
+        // "-android13-" train tag.
         assert_eq!(
             conf_route_geometry(
                 "multicast_waiter",
@@ -548,7 +532,13 @@ mod tests {
                 Some(-2),
                 &structs
             ),
-            vec![("task_offset", 48), ("lock_offset", 56)]
+            vec![
+                ("waiter_off", 96),
+                ("buffer_size", 264),
+                ("task_offset", 48),
+                ("lock_offset", 56),
+                ("compact_waiter", 1),
+            ]
         );
     }
 
@@ -589,7 +579,6 @@ mod tests {
             cred: &[],
             extra_offsets: &ConfExtraOffsets {
                 empty_zero_page: None,
-                mcast_fake_bss: None,
             },
         });
         assert!(out.contains("route {"));
@@ -611,6 +600,37 @@ mod tests {
             extra_offsets: &no_extra_offsets(),
         });
         assert!(!out.contains("kernelsnitch"));
+    }
+
+    #[test]
+    fn unverified_5x_candidate_is_runnable() {
+        let (symbols, structs) = conf_fixture();
+        let geometry = conf_route_geometry(
+            "multicast_waiter",
+            "5.15.178-g3575c47dc7ce-dirty",
+            Some(-2),
+            &structs,
+        );
+        let out = render_conf(&ConfInputs {
+            release: "5.15.178-g3575c47dc7ce-dirty",
+            phys: None,
+            symbols: &symbols,
+            structs: &structs,
+            route: Some("multicast_waiter"),
+            route_geometry: &geometry,
+            cred: &[],
+            extra_offsets: &no_extra_offsets(),
+        });
+        assert!(out.contains("multicast_waiter {\n    waiter_off = 96"));
+        assert!(out.contains("buffer_size = 264"));
+        assert!(out.contains("task_offset = 48"));
+        assert!(out.contains("lock_offset = 56"));
+        assert!(out.contains("compact_waiter = 1"));
+        // The 5.x KernelSnitch defaults are required to run and are emitted even
+        // without the "-android13-" train tag.
+        assert!(out.contains("kernelsnitch"));
+        assert!(out.contains("collisions = 8"));
+        assert!(out.contains("mm_struct_sz = 1024"));
     }
 
     #[test]
@@ -645,5 +665,158 @@ mod tests {
             pselect_waiter_shift_for(Some("6.7.1-generic")),
         );
         assert!(report["pselect_waiter_shift"].is_null());
+    }
+
+    /// Flatten a HOCON-ish profile into `section.key` -> value, ignoring
+    /// comments and one level of brace nesting.
+    fn flatten_conf(text: &str) -> BTreeMap<String, String> {
+        let mut out = BTreeMap::new();
+        let mut stack: Vec<String> = Vec::new();
+        for raw in text.lines() {
+            let line = raw.split('#').next().unwrap_or("").trim();
+            if line.is_empty() {
+                continue;
+            }
+            if line.ends_with('{') {
+                stack.push(line[..line.len() - 1].trim().to_string());
+                continue;
+            }
+            if line == "}" {
+                stack.pop();
+                continue;
+            }
+            if let Some((key, value)) = line.split_once('=') {
+                let key = key.trim();
+                let value = value.trim();
+                let full = if stack.is_empty() {
+                    key.to_string()
+                } else {
+                    format!("{}.{}", stack.join("."), key)
+                };
+                out.insert(full, value.to_string());
+            }
+        }
+        out
+    }
+
+    /// The values the real extractor produces for the A301SO `5.15.189` boot
+    /// image, so the rendered conf can be compared field-for-field with the
+    /// bundled, hardware-validated profile.
+    fn a301so_inputs() -> (
+        String,
+        BTreeMap<String, Option<u64>>,
+        BTreeMap<String, Option<u32>>,
+        Vec<(String, String)>,
+        ConfExtraOffsets,
+    ) {
+        let release = "5.15.189-android13-8-00016-g51bba4309aac-ab14546557";
+        let mut symbols: BTreeMap<String, Option<u64>> = BTreeMap::new();
+        for (key, value) in [
+            ("off_init_task", 46_412_800u64),
+            ("off_init_cred", 46_126_472),
+            ("off_root_task_group", 47_549_120),
+            ("off_selinux_enforcing", 47_885_704),
+            ("off_selinux_blob_sizes", 35_027_656),
+            ("off_security_hook_heads", 35_018_304),
+            ("off_slide_nfulnl_logger", 45_096_488),
+            ("off_slide_boot_id", 47_999_001),
+            ("off_slide_loggers_0_1", 45_096_280),
+        ] {
+            symbols.insert(key.to_string(), Some(value));
+        }
+        let mut structs: BTreeMap<String, Option<u32>> = BTreeMap::new();
+        for (key, _) in CONF_TASK_FIELDS {
+            // Values from the A301SO image's BTF.
+            let v = match *key {
+                "task_prio" => 124,
+                "task_normal_prio" => 132,
+                "task_sched_task_group" => 1024,
+                "task_pi_lock" => 2180,
+                "task_pi_waiters" => 2200,
+                "task_pi_top_task" => 2216,
+                "task_pi_blocked_on" => 2224,
+                "task_pid" => 1496,
+                "task_tgid" => 1500,
+                "task_atomic_flags" => 1432,
+                "task_real_cred" => 1936,
+                "task_cred" => 1944,
+                "task_comm" => 1960,
+                "task_tasks" => 1232,
+                "task_seccomp" => 2144,
+                _ => continue,
+            };
+            structs.insert(key.to_string(), Some(v));
+        }
+        structs.insert("waiter_task".to_string(), Some(48));
+        structs.insert("waiter_lock".to_string(), Some(56));
+        let cred5x = Cred5x {
+            caps_offset: 48,
+            caps_count: 3,
+            caps_value: 2_199_023_255_551,
+            refs: vec![
+                (128, -274_698_454_400i64 as u64),
+                (136, -274_696_707_824i64 as u64),
+                (144, -274_698_453_008i64 as u64),
+                (152, -274_698_454_232i64 as u64),
+            ],
+        };
+        let cred = conf_cred_5x(&cred5x, 176);
+        let extra = ConfExtraOffsets {
+            empty_zero_page: Some(47_529_984),
+        };
+        (release.to_string(), symbols, structs, cred, extra)
+    }
+
+    #[test]
+    fn a301so_generated_conf_matches_the_bundled_profile() {
+        let (release, symbols, structs, cred, extra) = a301so_inputs();
+        let geometry = conf_route_geometry("multicast_waiter", &release, None, &structs);
+        let generated = render_conf(&ConfInputs {
+            release: &release,
+            phys: None,
+            symbols: &symbols,
+            structs: &structs,
+            route: Some("multicast_waiter"),
+            route_geometry: &geometry,
+            cred: &cred,
+            extra_offsets: &extra,
+        });
+        let bundled = std::fs::read_to_string(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../app/src/main/assets/kernel_profiles/5.15.189-android13-8-00016-g51bba4309aac-ab14546557.conf"
+        ))
+        .expect("bundled 5.15.189 profile");
+        let generated = flatten_conf(&generated);
+        let bundled = flatten_conf(&bundled);
+
+        assert!(generated.contains_key("route.multicast_waiter.waiter_off"));
+        // The one intentional difference: shizuku defaults to off in generated
+        // confs, the bundled profile recommends it.
+        assert_eq!(
+            generated.get("recommend_shizuku").map(String::as_str),
+            Some("0")
+        );
+        assert_eq!(
+            bundled.get("recommend_shizuku").map(String::as_str),
+            Some("1")
+        );
+
+        for key in bundled.keys() {
+            if key == "recommend_shizuku" {
+                continue;
+            }
+            assert_eq!(
+                generated.get(key),
+                bundled.get(key),
+                "field {key} differs between generated and bundled profile"
+            );
+        }
+        // And the generated profile carries no extra non-comment field.
+        for key in generated.keys() {
+            assert!(
+                bundled.contains_key(key),
+                "generated profile has unexpected field {key}"
+            );
+        }
     }
 }

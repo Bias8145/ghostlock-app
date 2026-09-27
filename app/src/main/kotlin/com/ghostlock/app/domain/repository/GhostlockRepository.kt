@@ -33,6 +33,7 @@ interface GhostlockRepository {
     suspend fun parseSource(
         input: String,
         xblPath: String? = null,
+        uefiPath: String? = null,
         overwrite: Boolean = false,
         onLog: (String) -> Unit = {},
     ): ParseResult

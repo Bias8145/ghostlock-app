@@ -10,8 +10,8 @@ package com.ghostlock.app.data
  * metadata. Credential templates came from the built-in profile, not the
  * report, so none are invented here. The conversion is idempotent and also
  * normalises the local transition formats (flat prefixes, `route` strings,
- * `fallback_to`). 5.x branches are only kept for those local formats; nothing
- * in a remote/main document can select them.
+ * `fallback_to`). Multicast (a newer route) is intentionally unsupported here:
+ * `remote/main`-era documents never selected it.
  */
 private fun moveKey(
     source: ValueMap,
@@ -42,15 +42,10 @@ internal object LegacyProfileConverter {
         "ref3_offset", "ref0_image", "ref1_image", "ref2_image", "ref3_image",
     )
     private val OffsetFields = setOf(
-        "init_task", "init_cred", "empty_zero_page", "mcast_fake_bss",
+        "init_task", "init_cred",
         "root_task_group", "selinux_enforcing", "selinux_blob_sizes",
         "security_hook_heads", "slide_nfulnl_logger", "slide_loggers_0_1",
         "slide_boot_id",
-    )
-    private val McastFields = setOf(
-        "waiter_off", "buffer_size", "task_offset", "lock_offset",
-        "fake_lock_offset", "fake_task_offset", "lock_slots_offset",
-        "lock_slot_count", "lock_slot_stride",
     )
 
     /* Per-route legacy layout codec. Adding a route = add a codec + register it
@@ -76,28 +71,9 @@ internal object LegacyProfileConverter {
             moveKey(entry, branch, "pselect_waiter_shift", "waiter_shift")
     }
 
-    private object MulticastRouteCodec : LegacyRouteCodec {
-        override fun fillBranch(entry: ValueMap, branch: ValueMap) {
-            moveKey(entry, branch, "compact_waiter", "compact_waiter")
-            moveMcast(entry, branch)
-        }
-
-        override fun fillFallback(entry: ValueMap, branch: ValueMap) = moveMcast(entry, branch)
-
-        private fun moveMcast(entry: ValueMap, branch: ValueMap) {
-            entry["mcast"].asValueMap()?.let { mcast ->
-                mcast.forEach { (key, value) ->
-                    if (!branch.containsKey(key)) branch[key] = value
-                }
-                entry.remove("mcast")
-            }
-        }
-    }
-
     private val RouteCodecs: Map<String, LegacyRouteCodec> = mapOf(
         "tcp_zerocopy" to TcpRouteCodec,
         "select_stack" to SelectRouteCodec,
-        "multicast_waiter" to MulticastRouteCodec,
     )
 
     /* Values the bundled `credential-6x.conf` and `kernelsnitch-6x.conf` carry.
@@ -126,23 +102,18 @@ internal object LegacyProfileConverter {
         moveFlatNamespaces(entry)
         moveSymbolGroups(entry)
         moveKernelsnitch(entry)
-        if (legacy) inferKernelMajor(entry)
+        if (legacy && entry.containsKey("release")) {
+            /* remote/main-era reports carried no kernel_major (they are 6.x
+             * only); when a full legacy document does not state one, default to
+             * 6. A bundled/edited HOCON profile states its own value and wins,
+             * and a sparse override without a release is never seeded. */
+            if (!entry.containsKey("kernel_major")) entry["kernel_major"] = 6L
+        }
         moveRouteLayout(entry)
         moveFallback(entry)
         dropEmptyRouteBranches(entry)
         if (legacy) applySharedDefaults(entry)
         return entry
-    }
-
-    /**
-     * A legacy report only carries a release string; the current validation
-     * needs an explicit `kernel_major`. Recover it from the release.
-     */
-    private fun inferKernelMajor(entry: ValueMap) {
-        if (entry.containsKey("kernel_major")) return
-        val release = entry["release"] as? String ?: return
-        val major = release.substringBefore('.').toIntOrNull() ?: return
-        if (major == 5 || major == 6) entry["kernel_major"] = major.toLong()
     }
 
     /**
@@ -190,7 +161,6 @@ internal object LegacyProfileConverter {
         moveGroup(entry, "struct_fields", "task_struct", "task_", TaskStructFields)
         /* Local transition builds also stored credential/tuning keys here. */
         moveGroup(entry, "struct_fields", "cred", "cred_", CredFields)
-        moveGroup(entry, "struct_fields", "mcast", "mcast_", McastFields)
         val structFields = entry["struct_fields"].asValueMap() ?: return
         val snitch = entry.mutableChild("kernelsnitch")
         moveKey(structFields, snitch, "kernelsnitch_collisions", "collisions")
@@ -224,7 +194,6 @@ internal object LegacyProfileConverter {
             Triple("task_struct", "task_", TaskStructFields),
             Triple("cred", "cred_", CredFields),
             Triple("offset", "off_", OffsetFields),
-            Triple("mcast", "mcast_", McastFields),
         )
         for ((namespace, flatPrefix, allowed) in namespaces) {
             val keys = entry.keys
@@ -303,13 +272,11 @@ internal object LegacyProfileConverter {
             entry["fallback"] = fallback
             entry.remove("compact_waiter")
             entry.remove("pselect_waiter_shift")
-            entry.remove("mcast")
             return
         }
         if (entry["fallback"].asValueMap() != null || entry["route"].asValueMap() == null) {
             entry.remove("compact_waiter")
             entry.remove("pselect_waiter_shift")
-            entry.remove("mcast")
             return
         }
         if (!entry.containsKey("release")) {
@@ -317,7 +284,6 @@ internal object LegacyProfileConverter {
              * it would overwrite the choice kept in the offsets entry. */
             entry.remove("compact_waiter")
             entry.remove("pselect_waiter_shift")
-            entry.remove("mcast")
             return
         }
         /* Remote/main had no fallback field; the tcp path could still fall
@@ -335,16 +301,9 @@ internal object LegacyProfileConverter {
         }
         entry.remove("compact_waiter")
         entry.remove("pselect_waiter_shift")
-        entry.remove("mcast")
     }
 
     private fun inferRoute(entry: ValueMap): String {
-        /* Remote/main-era documents are 6.x only, so 5.x inference is a
-         * guarded fallback for local transition files rather than a path a
-         * report can take. */
-        val major = (entry["kernel_major"] as? Number)?.toLong() ?: 0L
-        val waiter = (entry["mcast_waiter_off"] as? Number)?.toLong() ?: 0L
-        if (major == 5L && waiter > 0L) return "multicast_waiter"
         if (((entry["compact_waiter"] as? Number)?.toLong() ?: 0L) != 0L) return "tcp_zerocopy"
         return "select_stack"
     }

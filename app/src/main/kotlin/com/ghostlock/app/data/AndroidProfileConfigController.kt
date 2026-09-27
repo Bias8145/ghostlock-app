@@ -161,7 +161,6 @@ internal class AndroidProfileConfigController(
                     invalid += "$routePrefix.compact_waiter"
                 }
                 requireNonZero(
-                    "offset.mcast_fake_bss",
                     "kernelsnitch.mm_struct_sz",
                     "offset.empty_zero_page",
                     "cred.ref_count",
@@ -784,13 +783,11 @@ internal class AndroidProfileConfigController(
             "select_stack" to listOf("waiter_shift"),
             "multicast_waiter" to listOf(
                 "waiter_off", "buffer_size", "task_offset", "lock_offset",
-                "fake_lock_offset", "fake_task_offset", "lock_slots_offset",
-                "lock_slot_count", "lock_slot_stride", "compact_waiter",
+                "compact_waiter",
             ),
         )
         private val RouteMulticastFields = listOf(
-            "buffer_size", "task_offset", "lock_offset", "fake_lock_offset",
-            "fake_task_offset", "lock_slots_offset", "lock_slot_count", "lock_slot_stride",
+            "buffer_size", "task_offset", "lock_offset",
         )
         private const val SizeofU32 = 4L
         private const val SizeofU64 = 8L

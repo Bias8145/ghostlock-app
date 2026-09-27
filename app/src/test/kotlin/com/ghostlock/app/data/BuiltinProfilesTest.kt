@@ -85,10 +85,6 @@ class BuiltinProfilesTest {
                         owner in allowed,
                     )
                 }
-                assertTrue(
-                    "${entry.release}: no tuning offered for $route",
-                    routePaths.any { it.startsWith("execution.routes.$route.") },
-                )
 
                 /* The resolved document re-encodes and decodes identically. */
                 val bytes = controller.nativeDocument(config)

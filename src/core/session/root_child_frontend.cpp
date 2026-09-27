@@ -92,7 +92,6 @@ namespace ghostlock::session::frontend {
             pr_warning("temporary root ready; KernelSU module load pending\n");
         else
             pr_warning("temporary root ready; KernelSU module not loaded (W3 seccomp clear failed)\n");
-        route::kernel5_resident_stop();
         return StageResult::Done;
     }
 } // namespace ghostlock::session::frontend

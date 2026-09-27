@@ -55,12 +55,6 @@ namespace ghostlock::attack {
         log_exec("routes.select_stack.consumer_max_calls", e->select_consumer_max_calls);
         log_exec("routes.select_stack.consumer_burst_calls",
                  e->select_consumer_burst_calls);
-        log_exec("routes.multicast_waiter.ready_timeout_ms",
-                 e->multicast_ready_timeout_ms);
-        log_exec("routes.multicast_waiter.post_requeue_settle_us",
-                 e->multicast_post_requeue_settle_us);
-        log_exec("routes.multicast_waiter.post_adjust_settle_us",
-                 e->multicast_post_adjust_settle_us);
         log_exec("handoff.pre_dispatch_settle_ms", e->handoff_pre_dispatch_settle_ms);
         log_exec("handoff.module_poll_attempts", e->handoff_module_poll_attempts);
         log_exec("handoff.module_poll_interval_ms", e->handoff_module_poll_interval_ms);

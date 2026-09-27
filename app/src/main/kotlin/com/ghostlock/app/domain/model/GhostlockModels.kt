@@ -122,8 +122,21 @@ sealed interface OffsetImportResult {
 }
 
 sealed interface ParseResult {
-    data class Parsed(val releases: List<String>) : ParseResult
-    data class RequiresOverwrite(val releases: List<String>) : ParseResult
+    /** Fields only an xbl_config/uefi sidecar can supply (e.g.
+     * `kernel_phys_load`) that the parsed profile is still missing. */
+    data class Parsed(
+        val releases: List<String>,
+        val missing: Set<String> = emptySet(),
+        /** Name of the stored document, so the caller can auto-load it. */
+        val documentName: String? = null,
+    ) : ParseResult
+
+    data class RequiresOverwrite(
+        val releases: List<String>,
+        val missing: Set<String> = emptySet(),
+    ) : ParseResult
+
     data object AlreadyPresent : ParseResult
+
     data class Failed(val code: Int, val reason: String? = null) : ParseResult
 }

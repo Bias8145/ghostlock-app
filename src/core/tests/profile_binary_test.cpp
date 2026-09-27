@@ -105,10 +105,6 @@ int32_t main(void) {
     values.execution.handoff_enforce_poll_interval_ms = 100;
     values.mcast_waiter_off = 96;
     values.mcast_buffer_size = 512;
-    values.off_mcast_fake_bss = 0x2000;
-    values.multicast_resident = 1;
-    values.execution.multicast_ready_timeout_ms = 1234;
-    values.execution.multicast_post_requeue_settle_us = 300;
 
     assert(round_trip(values, &parsed, release, sizeof(release)) == 0);
     assert(strcmp(release, values.uname_r) == 0);
@@ -131,10 +127,6 @@ int32_t main(void) {
     assert(parsed.execution.handoff_enforce_poll_interval_ms == 100);
     assert(parsed.mcast_waiter_off == 96);
     assert(parsed.mcast_buffer_size == 512);
-    assert(parsed.off_mcast_fake_bss == 0x2000);
-    assert(parsed.multicast_resident == 1);
-    assert(parsed.execution.multicast_ready_timeout_ms == 1234);
-    assert(parsed.execution.multicast_post_requeue_settle_us == 300);
 
     values.route = ghostlock::profile::kRouteTcpZerocopy;
     values.execution.tcp_attempts = 2000;

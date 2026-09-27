@@ -11,12 +11,6 @@ internal data class MulticastWaiterLayout(
     val bufferSize: ULong,
     val taskOffset: ULong,
     val lockOffset: ULong,
-    val fakeLockOffset: ULong,
-    val fakeTaskOffset: ULong,
-    val lockSlotsOffset: ULong,
-    val lockSlotCount: ULong,
-    val lockSlotStride: ULong,
-    val fakeBssImageOffset: ULong,
 )
 
 /** Read-only select-stack geometry, mirroring native `SelectStackLayout`. */
@@ -54,7 +48,7 @@ internal data class Profile(
     val kernelOffsets: KernelOffsetTable get() = document.kernelOffset
     val multicast: MulticastGeometry
         get() = (document.routeConfig as? MulticastConfig)?.geometry
-            ?: MulticastGeometry(0L, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u)
+            ?: MulticastGeometry(0L, 0u, 0u, 0u)
     val execution: ExecutionTuning get() = document.execution
     val kernelPhysLoad: ULong get() = document.kernelPhysLoad
     val compactWaiter: Boolean get() = document.compactWaiter != 0u
@@ -75,12 +69,6 @@ internal data class Profile(
         bufferSize = multicast.bufferSize.toULong(),
         taskOffset = multicast.taskOffset.toULong(),
         lockOffset = multicast.lockOffset.toULong(),
-        fakeLockOffset = multicast.fakeLockOffset.toULong(),
-        fakeTaskOffset = multicast.fakeTaskOffset.toULong(),
-        lockSlotsOffset = multicast.lockSlotsOffset.toULong(),
-        lockSlotCount = multicast.lockSlotCount.toULong(),
-        lockSlotStride = multicast.lockSlotStride.toULong(),
-        fakeBssImageOffset = (document.routeConfig as? MulticastConfig)?.fakeBssImageOffset ?: 0uL,
     )
 
     fun selectStackLayout(): SelectStackLayout =

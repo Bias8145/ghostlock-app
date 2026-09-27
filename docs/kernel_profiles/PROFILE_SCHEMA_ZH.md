@@ -127,7 +127,7 @@ route { multicast_waiter { waiter_off = 96, buffer_size = 264 } }
 | `kernel_major` ∈ {5,6}、`cred.copy_size`、`cred.caps_count` 及凭据模板边界 | 必填 | | | |
 | `route.tcp_zerocopy.compact_waiter` / `route.multicast_waiter.compact_waiter` | | 必填 | | 必填 |
 | `route.select_stack.waiter_shift` | | | 必填（0 合法） | |
-| `route.multicast_waiter.waiter_off`（>0）、`route.multicast_waiter.buffer_size`、`route.multicast_waiter.task_offset`、`route.multicast_waiter.lock_offset`、`route.multicast_waiter.fake_lock_offset`、`route.multicast_waiter.fake_task_offset`、`route.multicast_waiter.lock_slots_offset`、`route.multicast_waiter.lock_slot_count`、`route.multicast_waiter.lock_slot_stride`、`offset.mcast_fake_bss`、`offset.empty_zero_page`、`kernelsnitch.mm_struct_sz`、`cred.ref_count`（>0） | | | | 必填 |
+| `route.multicast_waiter.waiter_off`（>0）、`route.multicast_waiter.buffer_size`、`route.multicast_waiter.task_offset`、`route.multicast_waiter.lock_offset`、`offset.empty_zero_page`、`kernelsnitch.mm_struct_sz`、`cred.ref_count`（>0） | | | | 必填 |
 
 凭据模板边界（通用）：`cred.usage_offset + 4 ≤ cred.copy_size`；`cred.caps_offset + cred.caps_count × 8 ≤ cred.copy_size`；`cred.ref_count ≤ 4`；每个 `cred.refN_image` 非零、`cred.refN_offset + 8 ≤ cred.copy_size`。`multicast_waiter` 还要求 `cred_copy_size ≥ 0xa0` 且 `route.multicast_waiter.waiter_off + route.multicast_waiter.lock_offset + 8 ≤ route.multicast_waiter.buffer_size`。
 
@@ -164,9 +164,7 @@ cred
 ```
 伪造多播对象（multicast_waiter 路由）
 ├── waiter 起点      → route.multicast_waiter.waiter_off
-├── task / lock      → route.multicast_waiter.task_offset / lock_offset
-├── fake_lock / task → route.multicast_waiter.fake_lock_offset / fake_task_offset
-└── lock slots       → route.multicast_waiter.lock_slots_offset / count / stride
+└── task / lock      → route.multicast_waiter.task_offset / lock_offset
 ```
 
 `offset` 命名空间是内核映像符号偏移（`init_task`、`init_cred`、`empty_zero_page` 等），其中 `offset.slide_*` 是 KASLR 滑移探测锚点；它们与 `kernel_phys_load` 一起用于把符号地址换算为运行地址。
@@ -219,9 +217,6 @@ cred
 | `route.multicast_waiter.waiter_off` | 多播缓冲区中 waiter 的偏移（必须 > 0） |
 | `route.multicast_waiter.buffer_size` | 伪造缓冲区大小 |
 | `route.multicast_waiter.task_offset` / `route.multicast_waiter.lock_offset` | 缓冲区中任务 / 锁字段偏移 |
-| `route.multicast_waiter.fake_lock_offset` / `route.multicast_waiter.fake_task_offset` | 伪造锁 / 任务对象偏移 |
-| `route.multicast_waiter.lock_slots_offset` / `route.multicast_waiter.lock_slot_count` / `route.multicast_waiter.lock_slot_stride` | 锁槽数组偏移 / 数量 / 步长 |
-| `offset.mcast_fake_bss` | 伪造 BSS 页内核映像偏移 |
 | `offset.empty_zero_page` | `empty_zero_page` 偏移 |
 
 ### 4.6 KernelSnitch 参数（`kernelsnitch`）

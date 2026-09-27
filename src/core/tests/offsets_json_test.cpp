@@ -70,9 +70,7 @@ namespace {
             "\"tcp_zerocopy\":{\"attempts\":2000,\"arm_sequence\":16,"
             "\"post_receive_hold_iterations\":20000},"
             "\"select_stack\":{\"enter_delay_us\":50000,\"timeout_us\":200000,"
-            "\"consumer_max_calls\":1,\"consumer_burst_calls\":1},"
-            "\"multicast_waiter\":{\"ready_timeout_ms\":10000,"
-            "\"post_requeue_settle_us\":200000,\"post_adjust_settle_us\":100000}}}";
+            "\"consumer_max_calls\":1,\"consumer_burst_calls\":1}}}";
 
     void check_documents() {
         profile::kernel_offsets v = {};
@@ -107,18 +105,6 @@ namespace {
         expect(v.fallback_route == ghostlock::profile::kRouteSelectStack, "fallback target decoded");
         expect(v.compact_waiter == 1 && v.pselect_waiter_shift == 1,
                "fallback branch fields decoded");
-
-        const std::string mcast_doc = std::string("{\"release\":\"5.15.test\",") +
-                                      kCommon +
-                                      ",\"route\":{\"multicast_waiter\":{\"waiter_off\":96,"
-                                      "\"buffer_size\":264,\"compact_waiter\":1}},"
-                                      "\"fallback\":{\"to\":\"none\"}}";
-        expect(decode_text(mcast_doc.c_str(), &v, release, sizeof(release)),
-               "multicast document decodes");
-        expect(v.route == ghostlock::profile::kRouteMulticastWaiter, "multicast route kind");
-        expect(v.mcast_waiter_off == 96 && v.mcast_buffer_size == 264 &&
-               v.compact_waiter == 1,
-               "multicast branch decoded");
 
         /* Legacy flat spelling stays decodable for old offsets.json files. */
         const std::string legacy_doc = std::string("{\"release\":\"legacy.test\",") +
@@ -205,11 +191,73 @@ namespace {
                (uintptr_t)(ghostlock::kernel::KIMAGE_TEXT_BASE - ghostlock::kernel::MTK_VADDR_BASE),
                "MTK physical load fallback");
     }
+    /* The remote/main reference offsets.json shape: flat scalar keys plus the
+     * `symbols` / `struct_fields` containers, no route, no schema_version. The
+     * current legacy decoder must map every one of its fields 1:1. */
+    void check_remote_main_reference_format() {
+        const char *doc = R"JSON({
+            "release": "6.1.reference",
+            "kernel_phys_load": 2147483648,
+            "pselect_waiter_shift": -2,
+            "compact_waiter": 1,
+            "mm_struct_sz": 1024,
+            "symbols": {
+                "off_init_task": 11, "off_init_cred": 12,
+                "off_root_task_group": 13, "off_selinux_enforcing": 14,
+                "off_selinux_blob_sizes": 15, "off_security_hook_heads": 16,
+                "off_slide_nfulnl_logger": 17, "off_slide_loggers_0_1": 18,
+                "off_slide_boot_id": 19
+            },
+            "struct_fields": {
+                "task_prio": 21, "task_normal_prio": 22,
+                "task_sched_task_group": 23, "task_pi_lock": 24,
+                "task_pi_waiters": 25, "task_pi_top_task": 26,
+                "task_pi_blocked_on": 27, "task_pid": 28, "task_tgid": 29,
+                "task_atomic_flags": 30, "task_real_cred": 31, "task_cred": 32,
+                "task_comm": 33, "task_tasks": 34, "task_seccomp": 35
+            }
+        })JSON";
+
+        std::string_view entry;
+        expect(ghostlock::legacy::profile_json::select_entry(
+                   doc, "6.1.reference", &entry) == 0,
+               "remote/main entry selected");
+
+        profile::kernel_offsets out = {};
+        char release[64] = {0};
+        strcpy(release, "6.1.reference");
+        ghostlock::legacy::profile_json::fill_entry(&out, release, entry);
+
+        /* Flat scalars. */
+        expect(out.kernel_phys_load == 2147483648ULL, "remote/main kernel_phys_load");
+        expect(out.pselect_waiter_shift == -2, "remote/main pselect_waiter_shift");
+        expect(out.compact_waiter == 1, "remote/main compact_waiter");
+        expect(out.mm_struct_sz == 1024, "remote/main mm_struct_sz");
+        /* symbols{} -> off_* (9/9, exactly the remote/main struct fields). */
+        expect(out.off_init_task == 11 && out.off_init_cred == 12 &&
+               out.off_root_task_group == 13 && out.off_selinux_enforcing == 14 &&
+               out.off_selinux_blob_sizes == 15 &&
+               out.off_security_hook_heads == 16 &&
+               out.off_slide_nfulnl_logger == 17 &&
+               out.off_slide_loggers_0_1 == 18 && out.off_slide_boot_id == 19,
+               "remote/main symbols 9/9 mapped");
+        /* struct_fields{} -> task_* (15/15). */
+        expect(out.task_prio == 21 && out.task_normal_prio == 22 &&
+               out.task_sched_task_group == 23 && out.task_pi_lock == 24 &&
+               out.task_pi_waiters == 25 && out.task_pi_top_task == 26 &&
+               out.task_pi_blocked_on == 27 && out.task_pid == 28 &&
+               out.task_tgid == 29 && out.task_atomic_flags == 30 &&
+               out.task_real_cred == 31 && out.task_cred == 32 &&
+               out.task_comm == 33 && out.task_tasks == 34 &&
+               out.task_seccomp == 35,
+               "remote/main struct_fields 15/15 mapped");
+    }
 } // namespace
 
 int32_t main(void) {
     check_documents();
     check_decoder_rejections();
+    check_remote_main_reference_format();
     check_address_paths();
     if (g_failures != 0) {
         fprintf(stderr, "offsets_json_test: %d failure(s)\n", g_failures);

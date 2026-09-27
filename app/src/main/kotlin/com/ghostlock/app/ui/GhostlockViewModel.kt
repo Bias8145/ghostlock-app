@@ -46,7 +46,9 @@ sealed interface GhostlockEffect {
 
 private const val OverwriteSummaryLimit = 12
 
-enum class DocumentRequest { ImportOffsetsHocon, ImportOffsetsJson, BootImage, XblImage }
+enum class DocumentRequest { ImportOffsetsHocon, ImportOffsetsJson, BootImage, XblImage, PayloadImage, UefiImage }
+
+private enum class ParseDialogStage { Mode, Attach }
 
 class GhostlockViewModel(
     private val repository: GhostlockRepository,
@@ -69,7 +71,11 @@ class GhostlockViewModel(
 
     private var kernelSnapshot: KernelSnapshot? = null
     private var pendingParseWithXbl = false
+    private var pendingParseWithUefi = false
     private var pendingBootPath: String? = null
+    private var pendingXblPath: String? = null
+    private var pendingUefiPath: String? = null
+    private var parseDialogStage = ParseDialogStage.Mode
     private var pendingConfirmation: PendingConfirmation? = null
 
     fun initialize() {
@@ -236,6 +242,7 @@ class GhostlockViewModel(
     fun onOpenParameters() {
         mutableState.update {
             it.copy(
+                advancedScreenVisible = true,
                 parametersVisible = true,
                 loadConfigVisible = false,
                 builtinScreenVisible = false,
@@ -903,13 +910,36 @@ class GhostlockViewModel(
         send(GhostlockEffect.PickDocument(DocumentRequest.ImportOffsetsJson))
 
     fun parseOffsets() {
+        parseDialogStage = ParseDialogStage.Mode
         mutableState.update {
             it.copy(
                 dialogVisible = true,
                 dialogType = DialogType.LIST,
                 dialogTitleRes = R.string.parse_title,
                 dialogItems = emptyList(),
-                dialogItemResIds = listOf(R.string.parse_option_boot, R.string.parse_option_boot_xbl),
+                dialogItemResIds = listOf(
+                    R.string.parse_option_payload,
+                    R.string.parse_option_boot,
+                ),
+            )
+        }
+    }
+
+    /** boot.img was chosen: let the user attach xbl_config / uefi (optional). */
+    private fun promptBootAttach() {
+        parseDialogStage = ParseDialogStage.Attach
+        mutableState.update {
+            it.copy(
+                dialogVisible = true,
+                dialogType = DialogType.LIST,
+                dialogTitleRes = R.string.parse_boot_attach_title,
+                dialogItems = emptyList(),
+                dialogItemResIds = listOf(
+                    R.string.parse_attach_none,
+                    R.string.parse_attach_xbl,
+                    R.string.parse_attach_uefi,
+                    R.string.parse_attach_xbl_uefi,
+                ),
             )
         }
     }
@@ -931,6 +961,8 @@ class GhostlockViewModel(
         when (request) {
             DocumentRequest.BootImage -> stageBoot(uri)
             DocumentRequest.XblImage -> stageXbl(uri)
+            DocumentRequest.UefiImage -> stageUefi(uri)
+            DocumentRequest.PayloadImage -> stagePayload(uri)
             DocumentRequest.ImportOffsetsHocon, DocumentRequest.ImportOffsetsJson -> Unit
         }
     }
@@ -943,14 +975,25 @@ class GhostlockViewModel(
 
             DocumentRequest.BootImage -> uris.firstOrNull()?.let(::stageBoot)
             DocumentRequest.XblImage -> uris.firstOrNull()?.let(::stageXbl)
+            DocumentRequest.UefiImage -> uris.firstOrNull()?.let(::stageUefi)
+            DocumentRequest.PayloadImage -> uris.firstOrNull()?.let(::stagePayload)
         }
     }
 
     fun onDialogItemSelected(index: Int) {
         dismissDialog()
-        when (index) {
-            0 -> pickBoot(withXbl = false)
-            1 -> pickBoot(withXbl = true)
+        when (parseDialogStage) {
+            ParseDialogStage.Mode -> when (index) {
+                0 -> pickPayload()
+                1 -> promptBootAttach()
+            }
+
+            ParseDialogStage.Attach -> when (index) {
+                0 -> pickBoot(withXbl = false, withUefi = false)
+                1 -> pickBoot(withXbl = true, withUefi = false)
+                2 -> pickBoot(withXbl = false, withUefi = true)
+                3 -> pickBoot(withXbl = true, withUefi = true)
+            }
         }
     }
 
@@ -1076,8 +1119,18 @@ class GhostlockViewModel(
         }
     }
 
-    private fun pickBoot(withXbl: Boolean) {
+    private fun pickPayload() {
+        pendingParseWithXbl = false
+        pendingParseWithUefi = false
+        send(GhostlockEffect.Toast(R.string.parse_pick_payload_hint))
+        send(GhostlockEffect.PickDocument(DocumentRequest.PayloadImage))
+    }
+
+    private fun pickBoot(withXbl: Boolean, withUefi: Boolean) {
         pendingParseWithXbl = withXbl
+        pendingParseWithUefi = withUefi
+        pendingXblPath = null
+        pendingUefiPath = null
         if (withXbl) send(GhostlockEffect.Toast(R.string.parse_pick_boot_hint))
         send(GhostlockEffect.PickDocument(DocumentRequest.BootImage))
     }
@@ -1088,11 +1141,18 @@ class GhostlockViewModel(
                 val bootPath = readDocumentUseCase.cache(uri, "boot.img")
                 pendingBootPath = bootPath
                 appendLog("boot.img ready: $bootPath")
-                if (pendingParseWithXbl) {
-                    send(GhostlockEffect.Toast(R.string.parse_pick_xbl_hint))
-                    send(GhostlockEffect.PickDocument(DocumentRequest.XblImage))
-                } else {
-                    runParse(bootPath)
+                when {
+                    pendingParseWithXbl -> {
+                        send(GhostlockEffect.Toast(R.string.parse_pick_xbl_hint))
+                        send(GhostlockEffect.PickDocument(DocumentRequest.XblImage))
+                    }
+
+                    pendingParseWithUefi -> {
+                        send(GhostlockEffect.Toast(R.string.parse_pick_uefi_hint))
+                        send(GhostlockEffect.PickDocument(DocumentRequest.UefiImage))
+                    }
+
+                    else -> runParse(bootPath)
                 }
             } catch (error: CancellationException) {
                 throw error
@@ -1109,8 +1169,48 @@ class GhostlockViewModel(
             try {
                 val bootPath = requireNotNull(pendingBootPath) { "boot.img is not staged" }
                 val xblPath = readDocumentUseCase.cache(uri, "xbl_config.img")
+                pendingXblPath = xblPath
                 appendLog("xbl_config.img ready: $xblPath")
-                runParse(bootPath, xblPath)
+                if (pendingParseWithUefi) {
+                    send(GhostlockEffect.Toast(R.string.parse_pick_uefi_hint))
+                    send(GhostlockEffect.PickDocument(DocumentRequest.UefiImage))
+                } else {
+                    runParse(bootPath, xblPath = xblPath)
+                }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                appendLog("parse error: ${error.message}")
+                appendLog("result: parse failed")
+                send(GhostlockEffect.Toast(R.string.parse_failed))
+            }
+        }
+    }
+
+    private fun stageUefi(uri: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val bootPath = requireNotNull(pendingBootPath) { "boot.img is not staged" }
+                val uefiPath = readDocumentUseCase.cache(uri, "uefi.img")
+                pendingUefiPath = uefiPath
+                appendLog("uefi.img ready: $uefiPath")
+                runParse(bootPath, xblPath = pendingXblPath, uefiPath = uefiPath)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                appendLog("parse error: ${error.message}")
+                appendLog("result: parse failed")
+                send(GhostlockEffect.Toast(R.string.parse_failed))
+            }
+        }
+    }
+
+    private fun stagePayload(uri: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val payloadPath = readDocumentUseCase.cache(uri, "payload.bin")
+                appendLog("payload.bin ready: $payloadPath")
+                runParse(payloadPath)
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
@@ -1133,12 +1233,17 @@ class GhostlockViewModel(
         viewModelScope.launch(Dispatchers.IO) { runParse(url) }
     }
 
-    private suspend fun runParse(input: String, xblPath: String? = null, overwrite: Boolean = false) {
+    private suspend fun runParse(
+        input: String,
+        xblPath: String? = null,
+        uefiPath: String? = null,
+        overwrite: Boolean = false,
+    ) {
         if (!beginOperation()) return
         try {
-            when (val result = parseSourceUseCase(input, xblPath, overwrite, ::appendLog)) {
+            when (val result = parseSourceUseCase(input, xblPath, uefiPath, overwrite, ::appendLog)) {
                 is ParseResult.RequiresOverwrite -> {
-                    pendingConfirmation = PendingConfirmation.Parse(input, xblPath)
+                    pendingConfirmation = PendingConfirmation.Parse(input, xblPath, uefiPath)
                     showOverwriteDialog(result.releases)
                 }
 
@@ -1147,7 +1252,21 @@ class GhostlockViewModel(
                     refreshUserProfiles()
                     appendLog("offsets exported: ${result.releases.joinToString()}")
                     appendLog("result: offsets parsed successfully")
-                    send(GhostlockEffect.Toast(R.string.parse_success))
+                    /* Auto-load the just-saved document so the parsed profile
+                     * takes effect without a manual trip to the profile list. */
+                    if (result.documentName != null) {
+                        appendLog("auto-loading parsed profile: ${result.documentName}")
+                        selectUserProfile(result.documentName)
+                    } else {
+                        send(GhostlockEffect.Toast(R.string.parse_success))
+                    }
+                    if (result.missing.isNotEmpty()) {
+                        appendLog(
+                            "warning: missing ${result.missing.joinToString()}; " +
+                                "attach xbl_config.img or uefi.img to fill it",
+                        )
+                        send(GhostlockEffect.Toast(R.string.parse_missing_phys_hint))
+                    }
                 }
 
                 ParseResult.AlreadyPresent -> {
@@ -1203,7 +1322,12 @@ class GhostlockViewModel(
             }
 
             is PendingConfirmation.Parse -> viewModelScope.launch(Dispatchers.IO) {
-                runParse(confirmation.input, confirmation.xblPath, overwrite = true)
+                runParse(
+                    confirmation.input,
+                    confirmation.xblPath,
+                    confirmation.uefiPath,
+                    overwrite = true,
+                )
             }
         }
     }
@@ -1316,6 +1440,6 @@ class GhostlockViewModel(
 
     private sealed interface PendingConfirmation {
         data class Import(val documents: Map<String, String>) : PendingConfirmation
-        data class Parse(val input: String, val xblPath: String?) : PendingConfirmation
+        data class Parse(val input: String, val xblPath: String?, val uefiPath: String?) : PendingConfirmation
     }
 }

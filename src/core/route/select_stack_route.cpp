@@ -147,7 +147,6 @@ namespace ghostlock::route::select_stack {
 #pragma clang diagnostic ignored "-Wvla-cxx-extension"
 #endif
 
-#include "route/multicast_waiter_route.h"
 #include "route/route_lifecycle.hpp"
 #include "route/select_stack_route.h"
 #include "route/tcp_zerocopy_route.h"

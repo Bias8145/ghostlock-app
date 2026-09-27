@@ -223,7 +223,6 @@ namespace ghostlock::legacy {
         std::optional<std::string_view> task_struct;
         std::optional<std::string_view> cred;
         std::optional<std::string_view> offset;
-        std::optional<std::string_view> mcast;
     };
 
     /* Resolve one flat map name against the namespaced groups first
@@ -241,9 +240,6 @@ namespace ghostlock::legacy {
         } else if (field.starts_with("off_")) {
             group = &groups.offset;
             field.remove_prefix(4);
-        } else if (field.starts_with("mcast_")) {
-            group = &groups.mcast;
-            field.remove_prefix(6);
         }
         if (group != nullptr && group->has_value()) {
             const auto nested = json_member_value(**group, field);
@@ -339,8 +335,6 @@ namespace ghostlock::legacy {
     static constexpr struct scalar_field g_symbol_map[] = {
         scalar_store<&profile::kernel_offsets::off_init_task>("off_init_task"),
         scalar_store<&profile::kernel_offsets::off_init_cred>("off_init_cred"),
-        scalar_store<&profile::kernel_offsets::off_empty_zero_page>("off_empty_zero_page"),
-        scalar_store<&profile::kernel_offsets::off_mcast_fake_bss>("off_mcast_fake_bss"),
         scalar_store<&profile::kernel_offsets::off_root_task_group>("off_root_task_group"),
         scalar_store<&profile::kernel_offsets::off_selinux_enforcing>("off_selinux_enforcing"),
         scalar_store<&profile::kernel_offsets::off_selinux_blob_sizes>("off_selinux_blob_sizes"),
@@ -369,19 +363,8 @@ namespace ghostlock::legacy {
     };
 
     static constexpr struct scalar_field g_profile_map[] = {
-        scalar_store<&profile::kernel_offsets::kernel_major>("kernel_major"),
-        scalar_store<&profile::kernel_offsets::recommend_shizuku>("recommend_shizuku"),
         scalar_store<&profile::kernel_offsets::kernel_phys_load>("kernel_phys_load"),
         scalar_store<&profile::kernel_offsets::pselect_waiter_shift>("pselect_waiter_shift"),
-        scalar_store<&profile::kernel_offsets::mcast_waiter_off>("mcast_waiter_off"),
-        scalar_store<&profile::kernel_offsets::mcast_buffer_size>("mcast_buffer_size"),
-        scalar_store<&profile::kernel_offsets::mcast_task_offset>("mcast_task_offset"),
-        scalar_store<&profile::kernel_offsets::mcast_lock_offset>("mcast_lock_offset"),
-        scalar_store<&profile::kernel_offsets::mcast_fake_lock_offset>("mcast_fake_lock_offset"),
-        scalar_store<&profile::kernel_offsets::mcast_fake_task_offset>("mcast_fake_task_offset"),
-        scalar_store<&profile::kernel_offsets::mcast_lock_slots_offset>("mcast_lock_slots_offset"),
-        scalar_store<&profile::kernel_offsets::mcast_lock_slot_count>("mcast_lock_slot_count"),
-        scalar_store<&profile::kernel_offsets::mcast_lock_slot_stride>("mcast_lock_slot_stride"),
         scalar_store<&profile::kernel_offsets::kernelsnitch_collisions>("kernelsnitch_collisions"),
         scalar_store<&profile::kernel_offsets::compact_waiter>("compact_waiter"),
         scalar_store<&profile::kernel_offsets::mm_struct_sz>("mm_struct_sz"),
@@ -507,17 +490,10 @@ namespace ghostlock::legacy {
             exec_field<&profile::execution_settings::select_consumer_max_calls>("consumer_max_calls"),
             exec_field<&profile::execution_settings::select_consumer_burst_calls>("consumer_burst_calls"),
         };
-        static constexpr struct execution_field multicast[] = {
-            exec_field<&profile::execution_settings::multicast_ready_timeout_ms>("ready_timeout_ms"),
-            exec_field<&profile::execution_settings::multicast_post_requeue_settle_us>("post_requeue_settle_us"),
-            exec_field<&profile::execution_settings::multicast_post_adjust_settle_us>("post_adjust_settle_us"),
-        };
         return parse_execution_group(*routes, "tcp_zerocopy", tcp,
                                      std::size(tcp), out) ||
                parse_execution_group(*routes, "select_stack", select_stack,
-                                     std::size(select_stack), out) ||
-               parse_execution_group(*routes, "multicast_waiter", multicast,
-                                     std::size(multicast), out)
+                                     std::size(select_stack), out)
                    ? -1
                    : 0;
     }
@@ -545,34 +521,9 @@ namespace ghostlock::legacy {
         if (v && json_parse_int(*v, num)) out->pselect_waiter_shift = static_cast<int32_t>(*num);
     }
 
-    static void decode_multicast_branch(std::string_view branch,
-                                        profile::kernel_offsets *out, int64_t *num) {
-        static constexpr struct scalar_field kMcastFields[] = {
-            scalar_store<&profile::kernel_offsets::mcast_waiter_off>("waiter_off"),
-            scalar_store<&profile::kernel_offsets::mcast_buffer_size>("buffer_size"),
-            scalar_store<&profile::kernel_offsets::mcast_task_offset>("task_offset"),
-            scalar_store<&profile::kernel_offsets::mcast_lock_offset>("lock_offset"),
-            scalar_store<&profile::kernel_offsets::mcast_fake_lock_offset>("fake_lock_offset"),
-            scalar_store<&profile::kernel_offsets::mcast_fake_task_offset>("fake_task_offset"),
-            scalar_store<&profile::kernel_offsets::mcast_lock_slots_offset>("lock_slots_offset"),
-            scalar_store<&profile::kernel_offsets::mcast_lock_slot_count>("lock_slot_count"),
-            scalar_store<&profile::kernel_offsets::mcast_lock_slot_stride>("lock_slot_stride"),
-        };
-        for (const struct scalar_field &field: kMcastFields) {
-            const auto v = json_member_value(branch, field.name);
-            if (v && json_parse_int(*v, num)) field.store(*out, *num);
-        }
-        /* The multicast route also relies on the compact waiter layout. */
-        const auto compact = json_member_value(branch, "compact_waiter");
-        if (compact && json_parse_int(*compact, num)) {
-            out->compact_waiter = static_cast<uint8_t>(*num);
-        }
-    }
-
     static const route_branch_decoder kRouteBranchDecoders[] = {
         {profile::kRouteTcpZerocopy, decode_tcp_branch},
         {profile::kRouteSelectStack, decode_select_branch},
-        {profile::kRouteMulticastWaiter, decode_multicast_branch},
     };
 
     /* Writes one route branch's fields into the native struct. */
@@ -590,13 +541,16 @@ namespace ghostlock::legacy {
                                     const char *release_buf, std::string_view object) {
         int64_t num;
         out->uname_r = release_buf;
-        /* Offsets are namespaced as task/cred/off/mcast objects; the flat keys
+        /* remote/main-era offsets.json only ever described 6.x kernels and had
+         * neither a kernel_major nor a shizuku flag; fill the current defaults. */
+        out->kernel_major = 6;
+        out->recommend_shizuku = 0;
+        /* Offsets are namespaced as task/cred/off objects; the flat keys
      * remain as a legacy fallback for older offsets.json files. */
         const ProfileGroups groups = {
             .task_struct = json_object_span(object, "task_struct"),
             .cred = json_object_span(object, "cred"),
             .offset = json_object_span(object, "offset"),
-            .mcast = json_object_span(object, "mcast"),
         };
         for (size_t i = 0; i < std::size(g_profile_map); i++) {
             if (read_namespaced_scalar(object, g_profile_map[i].name, groups, &num)) {

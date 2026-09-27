@@ -42,9 +42,6 @@ private fun fieldLabelRes(path: String): Int? = when (path) {
         "execution.race.state_poll_interval_us" -> R.string.field_execution_race_state_poll_interval_us
         "execution.recommended_cpus.consumer" -> R.string.field_execution_recommended_cpus_consumer
         "execution.recommended_cpus.main" -> R.string.field_execution_recommended_cpus_main
-        "execution.routes.multicast_waiter.post_adjust_settle_us" -> R.string.field_execution_routes_multicast_waiter_post_adjust_settle_us
-        "execution.routes.multicast_waiter.post_requeue_settle_us" -> R.string.field_execution_routes_multicast_waiter_post_requeue_settle_us
-        "execution.routes.multicast_waiter.ready_timeout_ms" -> R.string.field_execution_routes_multicast_waiter_ready_timeout_ms
         "execution.routes.select_stack.consumer_burst_calls" -> R.string.field_execution_routes_select_stack_consumer_burst_calls
         "execution.routes.select_stack.consumer_max_calls" -> R.string.field_execution_routes_select_stack_consumer_max_calls
         "execution.routes.select_stack.enter_delay_us" -> R.string.field_execution_routes_select_stack_enter_delay_us
@@ -68,18 +65,8 @@ private fun fieldLabelRes(path: String): Int? = when (path) {
         "kernel_phys_load" -> R.string.field_kernel_phys_load
         "route.multicast_waiter.buffer_size" -> R.string.field_mcast_buffer_size
         "fallback.route.multicast_waiter.buffer_size" -> R.string.field_mcast_buffer_size
-        "route.multicast_waiter.fake_lock_offset" -> R.string.field_mcast_fake_lock_offset
-        "fallback.route.multicast_waiter.fake_lock_offset" -> R.string.field_mcast_fake_lock_offset
-        "route.multicast_waiter.fake_task_offset" -> R.string.field_mcast_fake_task_offset
-        "fallback.route.multicast_waiter.fake_task_offset" -> R.string.field_mcast_fake_task_offset
         "route.multicast_waiter.lock_offset" -> R.string.field_mcast_lock_offset
         "fallback.route.multicast_waiter.lock_offset" -> R.string.field_mcast_lock_offset
-        "route.multicast_waiter.lock_slot_count" -> R.string.field_mcast_lock_slot_count
-        "fallback.route.multicast_waiter.lock_slot_count" -> R.string.field_mcast_lock_slot_count
-        "route.multicast_waiter.lock_slot_stride" -> R.string.field_mcast_lock_slot_stride
-        "fallback.route.multicast_waiter.lock_slot_stride" -> R.string.field_mcast_lock_slot_stride
-        "route.multicast_waiter.lock_slots_offset" -> R.string.field_mcast_lock_slots_offset
-        "fallback.route.multicast_waiter.lock_slots_offset" -> R.string.field_mcast_lock_slots_offset
         "route.multicast_waiter.task_offset" -> R.string.field_mcast_task_offset
         "fallback.route.multicast_waiter.task_offset" -> R.string.field_mcast_task_offset
         "route.multicast_waiter.waiter_off" -> R.string.field_mcast_waiter_off
@@ -87,7 +74,6 @@ private fun fieldLabelRes(path: String): Int? = when (path) {
         "offset.empty_zero_page" -> R.string.field_off_empty_zero_page
         "offset.init_cred" -> R.string.field_off_init_cred
         "offset.init_task" -> R.string.field_off_init_task
-        "offset.mcast_fake_bss" -> R.string.field_off_mcast_fake_bss
         "offset.root_task_group" -> R.string.field_off_root_task_group
         "offset.security_hook_heads" -> R.string.field_off_security_hook_heads
         "offset.selinux_blob_sizes" -> R.string.field_off_selinux_blob_sizes

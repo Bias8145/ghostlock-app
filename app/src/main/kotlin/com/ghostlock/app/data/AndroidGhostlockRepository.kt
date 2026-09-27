@@ -289,7 +289,13 @@ class AndroidGhostlockRepository(context: Context) : GhostlockRepository {
         return entries.takeIf { it.isNotEmpty() }
     }
 
-    override suspend fun parseSource(input: String, xblPath: String?, overwrite: Boolean, onLog: (String) -> Unit): ParseResult {
+    override suspend fun parseSource(
+        input: String,
+        xblPath: String?,
+        uefiPath: String?,
+        overwrite: Boolean,
+        onLog: (String) -> Unit,
+    ): ParseResult {
         val parsedFile = File(filesDir, "offsets_parse.tmp")
         var tempBootFile: File? = null
         var tempXblFile: File? = null
@@ -300,7 +306,7 @@ class AndroidGhostlockRepository(context: Context) : GhostlockRepository {
                     pendingParsedDocument = null
                     dropReplacedDocuments(pending.releases)
                     userProfileStore.save(pending.name, pending.text)
-                    return ParseResult.Parsed(pending.releases)
+                    return ParseResult.Parsed(pending.releases, pending.missing, pending.name)
                 }
             }
             val binary = File(appContext.applicationInfo.nativeLibraryDir, ExtractBinaryName)
@@ -331,6 +337,10 @@ class AndroidGhostlockRepository(context: Context) : GhostlockRepository {
                     add("--xbl-config")
                     add(effectiveXblPath)
                 }
+                if (uefiPath != null) {
+                    add("--uefi")
+                    add(uefiPath)
+                }
                 /* --format conf: the extractor output is already the flattened
                  * profile (no includes, credential template inlined), so the
                  * stored document needs no legacy conversion. */
@@ -356,15 +366,16 @@ class AndroidGhostlockRepository(context: Context) : GhostlockRepository {
                 .filter { (it["release"] as? String).orEmpty().isNotEmpty() }
             if (filtered.isEmpty()) return ParseResult.AlreadyPresent
             val releases = freshReleases(filtered)
+            val missing = missingSidecarFields(filtered)
             val overlaps = releases.filter { userProfileStore.containsRelease(it) }
             val name = parsedDocumentName(releases)
             if (!overwrite && overlaps.isNotEmpty()) {
-                pendingParsedDocument = PendingParsedDocument(name, document, releases)
-                return ParseResult.RequiresOverwrite(overlaps)
+                pendingParsedDocument = PendingParsedDocument(name, document, releases, missing)
+                return ParseResult.RequiresOverwrite(overlaps, missing)
             }
             dropReplacedDocuments(releases)
             userProfileStore.save(name, document)
-            ParseResult.Parsed(releases)
+            ParseResult.Parsed(releases, missing, name)
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
@@ -835,7 +846,19 @@ class AndroidGhostlockRepository(context: Context) : GhostlockRepository {
         val name: String,
         val text: String,
         val releases: List<String>,
+        val missing: Set<String>,
     )
+
+    /**
+     * Fields a parsed profile still lacks that only an xbl_config FDT or uefi
+     * memory map can fill. Used to prompt for the optional sidecars.
+     */
+    private fun missingSidecarFields(entries: List<ValueMap>): Set<String> =
+        if (entries.isNotEmpty() && entries.all { it.getLongAt("kernel_phys_load") == null }) {
+            setOf("kernel_phys_load")
+        } else {
+            emptySet()
+        }
 
     private fun parsedDocumentName(releases: List<String>): String {
         val stem = releases.firstOrNull().orEmpty()

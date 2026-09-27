@@ -28,8 +28,6 @@ namespace ghostlock::profile {
         uint32_t tcp_post_receive_hold_iterations;
         uint32_t select_enter_delay_us, select_timeout_us;
         uint32_t select_consumer_max_calls, select_consumer_burst_calls;
-        uint32_t multicast_ready_timeout_ms, multicast_post_requeue_settle_us;
-        uint32_t multicast_post_adjust_settle_us;
         uint32_t handoff_pre_dispatch_settle_ms, handoff_module_poll_attempts;
         uint32_t handoff_module_poll_interval_ms, handoff_enforce_poll_attempts;
         uint32_t handoff_enforce_poll_interval_ms;
@@ -88,11 +86,8 @@ namespace ghostlock::profile {
         int32_t pselect_waiter_shift;
         int32_t mcast_waiter_off;
         uint32_t mcast_buffer_size, mcast_task_offset, mcast_lock_offset;
-        uint32_t mcast_fake_lock_offset, mcast_fake_task_offset;
-        uint32_t mcast_lock_slots_offset, mcast_lock_slot_count, mcast_lock_slot_stride;
         uint32_t kernelsnitch_collisions;
         uint64_t off_init_task, off_init_cred, off_empty_zero_page;
-        uint64_t off_mcast_fake_bss;
         uint64_t off_root_task_group, off_selinux_enforcing;
         uint64_t off_selinux_blob_sizes, off_security_hook_heads;
         uint64_t off_slide_nfulnl_logger, off_slide_loggers_0_1, off_slide_boot_id;
@@ -111,7 +106,6 @@ namespace ghostlock::profile {
         uint8_t compact_waiter;
         /* Execution flags resolved from the profile (v2). */
         uint8_t safe_mode;
-        uint8_t multicast_resident;
         uint32_t mm_struct_sz;
         struct execution_settings execution;
 
@@ -123,9 +117,6 @@ namespace ghostlock::profile {
 
     struct MulticastWaiterLayout {
         size_t waiter_offset, buffer_size, task_offset, lock_offset;
-        size_t fake_lock_offset, fake_task_offset;
-        size_t lock_slots_offset, lock_slot_count, lock_slot_stride;
-        uint64_t fake_bss_image_offset;
     };
 
     struct SelectStackLayout {
@@ -235,9 +226,6 @@ namespace ghostlock::profile {
         GHOSTLOCK_EXEC_U32(select_timeout_us)
         GHOSTLOCK_EXEC_U32(select_consumer_max_calls)
         GHOSTLOCK_EXEC_U32(select_consumer_burst_calls)
-        GHOSTLOCK_EXEC_U32(multicast_ready_timeout_ms)
-        GHOSTLOCK_EXEC_U32(multicast_post_requeue_settle_us)
-        GHOSTLOCK_EXEC_U32(multicast_post_adjust_settle_us)
         GHOSTLOCK_EXEC_U32(handoff_pre_dispatch_settle_ms)
         GHOSTLOCK_EXEC_U32(handoff_module_poll_attempts)
         GHOSTLOCK_EXEC_U32(handoff_module_poll_interval_ms)
@@ -253,10 +241,6 @@ namespace ghostlock::profile {
             return loaded_ && values_.safe_mode;
         }
 
-        [[nodiscard]] bool multicast_resident() const noexcept {
-            return loaded_ && values_.multicast_resident;
-        }
-
         [[nodiscard]] MulticastWaiterLayout multicast_layout() const noexcept {
             return loaded_
                        ? (MulticastWaiterLayout){
@@ -264,12 +248,6 @@ namespace ghostlock::profile {
                            .buffer_size = values_.mcast_buffer_size,
                            .task_offset = values_.mcast_task_offset,
                            .lock_offset = values_.mcast_lock_offset,
-                           .fake_lock_offset = values_.mcast_fake_lock_offset,
-                           .fake_task_offset = values_.mcast_fake_task_offset,
-                           .lock_slots_offset = values_.mcast_lock_slots_offset,
-                           .lock_slot_count = values_.mcast_lock_slot_count,
-                           .lock_slot_stride = values_.mcast_lock_slot_stride,
-                           .fake_bss_image_offset = values_.off_mcast_fake_bss,
                        }
                        : MulticastWaiterLayout{};
         }

@@ -49,16 +49,10 @@ Template file: [kernel-5.x.template.conf](kernel-5.x.template.conf). It lists ev
 <tr><td><code>route.multicast_waiter.buffer_size</code></td><td><code>264</code></td><td>Size of the forged buffer, i.e. the length of the injected byte string.</td></tr>
 <tr><td><code>route.multicast_waiter.task_offset</code></td><td><code>48</code></td><td>Offset of the task field inside the buffer.</td></tr>
 <tr><td><code>route.multicast_waiter.lock_offset</code></td><td><code>56</code></td><td>Offset of the lock field inside the buffer.</td></tr>
-<tr><td><code>route.multicast_waiter.fake_lock_offset</code></td><td><code>4608</code></td><td>Offset of the forged lock object.</td></tr>
-<tr><td><code>route.multicast_waiter.fake_task_offset</code></td><td><code>12800</code></td><td>Offset of the forged task object.</td></tr>
-<tr><td><code>route.multicast_waiter.lock_slots_offset</code></td><td><code>128</code></td><td>Offset of the lock-slot array.</td></tr>
-<tr><td><code>route.multicast_waiter.lock_slot_count</code></td><td><code>12</code></td><td>Number of lock slots.</td></tr>
-<tr><td><code>route.multicast_waiter.lock_slot_stride</code></td><td><code>8</code></td><td>Stride between lock slots.</td></tr>
 <tr><td><code>kernelsnitch.collisions</code></td><td><code>8</code></td><td>Number of futex collisions KernelSnitch needs.</td></tr>
-<tr><th rowspan="11">Kernel-relative symbols</th><td><code>offset.init_task</code></td><td></td><td>Offset of <code>init_task</code> relative to the kernel image base.</td><td rowspan="11">An incorrect value can change target selection, structure bounds, or race timing, causing failure, deadlock, memory corruption, a black screen, or reboot.</td><td rowspan="11">This preserves the verified 5.x baseline but is not a stable ABI; revalidate it against the same target image.</td></tr>
+<tr><th rowspan="10">Kernel-relative symbols</th><td><code>offset.init_task</code></td><td></td><td>Offset of <code>init_task</code> relative to the kernel image base.</td><td rowspan="11">An incorrect value can change target selection, structure bounds, or race timing, causing failure, deadlock, memory corruption, a black screen, or reboot.</td><td rowspan="11">This preserves the verified 5.x baseline but is not a stable ABI; revalidate it against the same target image.</td></tr>
 <tr><td><code>offset.init_cred</code></td><td></td><td>Offset of <code>init_cred</code>; W2 repair writes its +8.</td></tr>
 <tr><td><code>offset.empty_zero_page</code></td><td></td><td>Offset of <code>empty_zero_page</code>.</td></tr>
-<tr><td><code>offset.mcast_fake_bss</code></td><td></td><td>Image offset of the multicast forged lock object; added to <code>fake_lock_offset</code>, then aligned.</td></tr>
 <tr><td><code>offset.root_task_group</code></td><td></td><td>Offset of <code>root_task_group</code>.</td></tr>
 <tr><td><code>offset.selinux_enforcing</code></td><td></td><td>Offset of <code>selinux_state.enforcing</code>; W1 writes 0.</td></tr>
 <tr><td><code>offset.selinux_blob_sizes</code></td><td></td><td>Offset of <code>selinux_blob_sizes</code>.</td></tr>
@@ -89,9 +83,6 @@ Template file: [kernel-5.x.template.conf](kernel-5.x.template.conf). It lists ev
 <tr><td><code>execution.routes.select_stack.timeout_us</code></td><td><code>200000</code></td><td>Per-select timeout.</td><td>Balances premature exit and recovery time.</td><td>Preserves 200 ms.</td></tr>
 <tr><td><code>execution.routes.select_stack.consumer_max_calls</code></td><td><code>1</code></td><td>Consumer call cap.</td><td>Multiple calls alter the proven layout.</td><td>The stable path is single-shot.</td></tr>
 <tr><td><code>execution.routes.select_stack.consumer_burst_calls</code></td><td><code>1</code></td><td>Calls per consumer burst.</td><td>Changes scheduling and stack lifetime.</td><td>Preserves one-call bursts.</td></tr>
-<tr><th rowspan="3">Multicast-waiter route</th><td><code>execution.routes.multicast_waiter.ready_timeout_ms</code></td><td><code>10000</code></td><td>Waiter-ready timeout.</td><td>Balances slow scheduling and cleanup latency.</td><td>Matches legacy 10 seconds.</td></tr>
-<tr><td><code>execution.routes.multicast_waiter.post_requeue_settle_us</code></td><td><code>200000</code></td><td>Post-requeue settle.</td><td>Affects waiter-chain stabilization; shorter waits may overwrite too early.</td><td>Preserves 200 ms.</td></tr>
-<tr><td><code>execution.routes.multicast_waiter.post_adjust_settle_us</code></td><td><code>100000</code></td><td>Post-adjust settle.</td><td>Controls state visibility.</td><td>Preserves 100 ms.</td></tr>
 <tr><th rowspan="5">Privilege handoff</th><td><code>execution.handoff.pre_dispatch_settle_ms</code></td><td><code>2000</code></td><td>Pre-handoff settle.</td><td>Too short may dispatch before privilege/SELinux state settles.</td><td>Preserves two seconds.</td></tr>
 <tr><td><code>execution.handoff.module_poll_attempts</code></td><td><code>30</code></td><td>Module-state poll count.</td><td>Together with the interval, forms the 3-second total window.</td><td>30×100 ms preserves three seconds.</td></tr>
 <tr><td><code>execution.handoff.module_poll_interval_ms</code></td><td><code>100</code></td><td>Module poll interval.</td><td>Trades wakeups for latency.</td><td>Legacy cadence.</td></tr>

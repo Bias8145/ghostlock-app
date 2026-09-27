@@ -36,10 +36,8 @@ class ProfileRoundTripTest {
         "execution.routes.select_stack.enter_delay_us" to 50000L,
     )
     private val multicastValues = common + mapOf(
-        "offset.mcast_fake_bss" to 0x2000L,
         "mcast.waiter_off" to 264L,
         "mcast.buffer_size" to 512L,
-        "execution.routes.multicast_waiter.ready_timeout_ms" to 1234L,
     )
 
     private fun document(
@@ -87,7 +85,6 @@ class ProfileRoundTripTest {
         assertEquals(true, profile.hasCompactWaiter())
         assertEquals(0x4000u, profile.mmStructStride(fallback = 1u))
         assertEquals(264uL, profile.multicastLayout().waiterOffset)
-        assertEquals(0x2000uL, profile.multicastLayout().fakeBssImageOffset)
         /* Consumer cadence rides the common slot, not the multicast section. */
         val decoded = NativeProfileDocument.fromBinary(bytes)!!
         assertEquals(1u, decoded.execution.consumerMaxCalls)
