@@ -65,7 +65,7 @@ android {
     }
     defaultConfig {
         applicationId = "com.ghostlock.app"
-        minSdk = 34
+        minSdk = 31
         targetSdk = 37
         versionCode = gitVersionCode
         versionName = appVersionName
