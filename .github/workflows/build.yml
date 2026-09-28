@@ -248,6 +248,7 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           path: artifacts
+          skip-decompress: true
 
       - name: Prepare release files and notes
         run: |
@@ -351,6 +352,7 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           path: artifacts
+          skip-decompress: true
 
       - name: Post to Telegram
         env:
