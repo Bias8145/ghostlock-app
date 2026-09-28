@@ -119,6 +119,10 @@ android {
         includeInApk = false
         includeInBundle = false
     }
+    // The native exploit runtime is deliberately shipped only for arm64.
+    lint {
+        disable += "ChromeOsAbiSupport"
+    }
     packaging {
         jniLibs {
             useLegacyPackaging = true

@@ -16,9 +16,6 @@ internal data class MulticastWaiterLayout(
 /** Read-only select-stack geometry, mirroring native `SelectStackLayout`. */
 internal data class SelectStackLayout(val waiterShift: Int?, val compactWaiter: Boolean)
 
-/** Read-only TCP-zerocopy geometry, mirroring native `TcpZerocopyLayout`. */
-internal data class TcpZerocopyLayout(val compactWaiter: Boolean)
-
 /**
  * Single authority for one fully resolved profile.
  *
@@ -40,19 +37,14 @@ internal data class Profile(
 
     val fallback: RouteKind? get() = RouteKind.fromWire(document.fallbackRoute)
     val kernelMajor: UInt get() = document.kernelMajor
-    val recommendShizuku: Boolean get() = document.recommendShizuku != 0u
-    val taskStruct: TaskStructOffsets get() = document.taskStruct
     val cred: CredTemplate get() = document.cred
-    val kernelOffsets: KernelOffsetTable get() = document.kernelOffset
     val multicast: MulticastGeometry
         get() = (document.routeConfig as? MulticastConfig)?.geometry
             ?: MulticastGeometry(null, null, null, null)
     val execution: ExecutionTuning get() = document.execution
-    val kernelPhysLoad: ULong? get() = document.kernelPhysLoad
     val compactWaiter: Boolean get() = (document.compactWaiter?.toInt() ?: 0) != 0
     val pselectWaiterShift: Int?
         get() = (document.routeConfig as? SelectConfig)?.waiterShift
-    val kernelsnitchCollisions: UInt? get() = document.kernelsnitchCollisions
     val mmStructSz: UInt? get() = document.mmStructSz
 
     fun supports(candidate: RouteKind): Boolean = route == candidate
@@ -71,10 +63,6 @@ internal data class Profile(
 
     fun selectStackLayout(): SelectStackLayout =
         SelectStackLayout(waiterShift = pselectWaiterShift, compactWaiter = compactWaiter)
-
-    fun tcpZerocopyLayout(): TcpZerocopyLayout = TcpZerocopyLayout(compactWaiter)
-
-    fun toNativeDocument(): NativeProfileDocument = document
 
     fun toBinary(): ByteArray = document.toBinary()
 

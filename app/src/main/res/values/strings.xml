@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">GhostLock</string>
     <string name="action_run">Run</string>
     <string name="action_running">Running…</string>
-    <string name="action_advanced">Advanced options</string>
     <string name="advanced_settings">Advanced options</string>
     <string name="advanced_settings_summary">Profiles, debug logs, and test settings</string>
     <string name="about">About</string>
@@ -62,7 +61,6 @@
     <string name="log_title">Log</string>
     <string name="device_label">Device</string>
     <string name="kernel_label">Kernel</string>
-    <string name="build_label">Build</string>
     <string name="soc_label">SoC</string>
     <string name="kernel_supported">Supported</string>
     <string name="kernel_unsupported">Not supported</string>
@@ -73,9 +71,6 @@
     <string name="kernel_unsupported_summary">No matching kernel profile</string>
     <string name="kernel_profile_required_summary">Load a profile to continue</string>
     <string name="kernel_profile_invalid_summary">Correct the marked fields</string>
-    <string name="shizuku_ready">Supported · Shizuku ready</string>
-    <string name="shizuku_permission_required">Supported · Shizuku required · Tap to authorize</string>
-    <string name="shizuku_not_running">Supported · Need to start Shizuku</string>
     <string name="cpu_pair_custom">Custom (%1$s)</string>
     <string name="cpu_pair_label">CPU cores</string>
     <string name="safe_mode_label">Safe mode</string>
@@ -95,14 +90,7 @@
     <string name="run_interrupted_title">Previous run interrupted</string>
     <string name="run_interrupted_message">The last attack stopped mid-way (the device may have panicked and rebooted). Check the device and try again.</string>
     <string name="dialog_dismiss">Dismiss</string>
-    <string name="execution_apply_cores">Use recommended cores %1$d / %2$d</string>
-    <string name="execution_save">Save overrides</string>
-    <string name="execution_reset">Clear overrides</string>
-    <string name="execution_saved">Execution overrides saved</string>
     <string name="execution_save_failed">Could not save execution overrides</string>
-    <string name="execution_reset_done">Execution overrides cleared</string>
-    <string name="execution_cores_applied">Recommended cores selected</string>
-    <string name="execution_cores_unavailable">Recommended cores unavailable</string>
     <string name="debug_export_log">Export debug log to file</string>
     <string name="debug_export_log_summary">Write the attack log and dumps to storage</string>
     <string name="debug_build_hint">Use a debug build for more detailed log output</string>
@@ -117,11 +105,9 @@
     <string name="parameters">Parameter configuration</string>
     <string name="parameters_summary">Load configuration and parameter overrides</string>
     <string name="override_summary">Edit the parameters of the loaded profile</string>
-    <string name="override_general">General overrides</string>
     <string name="profile_docs">Profile documentation</string>
     <string name="profile_docs_summary">Field reference and validation rules on GitHub</string>
     <string name="override_export">Export configuration</string>
-    <string name="override_export_summary">Save the merged profile as a file</string>
     <string name="override_export_done">Configuration exported</string>
     <string name="builtin_edit_save_hint">Built-in profiles cannot be saved; use Save as to store a copy.</string>
     <string name="profile_save">Save</string>
@@ -181,8 +167,8 @@
     <string name="field_cred_copy_size">cred_copy_size</string>
     <string name="field_cred_ref0_image">cred_ref0_image</string>
     <string name="field_cred_ref0_offset">cred_ref0_offset</string>
-    <string name="field_cred_ref1_image">cred_ref1_image</string>
-    <string name="field_cred_ref1_offset">cred_ref1_offset</string>
+    <string name="field_cred_ref1_image" tools:ignore="Typos">cred_ref1_image</string>
+    <string name="field_cred_ref1_offset" tools:ignore="Typos">cred_ref1_offset</string>
     <string name="field_cred_ref2_image">cred_ref2_image</string>
     <string name="field_cred_ref2_offset">cred_ref2_offset</string>
     <string name="field_cred_ref3_image">cred_ref3_image</string>

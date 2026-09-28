@@ -1,10 +1,9 @@
 package com.ghostlock.app.shizuku
 
-import com.ghostlock.app.data.NativeProfileDocument
 import android.content.Context
 import android.os.Process
 import androidx.annotation.Keep
-import com.ghostlock.app.BuildConfig
+import com.ghostlock.app.data.NativeProfileDocument
 import java.io.File
 import java.io.RandomAccessFile
 import java.util.concurrent.atomic.AtomicBoolean

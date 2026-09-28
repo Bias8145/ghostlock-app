@@ -24,26 +24,6 @@ data class CoreProfile(
     val recommendations: SparseExecutionValues,
 )
 
-/** Common plus per-route execution defaults, parsed from the shared presets. */
-data class ExecutionPreset(
-    val general: Map<String, ULong>,
-    val perRoute: Map<RouteKind, Map<String, ULong>>,
-)
-
-/** User sparse overrides: execution edits plus advanced core edits. */
-data class ExecutionOverride(
-    val execution: Map<String, ULong>,
-    val coreOverrides: SparseExecutionValues,
-)
-
-/** One resolved run configuration handed to the wire codec. */
-data class ResolvedProfile(
-    val core: CoreProfile,
-    val execution: Map<String, ULong>,
-    val selectedCpus: Map<String, ULong>?,
-    val recommendShizuku: Boolean,
-)
-
 /** Typed, path-carrying configuration error. */
 data class ConfigError(val fieldPath: String, val message: String) {
     override fun toString(): String = "$fieldPath: $message"

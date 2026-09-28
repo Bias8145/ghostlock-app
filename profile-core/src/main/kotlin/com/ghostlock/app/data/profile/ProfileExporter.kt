@@ -3,7 +3,6 @@ package com.ghostlock.app.data.profile
 import com.ghostlock.app.data.HoconSupport
 import com.ghostlock.app.data.NativeProfileDocument
 import com.ghostlock.app.data.ValueMap
-import com.ghostlock.app.data.asValueList
 import com.ghostlock.app.data.asValueMap
 import com.ghostlock.app.data.route.RouteKind
 import java.io.File
@@ -118,7 +117,7 @@ object ProfileExporter {
             "output dir must be the configured export dir $expectedDir, got $outDir"
         }
         val underBuild = out.contains("${File.separator}build${File.separator}") ||
-            outDir.parentFile!!.name == "build"
+                outDir.parentFile!!.name == "build"
         require(underBuild) { "output dir must live under a build directory: $outDir" }
         require(out != src) { "output dir must not be the profiles dir: $outDir" }
         require(!out.startsWith(src + File.separator)) {

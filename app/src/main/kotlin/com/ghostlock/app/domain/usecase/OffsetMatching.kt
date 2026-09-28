@@ -16,12 +16,6 @@ object OffsetMatching {
                 !objectFieldDiffers(builtin, entry.structFields)
     }
 
-    fun fieldDiffers(builtin: Map<String, Long>, fields: Map<String, Long?>, key: String): Boolean {
-        val value = fields[key] ?: return false
-        val expected = builtin[key] ?: return false
-        return value != expected
-    }
-
     fun objectFieldDiffers(builtin: Map<String, Long>, fields: Map<String, Long?>): Boolean =
         fields.any { (key, value) -> value != null && builtin[key]?.let { it != value } == true }
 }

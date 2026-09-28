@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">GhostLock</string>
     <string name="action_run">执行</string>
     <string name="action_running">执行中…</string>
-    <string name="action_advanced">高级选项</string>
     <string name="advanced_settings">高级选项</string>
     <string name="advanced_settings_summary">配置参数、调试日志与测试设置</string>
     <string name="about">关于</string>
@@ -62,7 +61,6 @@
     <string name="log_title">日志</string>
     <string name="device_label">设备</string>
     <string name="kernel_label">内核</string>
-    <string name="build_label">构建</string>
     <string name="soc_label">芯片</string>
     <string name="kernel_supported">受支持</string>
     <string name="kernel_unsupported">不支持</string>
@@ -73,9 +71,6 @@
     <string name="kernel_unsupported_summary">未找到匹配的内核配置</string>
     <string name="kernel_profile_required_summary">加载配置后可继续</string>
     <string name="kernel_profile_invalid_summary">请修正标记的配置项</string>
-    <string name="shizuku_ready">受支持 · Shizuku 已就绪</string>
-    <string name="shizuku_permission_required">受支持 · 需要 Shizuku · 点击授权</string>
-    <string name="shizuku_not_running">受支持 · 需要启动 Shizuku</string>
     <string name="cpu_pair_custom">自定义（%1$s）</string>
     <string name="cpu_pair_label">CPU 核心组</string>
     <string name="safe_mode_label">安全模式</string>
@@ -95,14 +90,7 @@
     <string name="run_interrupted_title">上次攻击未完成</string>
     <string name="run_interrupted_message">上次攻击在某个阶段中断（设备可能已内核 panic 并重启）。请确认设备状态后重试。</string>
     <string name="dialog_dismiss">关闭</string>
-    <string name="execution_apply_cores">应用推荐核心 %1$d / %2$d</string>
-    <string name="execution_save">保存覆盖</string>
-    <string name="execution_reset">清除覆盖</string>
-    <string name="execution_saved">执行参数覆盖已保存</string>
     <string name="execution_save_failed">无法保存执行参数覆盖</string>
-    <string name="execution_reset_done">执行参数覆盖已清除</string>
-    <string name="execution_cores_applied">已选择推荐核心</string>
-    <string name="execution_cores_unavailable">推荐核心不可用</string>
     <string name="debug_export_log">导出 Debug 日志到文件</string>
     <string name="debug_export_log_summary">把攻击日志与 dump 写入存储</string>
     <string name="debug_build_hint">使用 debug 构建可获得更详细日志输出</string>
@@ -117,11 +105,9 @@
     <string name="parameters">参数配置</string>
     <string name="parameters_summary">加载配置与参数覆盖</string>
     <string name="override_summary">编辑已加载配置的参数</string>
-    <string name="override_general">一般参数覆盖</string>
     <string name="profile_docs">配置文档</string>
     <string name="profile_docs_summary">在 GitHub 上查看字段含义与校验规则</string>
     <string name="override_export">导出配置</string>
-    <string name="override_export_summary">将合并后的 profile 保存为文件</string>
     <string name="override_export_done">配置已导出</string>
     <string name="builtin_edit_save_hint">内置配置无法保存，请使用另存为保存副本。</string>
     <string name="profile_save">保存</string>
@@ -179,14 +165,14 @@
     <string name="field_cred_caps_offset">能力集偏移</string>
     <string name="field_cred_caps_value">能力集填充值</string>
     <string name="field_cred_copy_size">凭据复制大小</string>
-    <string name="field_cred_ref0_image">凭据引用0镜像</string>
-    <string name="field_cred_ref0_offset">凭据引用0偏移</string>
-    <string name="field_cred_ref1_image">凭据引用1镜像</string>
-    <string name="field_cred_ref1_offset">凭据引用1偏移</string>
-    <string name="field_cred_ref2_image">凭据引用2镜像</string>
-    <string name="field_cred_ref2_offset">凭据引用2偏移</string>
-    <string name="field_cred_ref3_image">凭据引用3镜像</string>
-    <string name="field_cred_ref3_offset">凭据引用3偏移</string>
+    <string name="field_cred_ref0_image">凭据引用 0 镜像</string>
+    <string name="field_cred_ref0_offset">凭据引用 0 偏移</string>
+    <string name="field_cred_ref1_image" tools:ignore="Typos">凭据引用 1 镜像</string>
+    <string name="field_cred_ref1_offset" tools:ignore="Typos">凭据引用 1 偏移</string>
+    <string name="field_cred_ref2_image">凭据引用 2 镜像</string>
+    <string name="field_cred_ref2_offset">凭据引用 2 偏移</string>
+    <string name="field_cred_ref3_image">凭据引用 3 镜像</string>
+    <string name="field_cred_ref3_offset">凭据引用 3 偏移</string>
     <string name="field_cred_ref_count">凭据引用数量</string>
     <string name="field_cred_usage_value">引用计数初始值</string>
     <string name="field_execution_handoff_enforce_poll_attempts">enforce 轮询尝试次数</string>

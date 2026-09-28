@@ -4,7 +4,6 @@ import com.ghostlock.app.data.ValueMap
 import com.ghostlock.app.data.asValueMap
 import com.ghostlock.app.data.copyValue
 import com.ghostlock.app.data.deepMergeValues
-import com.ghostlock.app.data.getLongAt
 import com.ghostlock.app.data.mutableChild
 import com.ghostlock.app.data.route.RouteKind
 import com.ghostlock.app.data.valueMapOf
@@ -41,22 +40,12 @@ object ProfileMerger {
             overrides,
         )
         resolved["schema_version"] = 1
-        /* A manually chosen builtin still reports the device release so the
-         * native release gate and the exported document stay coherent. */
         resolved["release"] = deviceRelease
-        /* The CPU pair is the run-scoped session choice and outranks imported
-         * or overridden selected_cpus, so a stale imported value can never
-         * silently override the user's current picker choice. */
         applySelectedCpus(resolved, pair)
         fillRouteExecutionDefaults(resolved, routePresets)
         validateResolved(resolved, deviceRelease)
         return resolved
     }
-
-    /** Reads the effective `selected_cpus` override from an imported/override layer. */
-    fun selectedCpusOverride(imported: ValueMap?, overrides: ValueMap?): ValueMap? =
-        imported?.get("execution").asValueMap()?.get("selected_cpus").asValueMap()
-            ?: overrides?.get("execution").asValueMap()?.get("selected_cpus").asValueMap()
 
     private fun applySelectedCpus(resolved: ValueMap, pair: CpuPairView) {
         resolved.mutableChild("execution")["selected_cpus"] = valueMapOf(
@@ -76,8 +65,6 @@ object ProfileMerger {
                 routes[route] = defaults
                 continue
             }
-            /* A sparse import/override may carry only some route fields; fill
-             * the rest from the preset instead of leaving them to encode as 0. */
             for ((key, value) in defaults) {
                 if (!existing.containsKey(key)) existing[key] = value
             }

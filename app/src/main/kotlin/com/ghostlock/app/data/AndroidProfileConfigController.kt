@@ -2,8 +2,8 @@ package com.ghostlock.app.data
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.net.Uri
 import androidx.core.content.edit
+import androidx.core.net.toUri
 import com.ghostlock.app.data.profile.CpuPairView
 import com.ghostlock.app.data.profile.ProfileMerger
 import com.ghostlock.app.data.profile.ProfileResolver
@@ -393,7 +393,7 @@ internal class AndroidProfileConfigController(
         val snapshot = File(filesDir, snapshotName(release))
         if (!snapshot.isFile) return false
         val resolver = appContext.contentResolver
-        val output = resolver.openOutputStream(Uri.parse(documentUri), "wt") ?: return false
+        val output = resolver.openOutputStream(documentUri.toUri(), "wt") ?: return false
         output.use { stream -> snapshot.inputStream().use { it.copyTo(stream) } }
         true
     } catch (_: Exception) {

@@ -1,5 +1,8 @@
 package com.ghostlock.app.data
 
+import com.ghostlock.app.data.RunStateCodec.Steps
+
+
 /**
  * Encoding/decoding for the attack step status file written by the app while a
  * native run reports steps over stdio. HOCON (a JSON superset) so the file is

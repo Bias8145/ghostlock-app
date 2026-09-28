@@ -6,7 +6,6 @@ import com.ghostlock.app.domain.model.LogTone
 class FormatLogUseCase {
     operator fun invoke(line: String): LogEntry {
         val text = stripAnsi(if (line.endsWith('\n')) line else "$line\n")
-        // a source tag such as [ksu] hides the marker that follows it
         val body = text.replaceFirst(sourceTag, "")
         val marker = body.getOrNull(1).takeIf { body.startsWith('[') && body.getOrNull(2) == ']' }
         val message = body.replace(leadingTags, "").removePrefix("=== ")
@@ -16,10 +15,6 @@ class FormatLogUseCase {
             .removePrefix("<s> ")
             .removePrefix("<k> ")
         val tone = when {
-            /* Explicit source tags keep Kotlin/Shizuku lines apart from the
-             * native "[x]" markers. "<->" is a Kotlin error; "<b>" a module
-             * hand-off (blue, unless the connection succeeded -> green);
-             * "<s>" Shizuku plumbing (red when it reports a failure). */
             text.startsWith("<->") -> LogTone.Error
             text.startsWith("<b>") ->
                 if (tagged.contains("connected") && !tagged.contains("disconnected")) {
@@ -52,7 +47,7 @@ class FormatLogUseCase {
     private fun looksLikeError(text: String): Boolean {
         val lower = text.lowercase()
         return lower.startsWith("error") ||
-            listOf("fail", "cannot", "unable", "denied", "refus").any(lower::contains)
+                listOf("fail", "cannot", "unable", "denied", "refus").any(lower::contains)
     }
 
     private fun stripAnsi(value: String): String = value.replace(ansi, "")

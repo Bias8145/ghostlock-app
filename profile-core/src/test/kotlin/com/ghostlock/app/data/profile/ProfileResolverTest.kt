@@ -1,5 +1,6 @@
 package com.ghostlock.app.data.profile
 
+import com.ghostlock.app.data.asValueMap
 import com.ghostlock.app.data.valueMapOf
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -52,7 +53,7 @@ class ProfileResolverTest {
     @Test
     fun `validateMerged rejects a missing required task field`() {
         val profile = validProfile()
-        (profile["task_struct"] as MutableMap<String, Any?>).remove("prio")
+        profile["task_struct"].asValueMap()!!.remove("prio")
         val errors = ProfileResolver.validateMerged(profile, "select_stack", "none")
         assertTrue(errors.any { it.fieldPath == "task_struct.prio" })
     }
@@ -60,7 +61,7 @@ class ProfileResolverTest {
     @Test
     fun `validateMerged reports a missing required cred field`() {
         val profile = validProfile()
-        (profile["cred"] as MutableMap<String, Any?>).remove("copy_size")
+        profile["cred"].asValueMap()!!.remove("copy_size")
         val errors = ProfileResolver.validateMerged(profile, "select_stack", "none")
         assertTrue(errors.any { it.fieldPath == "cred.copy_size" && it.message == "missing" })
     }

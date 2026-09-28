@@ -757,7 +757,7 @@ class AndroidGhostlockRepository(context: Context) : GhostlockRepository {
                 EditSessionPreferences,
                 Context.MODE_PRIVATE,
             )
-            sessionPreferences.edit().clear().commit()
+            sessionPreferences.edit { clear() }
             editSessionLive = name != null && name == profileController.activeUserProfile()
             if (editSessionLive) {
                 val overrides = profileController.overridesSnapshot(deviceRelease)
