@@ -1,6 +1,5 @@
 package com.ghostlock.app.data.profile
 
-import com.ghostlock.app.data.NativeProfileDocument
 import com.ghostlock.app.data.getLongAt
 import com.ghostlock.app.data.route.RouteKind
 
@@ -132,34 +131,6 @@ object ProfileResolver {
             }
         }
         return errors
-    }
-
-    /** Extracts the typed core from a (validated) merged profile. */
-    fun coreFromMerged(
-        release: String,
-        profile: Map<String, Any?>,
-        route: RouteKind?,
-        fallbackTo: RouteKind?,
-    ): CoreProfile {
-        val document = NativeProfileDocument.from(
-            release = release,
-            route = route?.token,
-            fallbackTo = fallbackTo?.token,
-        ) { path -> nativeValue(profile, route?.token, fallbackTo?.token, path) }
-        return CoreProfile(
-            release = release,
-            schemaVersion = (profile["schema_version"] as? Number)?.toInt() ?: 1,
-            kernelMajor = document.kernelMajor,
-            taskStruct = document.taskStruct,
-            cred = document.cred,
-            offsets = document.kernelOffset,
-            kernelPhysLoad = document.kernelPhysLoad ?: 0uL,
-            route = RouteKind.fromWire(document.routeKind),
-            fallback = RouteKind.fromWire(document.fallbackRoute),
-            kernelsnitchCollisions = document.kernelsnitchCollisions ?: 0u,
-            mmStructSz = document.mmStructSz ?: 0u,
-            recommendations = SparseExecutionValues(executionFromMerged(profile)),
-        )
     }
 
     /** Flattens the `execution` object into path -> value. */

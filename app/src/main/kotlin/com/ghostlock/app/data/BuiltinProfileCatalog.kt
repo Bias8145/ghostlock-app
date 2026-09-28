@@ -7,7 +7,7 @@ import android.content.Context
  * index.conf on first use. Keeps the assets as the single source of truth
  * (replaces the former build-time SupportedKernels code generation).
  */
-internal class BuiltinProfileCatalog(private val context: Context) {
+internal class BuiltinProfileCatalog(context: Context) {
     private val assetLoader = AssetConfigLoader(context)
 
     private data class Entry(
@@ -91,10 +91,10 @@ internal class BuiltinProfileCatalog(private val context: Context) {
         return fields
     }
 
-    private fun routeFieldKey(route: String, field: String): String = when {
-        route == "tcp_zerocopy" && field == "compact_waiter" -> "compact_waiter"
-        route == "select_stack" && field == "waiter_shift" -> "pselect_waiter_shift"
-        route == "multicast_waiter" -> "mcast.$field"
+    private fun routeFieldKey(route: String, field: String): String = when (route) {
+        "tcp_zerocopy" if field == "compact_waiter" -> "compact_waiter"
+        "select_stack" if field == "waiter_shift" -> "pselect_waiter_shift"
+        "multicast_waiter" -> "mcast.$field"
         else -> "$route.$field"
     }
 

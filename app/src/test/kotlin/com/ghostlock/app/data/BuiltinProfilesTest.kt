@@ -92,7 +92,7 @@ class BuiltinProfilesTest {
                 val profile = Profile.fromBinary(bytes!!)
                 assertNotNull("${entry.release}: native document failed to decode", profile)
                 assertEquals(entry.release, profile!!.release)
-                assertEquals(route, profile.route?.token)
+                assertEquals(route, profile.route.token)
             }
         } finally {
             root.deleteRecursively()

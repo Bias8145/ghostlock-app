@@ -79,12 +79,6 @@ internal class UserProfileStore(
 
     fun containsRelease(release: String): Boolean = findFileForRelease(release) != null
 
-    /** True when the loaded document [preferredName] carries [release]. */
-    fun containsRelease(release: String, preferredName: String?): Boolean {
-        val file = preferredName?.let(::fileByName) ?: return false
-        return runCatching { fileCarries(file, release) }.getOrDefault(false)
-    }
-
     /**
      * Resolved entry for [release] out of the loaded document [preferredName],
      * converted to the current layout. Conversion is in-memory: the file stays
@@ -100,10 +94,6 @@ internal class UserProfileStore(
             LegacyProfileConverter.convertValue(entry)
         }
     }
-
-    fun recommendShizuku(release: String, preferredName: String?): Boolean =
-        loadEntry(release, preferredName)?.get("recommend_shizuku")
-            .let { (it as? Number)?.toLong() == 1L }
 
     /**
      * True when any stored document recommends Shizuku for [release]. This is
@@ -211,12 +201,6 @@ internal class UserProfileStore(
     }
 
     fun findFileForRelease(release: String): File? = findFileForRelease(release, documents())
-
-    private fun fileCarries(file: File, release: String): Boolean {
-        val byName = documents()
-        return runCatching { parseWith(file.readText(), byName) }.getOrNull()
-            ?.any { it["release"] == release } == true
-    }
 
     private fun findFileForRelease(release: String, byName: Map<String, String>): File? =
         files().firstOrNull { file ->

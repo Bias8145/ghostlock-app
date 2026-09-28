@@ -30,7 +30,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ghostlock.app.BuildConfig
@@ -102,9 +101,9 @@ private fun ProfileDocsCard(onOpen: () -> Unit) {
 @Composable
 private fun ProfileHintBanner(
     text: String,
+    modifier: Modifier = Modifier,
     warning: Boolean = false,
     title: String? = null,
-    modifier: Modifier = Modifier,
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),

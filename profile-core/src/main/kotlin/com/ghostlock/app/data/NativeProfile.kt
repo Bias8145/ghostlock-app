@@ -1,5 +1,6 @@
 package com.ghostlock.app.data
 
+import com.ghostlock.app.data.NativeProfileDocument.Companion.fromBinary
 import com.ghostlock.app.data.route.NoRouteConfig
 import com.ghostlock.app.data.route.RouteConfig
 import com.ghostlock.app.data.route.RouteKind
@@ -533,9 +534,11 @@ data class NativeProfileDocument(
                     "execution.heap" -> execution = when (key) {
                         "prepare_max_attempts" ->
                             execution.copy(heapPrepareMaxAttempts = raw.toUInt())
+
                         "prepare_timeout_ms" -> execution.copy(heapPrepareTimeoutMs = raw.toUInt())
                         "kernelsnitch_timeout_ms" ->
                             execution.copy(heapKernelsnitchTimeoutMs = raw.toUInt())
+
                         else -> execution
                     }
 
@@ -543,9 +546,11 @@ data class NativeProfileDocument(
                         "route_wait_ms" -> execution.copy(raceRouteWaitMs = raw.toUInt())
                         "route_done_timeout_ms" ->
                             execution.copy(raceRouteDoneTimeoutMs = raw.toUInt())
+
                         "setup_settle_us" -> execution.copy(raceSetupSettleUs = raw.toUInt())
                         "state_poll_interval_us" ->
                             execution.copy(raceStatePollIntervalUs = raw.toUInt())
+
                         else -> execution
                     }
 
@@ -554,6 +559,7 @@ data class NativeProfileDocument(
                         "w1_settle_us" -> execution.copy(w1SettleUs = raw.toUInt())
                         "w1_scratch_repair_attempts" ->
                             execution.copy(w1ScratchRepairAttempts = raw.toUInt())
+
                         "w2_attempts" -> execution.copy(w2Attempts = raw.toUInt())
                         "w2_settle_us" -> execution.copy(w2SettleUs = raw.toUInt())
                         "w3_chain_rounds" -> execution.copy(w3ChainRounds = raw.toUInt())
@@ -565,14 +571,19 @@ data class NativeProfileDocument(
                     "execution.handoff" -> execution = when (key) {
                         "pre_dispatch_settle_ms" ->
                             execution.copy(handoffPreDispatchSettleMs = raw.toUInt())
+
                         "module_poll_attempts" ->
                             execution.copy(handoffModulePollAttempts = raw.toUInt())
+
                         "module_poll_interval_ms" ->
                             execution.copy(handoffModulePollIntervalMs = raw.toUInt())
+
                         "enforce_poll_attempts" ->
                             execution.copy(handoffEnforcePollAttempts = raw.toUInt())
+
                         "enforce_poll_interval_ms" ->
                             execution.copy(handoffEnforcePollIntervalMs = raw.toUInt())
+
                         else -> execution
                     }
 

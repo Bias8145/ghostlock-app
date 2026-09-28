@@ -19,6 +19,7 @@ fun Any?.asValueMap(): ValueMap? {
         ?: ValueMap().apply { map.forEach { (key, value) -> put(key.toString(), value) } }
 }
 
+@Suppress("UNCHECKED_CAST")
 fun Any?.asValueList(): ValueList? {
     val list = this as? List<*> ?: return null
     return list as? ValueList ?: ValueList().apply { addAll(list) }
@@ -64,29 +65,9 @@ fun MutableMap<String, Any?>.setValueAt(path: String, value: Any?) {
     node[segments.last()] = value
 }
 
-fun MutableMap<String, Any?>.removeValueAt(path: String) {
-    val segments = path.split('.')
-    val parents = ArrayList<Pair<MutableMap<String, Any?>, String>>()
-    var node: MutableMap<String, Any?> = this
-    for (index in 0 until segments.size - 1) {
-        val child = node.mutableChildOrNull(segments[index]) ?: return
-        parents += node to segments[index]
-        node = child
-    }
-    node.remove(segments.last())
-    for ((parent, key) in parents.asReversed()) {
-        val child = parent[key] as? Map<*, *> ?: break
-        if (child.isEmpty()) parent.remove(key) else break
-    }
-}
-
 @Suppress("UNCHECKED_CAST")
 fun MutableMap<String, Any?>.mutableChild(key: String): ValueMap =
     (this[key] as? ValueMap) ?: ValueMap().also { this[key] = it }
-
-@Suppress("UNCHECKED_CAST")
-fun MutableMap<String, Any?>.mutableChildOrNull(key: String): ValueMap? =
-    this[key] as? ValueMap
 
 fun deepMergeValues(base: ValueMap, override: Map<String, Any?>?): ValueMap {
     if (override == null) return base
@@ -102,5 +83,6 @@ fun deepMergeValues(base: ValueMap, override: Map<String, Any?>?): ValueMap {
     return base
 }
 
+@Suppress("UNCHECKED_CAST")
 fun asMutableMap(source: Map<*, *>): ValueMap =
     source as? ValueMap ?: ValueMap().apply { source.forEach { (key, value) -> put(key.toString(), value) } }

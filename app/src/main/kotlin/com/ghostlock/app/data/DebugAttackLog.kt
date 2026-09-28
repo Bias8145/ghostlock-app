@@ -68,7 +68,8 @@ internal class DebugAttackLog private constructor(
         publishSidecars()
     }
 
-    /** Ask MediaStore to index the root-written dumps so file managers show them. */    private fun publishSidecars() {
+    /** Ask MediaStore to index the root-written dumps so file managers show them. */
+    private fun publishSidecars() {
         val paths = buildList {
             for (name in SidecarNames) {
                 val file = File(folderFile, name)
