@@ -76,7 +76,7 @@ offset { init_task = 34464384, init_cred = 34538824 }
 | `kernel_major` | int | `5` 或 `6`；用于地址解析与合法性检查，不再决定路由 |
 | `route` | object | 显式路由父项，只含一个分支，见第 3 节 |
 | `fallback` | object | 回退声明（`to` + 可选 `route` 分支），见第 3 节 |
-| 几何字段 | object/int | 按命名空间分组：`task_struct` / `cred` / `offset` / `kernelsnitch`；未采用的路由专属字段**直接省略**，不要写 `0` 或占位值；`null` 只出现在模板与编辑中间态 |
+| 几何字段 | object/int | 按命名空间分组：`task_struct` / `cred` / `offset` / `kernelsnitch`；当前路由的全字段与公共几何**必须全部出现**，无法提供的值写显式 `null`（不要用 `0` 占位）；非当前路由的分支省略 |
 | `execution` | object | 调优参数（advisory）；通用项来自 `execution-tuning.conf`，路由项来自 `execution-<route>.conf`；两者由 resolver 作为 preset 加载，设备 profile 不 include。只写差异 |
 
 ## 3. 路由（route）机制
@@ -120,14 +120,14 @@ route { multicast_waiter { waiter_off = 96, buffer_size = 264 } }
 
 ### 必填矩阵
 
-| 字段组 | 公共（所有路由） | tcp_zerocopy | select_stack | multicast_waiter |
-|---|:---:|:---:|:---:|:---:|
-| `offset.init_task` / `offset.init_cred` / `offset.root_task_group` / `offset.selinux_enforcing` | 必填 | | | |
-| `task_struct.prio` / `task_struct.pi_lock` / `task_struct.pi_waiters` / `task_struct.pi_blocked_on` / `task_struct.cred` / `task_struct.seccomp` | 必填 | | | |
-| `kernel_major` ∈ {5,6}、`cred.copy_size`、`cred.caps_count` 及凭据模板边界 | 必填 | | | |
-| `route.tcp_zerocopy.compact_waiter` / `route.multicast_waiter.compact_waiter` | | 必填 | | 必填 |
-| `route.select_stack.waiter_shift` | | | 必填（0 合法） | |
-| `route.multicast_waiter.waiter_off`（>0）、`route.multicast_waiter.buffer_size`、`route.multicast_waiter.task_offset`、`route.multicast_waiter.lock_offset`、`offset.empty_zero_page`、`kernelsnitch.mm_struct_sz`、`cred.ref_count`（>0） | | | | 必填 |
+| 字段组 | tcp_zerocopy | select_stack | multicast_waiter |
+|---|:---:|:---:|:---:|
+| `offset.init_task` / `offset.init_cred` / `offset.root_task_group` / `offset.selinux_enforcing` | 必填 | 必填 | 必填 |
+| `task_struct.prio` / `task_struct.pi_lock` / `task_struct.pi_waiters` / `task_struct.pi_blocked_on` / `task_struct.cred` / `task_struct.seccomp` | 必填 | 必填 | 必填 |
+| `kernel_major` ∈ {5,6}、`cred.copy_size`、`cred.caps_count` 及凭据模板边界 | 必填 | 必填 | 必填 |
+| `route.tcp_zerocopy.compact_waiter` / `route.multicast_waiter.compact_waiter` | 必填 | | 必填 |
+| `route.select_stack.waiter_shift` | | 必填（0 合法） | |
+| `route.multicast_waiter.waiter_off`（>0）、`route.multicast_waiter.buffer_size`、`route.multicast_waiter.task_offset`、`route.multicast_waiter.lock_offset`、`offset.empty_zero_page`、`kernelsnitch.mm_struct_sz`、`cred.ref_count`（>0） | | | 必填 |
 
 凭据模板边界（通用）：`cred.usage_offset + 4 ≤ cred.copy_size`；`cred.caps_offset + cred.caps_count × 8 ≤ cred.copy_size`；`cred.ref_count ≤ 4`；每个 `cred.refN_image` 非零、`cred.refN_offset + 8 ≤ cred.copy_size`。`multicast_waiter` 还要求 `cred_copy_size ≥ 0xa0` 且 `route.multicast_waiter.waiter_off + route.multicast_waiter.lock_offset + 8 ≤ route.multicast_waiter.buffer_size`。
 
@@ -289,7 +289,7 @@ cred
 
 ## 10. 修改配置的检查清单
 
-1. 只改需要改的字段；未采用的路由字段直接省略（不要补 `0` 占位）。
+1. 每份 profile 都要包含当前路由的全字段与公共几何，且每项都必须出现；镜像或设备无法提供的值写显式 `null`（不要用 `0` 占位，除非 0 就是真实值）。非当前路由（及其声明的 fallback）的字段省略。`ghostlock-extract --format conf` 会输出这份完整骨架；`null` 使字段在 app 中可见可编辑，而不是悄无声息地缺失。
 2. `route` 只能有一个分支，且分支内必须给出该路由的必填字段；`fallback.to` 声明了回退目标时，`fallback.route` 分支内同样要补齐。
    共享 core 值通过 `include` 引入，不要复制：`credential-6x.conf`（6.x 凭据模板）、`kernelsnitch-6x.conf`（6.x collisions）。execution 调优（`execution-tuning.conf` / `execution-<route>.conf`）由 resolver 作为 preset 加载，设备 profile 不要 include。
 3. 修改 `execution` 需要设备实测依据；否则保持 defaults。

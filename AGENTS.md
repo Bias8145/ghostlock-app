@@ -37,7 +37,7 @@ ANDROID_NDK_HOME=... make -C src      # NDK 未自动探测时的显式写法
 ./gradlew :app:assembleDebug
 ./gradlew :app:testDebugUnitTest
 ./gradlew exportKernelProfiles        # 生成 GLK1 .bin 到 build/kernel-profiles/
-cargo test --release --manifest-path tools/extract_rs/Cargo.toml
+(cd tools/extract_rs && cargo test --release)
 
 # 攻击函数形状对比（攻击路径改动必须跑）
 python3 tools/cmp_disasm.py <baseline-binary> build/native/ghostlock

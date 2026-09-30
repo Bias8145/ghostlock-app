@@ -154,14 +154,14 @@ retained only as a guarded inference of the local format).
 
 ### Required-field matrix
 
-| Field group | common (all routes) | tcp_zerocopy | select_stack | multicast_waiter |
-|---|:---:|:---:|:---:|:---:|
-| `offset.init_task` / `offset.init_cred` / `offset.root_task_group` / `offset.selinux_enforcing` | required | | | |
-| `task_struct.prio` / `task_struct.pi_lock` / `task_struct.pi_waiters` / `task_struct.pi_blocked_on` / `task_struct.cred` / `task_struct.seccomp` | required | | | |
-| `kernel_major` ∈ {5,6}, `cred.copy_size`, `cred.caps_count`, and the credential-template bounds | required | | | |
-| `route.tcp_zerocopy.compact_waiter` / `route.multicast_waiter.compact_waiter` | | required | | required |
-| `route.select_stack.waiter_shift` | | | required (0 is valid) | |
-| `route.multicast_waiter.waiter_off` (>0), `route.multicast_waiter.buffer_size`, `route.multicast_waiter.task_offset`, `route.multicast_waiter.lock_offset`, `offset.empty_zero_page`, `kernelsnitch.mm_struct_sz`, `cred.ref_count` (>0) | | | | required |
+| Field group | tcp_zerocopy | select_stack | multicast_waiter |
+|---|:---:|:---:|:---:|
+| `offset.init_task` / `offset.init_cred` / `offset.root_task_group` / `offset.selinux_enforcing` | required | required | required |
+| `task_struct.prio` / `task_struct.pi_lock` / `task_struct.pi_waiters` / `task_struct.pi_blocked_on` / `task_struct.cred` / `task_struct.seccomp` | required | required | required |
+| `kernel_major` ∈ {5,6}, `cred.copy_size`, `cred.caps_count`, and the credential-template bounds | required | required | required |
+| `route.tcp_zerocopy.compact_waiter` / `route.multicast_waiter.compact_waiter` | required | | required |
+| `route.select_stack.waiter_shift` | | required (0 is valid) | |
+| `route.multicast_waiter.waiter_off` (>0), `route.multicast_waiter.buffer_size`, `route.multicast_waiter.task_offset`, `route.multicast_waiter.lock_offset`, `offset.empty_zero_page`, `kernelsnitch.mm_struct_sz`, `cred.ref_count` (>0) | | | required |
 
 Credential-template bounds (general): `cred.usage_offset + 4 ≤ cred.copy_size`;
 `cred.caps_offset + cred.caps_count × 8 ≤ cred.copy_size`; `cred.ref_count ≤ 4`;
@@ -390,8 +390,13 @@ and there is no legacy decode.
 
 ## 10. Checklist for changing configuration
 
-1. Change only the fields you need; omit unused route fields entirely (don't add
-   `0` placeholders).
+1. Every profile carries every field of its active route plus the shared
+   geometry, and each such field must be present. A value the image or device
+   cannot supply is written as an explicit `null` (never `0` as a placeholder,
+   unless 0 is the real value). Fields of routes other than the active one (and
+   its declared fallback) are omitted. `ghostlock-extract --format conf` emits
+   this complete skeleton; `null` keeps the field visible and editable in the
+   app instead of silently absent.
 2. `route` has exactly one branch, and that branch must carry the route's
    required fields. When `fallback.to` names a target, fill the
    `fallback.route` branch the same way.

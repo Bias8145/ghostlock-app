@@ -38,7 +38,9 @@ adb shell /data/local/tmp/ghostlock --load-prebuilt-profile /data/local/tmp/prof
 `tools/extract_rs` 从 `boot.img`（可加 `xbl_config.img`）、完整 OTA zip 或指向它的 `http(s)` 链接解析偏移量。kallsyms 传 `--kallsyms`，或省略以直接恢复镜像内嵌表。`pselect_waiter_shift` 与 `off_slide_loggers_0_1` 由内置 arm64 反汇编器推导。联发科镜像没有 `xbl_config.img` 且通常无内嵌 BTF：物理加载地址由 kallsyms `_text` 推导（可用 `--phys` 覆盖）。
 
 ```powershell
-cargo build --release --manifest-path tools/extract_rs/Cargo.toml
+Push-Location tools/extract_rs
+cargo build --release
+Pop-Location
 build/extract/release/ghostlock-extract.exe boot.img --xbl-config xbl_config.img --format conf --out profile.conf
 build/extract/release/ghostlock-extract.exe OTA.zip --format conf --out profile.conf
 ```
@@ -59,7 +61,9 @@ $ndk = "$env:ANDROID_HOME\ndk\<version>\toolchains\llvm\prebuilt\windows-x86_64\
 $env:CC_aarch64_linux_android = "$ndk\aarch64-linux-android35-clang.cmd"
 $env:AR_aarch64_linux_android = "$ndk\llvm-ar.exe"
 $env:CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER = $env:CC_aarch64_linux_android
-cargo build --release --target aarch64-linux-android --manifest-path tools/extract_rs/Cargo.toml
+Push-Location tools/extract_rs
+cargo build --release --target aarch64-linux-android
+Pop-Location
 adb push build/extract/aarch64-linux-android/release/ghostlock-extract /data/local/tmp/
 adb shell /data/local/tmp/ghostlock-extract /sdcard/OTA.zip
 ```
