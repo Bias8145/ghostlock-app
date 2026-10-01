@@ -292,9 +292,6 @@ public class RuntimeStatusView extends FrameLayout {
             managerStatus.setTextColor(ContextCompat.getColor(getContext(), statusColorRes));
             managerIcon.setImageResource(result.manager.spoofed
                     ? R.drawable.ic_shield_alert : R.drawable.ic_shield_check);
-            setIndicator(managerIndicator,
-                    result.manager.spoofed ? "×" : "✓",
-                    result.manager.spoofed ? R.color.text_secondary : R.color.status_success);
             packageLabel.setText(result.manager.packageName);
             packageLabel.setTextColor(ContextCompat.getColor(getContext(), R.color.text_primary));
             integrityLabel.setText(result.manager.identityVerified
@@ -312,7 +309,6 @@ public class RuntimeStatusView extends FrameLayout {
             managerStatus.setText("Not installed");
             managerStatus.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
             managerIcon.setImageResource(R.drawable.ic_shield_alert);
-            setIndicator(managerIndicator, "!", R.color.text_secondary);
             packageLabel.setText("—");
             packageLabel.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
             setIndicator(packageIndicator, "!", R.color.text_secondary);
