@@ -15,7 +15,6 @@ import androidx.core.content.ContextCompat;
 public class RuntimeStatusView extends FrameLayout {
     private final LinearLayout content;
     private final LinearLayout statusHeader;
-    private final ImageView statusIcon;
     private final TextView statusLabel;
     private final TextView message;
     private final LinearLayout managerCard;
@@ -39,31 +38,31 @@ public class RuntimeStatusView extends FrameLayout {
         content.setPadding(dp(16), dp(14), dp(16), dp(13));
         addView(content, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
+        // Status is intentionally text-only. The status word already communicates
+        // the state, so a second shield/check icon only adds visual redundancy.
         statusHeader = new LinearLayout(context);
         statusHeader.setOrientation(LinearLayout.HORIZONTAL);
         statusHeader.setGravity(Gravity.CENTER_VERTICAL);
-        statusIcon = new ImageView(context);
-        statusIcon.setScaleType(ImageView.ScaleType.CENTER);
-        LinearLayout.LayoutParams statusIconParams = new LinearLayout.LayoutParams(dp(18), dp(18));
-        statusIconParams.rightMargin = dp(8);
-        statusHeader.addView(statusIcon, statusIconParams);
         statusLabel = text(13, true);
         statusLabel.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
-        statusHeader.addView(statusLabel, new LinearLayout.LayoutParams(0, dp(20), 1f));
+        statusHeader.addView(statusLabel, new LinearLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, dp(20)));
         content.addView(statusHeader);
 
         message = text(12, false);
         message.setGravity(Gravity.START);
         message.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
         message.setLineSpacing(dp(1), 1.0f);
-        LinearLayout.LayoutParams msgParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        msgParams.topMargin = dp(5); msgParams.leftMargin = dp(26);
+        LinearLayout.LayoutParams msgParams = new LinearLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        msgParams.topMargin = dp(5);
         content.addView(message, msgParams);
 
         managerCard = new LinearLayout(context);
         managerCard.setOrientation(LinearLayout.VERTICAL);
         managerCard.setPadding(dp(12), dp(11), dp(12), dp(11));
-        managerCard.setBackground(createRoundedBackground(ContextCompat.getColor(context, R.color.surface_container_low), 12));
+        managerCard.setBackground(createRoundedBackground(
+                ContextCompat.getColor(context, R.color.surface_container_low), 12));
 
         LinearLayout identityRow = new LinearLayout(context);
         identityRow.setOrientation(LinearLayout.HORIZONTAL);
@@ -77,20 +76,25 @@ public class RuntimeStatusView extends FrameLayout {
         identityText.setOrientation(LinearLayout.VERTICAL);
         identityText.setGravity(Gravity.START);
         identityText.setPadding(dp(10), 0, 0, 0);
-        identityRow.addView(identityText, new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
+        identityRow.addView(identityText, new LinearLayout.LayoutParams(
+                0, LayoutParams.WRAP_CONTENT, 1f));
         managerName = text(14, true);
-        identityText.addView(managerName, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+        identityText.addView(managerName, new LinearLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
         managerStatus = text(11, false);
         managerStatus.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
-        LinearLayout.LayoutParams managerStatusParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        LinearLayout.LayoutParams managerStatusParams = new LinearLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         managerStatusParams.topMargin = dp(3);
         identityText.addView(managerStatus, managerStatusParams);
         managerCard.addView(identityRow);
 
         View divider = new View(context);
         divider.setBackgroundColor(ContextCompat.getColor(context, R.color.outline_variant));
-        LinearLayout.LayoutParams dividerParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, dp(1));
-        dividerParams.topMargin = dp(10); dividerParams.bottomMargin = dp(9);
+        LinearLayout.LayoutParams dividerParams = new LinearLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, dp(1));
+        dividerParams.topMargin = dp(10);
+        dividerParams.bottomMargin = dp(9);
         managerCard.addView(divider, dividerParams);
 
         LinearLayout details = new LinearLayout(context);
@@ -100,7 +104,8 @@ public class RuntimeStatusView extends FrameLayout {
         details.addView(detailRow(context, "Kernel", kernelLabel = text(11, false)));
         managerCard.addView(details);
 
-        LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         cardParams.topMargin = dp(12);
         content.addView(managerCard, cardParams);
 
@@ -112,10 +117,12 @@ public class RuntimeStatusView extends FrameLayout {
         installButton.setText("Install Manager");
         installButton.setGravity(Gravity.CENTER);
         installButton.setPadding(dp(12), dp(7), dp(12), dp(7));
-        installButton.setBackground(createRoundedBackground(ContextCompat.getColor(context, R.color.accent), 10));
+        installButton.setBackground(createRoundedBackground(
+                ContextCompat.getColor(context, R.color.accent), 10));
         installButton.setTextColor(ContextCompat.getColor(context, R.color.on_accent));
         actionButtons.addView(installButton);
-        LinearLayout.LayoutParams btnParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        LinearLayout.LayoutParams btnParams = new LinearLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         btnParams.topMargin = dp(9);
         content.addView(actionButtons, btnParams);
         refresh();
@@ -140,96 +147,206 @@ public class RuntimeStatusView extends FrameLayout {
     public void refresh() {
         ManagerCompatibility.Result result = ManagerCompatibility.evaluate(getContext());
         boolean showInstall = false;
-        int statusColor, bgColor, statusIconRes;
+        int statusColor, bgColor;
         String statusText, messageText;
         switch (result.state) {
             case READY:
-                statusText = "READY"; messageText = "Manager verified and ready to use";
-                statusColor = R.color.status_success; bgColor = R.color.status_success_bg; statusIconRes = R.drawable.ic_shield_check; break;
+                statusText = "READY";
+                messageText = "Manager verified and ready to use";
+                statusColor = R.color.status_success;
+                bgColor = R.color.status_success_bg;
+                break;
             case MANAGER_REQUIRED:
-                statusText = "MANAGER REQUIRED"; messageText = "Install a supported manager to continue";
-                statusColor = R.color.accent; bgColor = R.color.accent_container; statusIconRes = R.drawable.ic_shield_alert; showInstall = true; break;
+                statusText = "MANAGER REQUIRED";
+                messageText = "Install a supported manager to continue";
+                statusColor = R.color.accent;
+                bgColor = R.color.accent_container;
+                showInstall = true;
+                break;
             case KERNEL_UNSUPPORTED_MANAGER_REQUIRED:
-                statusText = "NOT INSTALLED"; messageText = "No supported manager detected on device";
-                statusColor = R.color.accent; bgColor = R.color.accent_container; statusIconRes = R.drawable.ic_shield_alert; showInstall = true; break;
+                statusText = "NOT INSTALLED";
+                messageText = "No supported manager detected on device";
+                statusColor = R.color.accent;
+                bgColor = R.color.accent_container;
+                showInstall = true;
+                break;
             case KERNEL_UNSUPPORTED:
-                statusText = "KERNEL UNSUPPORTED"; messageText = "Current kernel is not supported by GhostLock";
-                statusColor = R.color.status_error; bgColor = R.color.status_error_bg; statusIconRes = R.drawable.ic_shield_alert; break;
+                statusText = "KERNEL UNSUPPORTED";
+                messageText = "Current kernel is not supported by GhostLock";
+                statusColor = R.color.status_error;
+                bgColor = R.color.status_error_bg;
+                break;
             case SPOOFED_MANAGER:
-                statusText = "IDENTITY MISMATCH"; messageText = "Manager identity verification failed";
-                statusColor = R.color.status_error; bgColor = R.color.status_error_bg; statusIconRes = R.drawable.ic_shield_alert; break;
+                statusText = "IDENTITY MISMATCH";
+                messageText = "Manager identity verification failed";
+                statusColor = R.color.status_error;
+                bgColor = R.color.status_error_bg;
+                break;
             case UNSUPPORTED_MANAGER:
-                statusText = "UNSUPPORTED MANAGER"; messageText = "Installed manager is not registered";
-                statusColor = R.color.status_error; bgColor = R.color.status_error_bg; statusIconRes = R.drawable.ic_shield_alert; break;
+                statusText = "UNSUPPORTED MANAGER";
+                messageText = "Installed manager is not registered";
+                statusColor = R.color.status_error;
+                bgColor = R.color.status_error_bg;
+                break;
             default:
-                statusText = "STATUS UNAVAILABLE"; messageText = "Manager information unavailable";
-                statusColor = R.color.text_secondary; bgColor = R.color.surface_container; statusIconRes = R.drawable.ic_shield_alert; break;
+                statusText = "STATUS UNAVAILABLE";
+                messageText = "Manager information unavailable";
+                statusColor = R.color.text_secondary;
+                bgColor = R.color.surface_container;
+                break;
         }
-        statusLabel.setText(statusText); statusLabel.setTextColor(ContextCompat.getColor(getContext(), statusColor));
-        statusIcon.setImageResource(statusIconRes); statusIcon.setColorFilter(ContextCompat.getColor(getContext(), statusColor));
+        statusLabel.setText(statusText);
+        statusLabel.setTextColor(ContextCompat.getColor(getContext(), statusColor));
         message.setText(messageText);
 
         if (result.manager.installed) {
             managerName.setText(result.manager.name);
-            String status; int statusColorRes;
-            if (result.manager.spoofed) { status = "Identity Mismatch"; statusColorRes = R.color.status_error; }
-            else if (result.manager.identityVerified) { status = "Verified"; statusColorRes = R.color.status_success; }
-            else if (result.manager.recognized) { status = "Recognized"; statusColorRes = R.color.accent; }
-            else { status = "Unknown"; statusColorRes = R.color.text_secondary; }
-            managerStatus.setText(status); managerStatus.setTextColor(ContextCompat.getColor(getContext(), statusColorRes));
-            managerIcon.setImageResource(result.manager.spoofed ? R.drawable.ic_shield_alert : R.drawable.ic_shield_check);
+            String status;
+            int statusColorRes;
+            if (result.manager.spoofed) {
+                status = "Identity Mismatch";
+                statusColorRes = R.color.status_error;
+            } else if (result.manager.identityVerified) {
+                status = "Verified";
+                statusColorRes = R.color.status_success;
+            } else if (result.manager.recognized) {
+                status = "Recognized";
+                statusColorRes = R.color.accent;
+            } else {
+                status = "Unknown";
+                statusColorRes = R.color.text_secondary;
+            }
+            managerStatus.setText(status);
+            managerStatus.setTextColor(ContextCompat.getColor(getContext(), statusColorRes));
+            managerIcon.setImageResource(result.manager.spoofed
+                    ? R.drawable.ic_shield_alert : R.drawable.ic_shield_check);
             packageLabel.setText(result.manager.packageName);
             packageLabel.setTextColor(ContextCompat.getColor(getContext(), R.color.text_primary));
-            integrityLabel.setText(result.manager.identityVerified ? "Signature verified" : result.manager.recognized ? "Signature not verified" : "Unrecognized package");
-            integrityLabel.setTextColor(ContextCompat.getColor(getContext(), result.manager.identityVerified ? R.color.status_success : R.color.text_secondary));
+            integrityLabel.setText(result.manager.identityVerified
+                    ? "Signature verified"
+                    : result.manager.recognized
+                            ? "Signature not verified"
+                            : "Unrecognized package");
+            integrityLabel.setTextColor(ContextCompat.getColor(getContext(),
+                    result.manager.identityVerified ? R.color.status_success : R.color.text_secondary));
         } else {
-            managerName.setText("No Manager"); managerStatus.setText("Not installed");
+            managerName.setText("No Manager");
+            managerStatus.setText("Not installed");
             managerStatus.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
             managerIcon.setImageResource(R.drawable.ic_shield_alert);
-            packageLabel.setText("—"); packageLabel.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
-            integrityLabel.setText("Not available"); integrityLabel.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
+            packageLabel.setText("—");
+            packageLabel.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
+            integrityLabel.setText("Not available");
+            integrityLabel.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
         }
         kernelLabel.setText(result.kernelSupported ? "Supported" : "Unsupported");
-        kernelLabel.setTextColor(ContextCompat.getColor(getContext(), result.kernelSupported ? R.color.status_success : R.color.status_error));
+        kernelLabel.setTextColor(ContextCompat.getColor(getContext(),
+                result.kernelSupported ? R.color.status_success : R.color.status_error));
         actionButtons.setVisibility(showInstall ? View.VISIBLE : View.GONE);
         if (showInstall) installButton.setOnClickListener(v -> showManagerPicker());
         setSurface(bgColor);
     }
 
     private void showManagerPicker() {
-        final java.util.List<ManagerCompatibility.ManagerInfo> managers = ManagerCompatibility.registeredManagers(getContext());
+        final java.util.List<ManagerCompatibility.ManagerInfo> managers =
+                ManagerCompatibility.registeredManagers(getContext());
         final android.app.Dialog dialog = new android.app.Dialog(getContext());
-        LinearLayout box = new LinearLayout(getContext()); box.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout box = new LinearLayout(getContext());
+        box.setOrientation(LinearLayout.VERTICAL);
         box.setPadding(dp(24), dp(22), dp(24), dp(18));
-        box.setBackground(createRoundedBackground(ContextCompat.getColor(getContext(), R.color.surface), 26));
-        TextView title = text(20, true); title.setText("Install Manager"); box.addView(title);
-        TextView subtitle = text(13, false); subtitle.setText("Select a supported manager to continue");
+        box.setBackground(createRoundedBackground(
+                ContextCompat.getColor(getContext(), R.color.surface), 26));
+        TextView title = text(20, true);
+        title.setText("Install Manager");
+        box.addView(title);
+        TextView subtitle = text(13, false);
+        subtitle.setText("Select a supported manager to continue");
         subtitle.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
-        LinearLayout.LayoutParams subtitleParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        subtitleParams.topMargin = dp(6); subtitleParams.bottomMargin = dp(16); box.addView(subtitle, subtitleParams);
+        LinearLayout.LayoutParams subtitleParams = new LinearLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        subtitleParams.topMargin = dp(6);
+        subtitleParams.bottomMargin = dp(16);
+        box.addView(subtitle, subtitleParams);
         for (ManagerCompatibility.ManagerInfo info : managers) {
-            LinearLayout row = new LinearLayout(getContext()); row.setOrientation(LinearLayout.HORIZONTAL); row.setGravity(Gravity.CENTER_VERTICAL);
+            LinearLayout row = new LinearLayout(getContext());
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
             row.setPadding(dp(16), dp(14), dp(16), dp(14));
-            row.setBackground(createRoundedBackground(ContextCompat.getColor(getContext(), R.color.surface_container_low), 14)); row.setClickable(true); row.setFocusable(true);
-            ImageView icon = new ImageView(getContext()); icon.setImageResource(R.drawable.ic_shield_check); icon.setColorFilter(ContextCompat.getColor(getContext(), R.color.icon_tint)); row.addView(icon, new LinearLayout.LayoutParams(dp(24), dp(24)));
-            LinearLayout textLayout = new LinearLayout(getContext()); textLayout.setOrientation(LinearLayout.VERTICAL); textLayout.setPadding(dp(12), 0, 0, 0); row.addView(textLayout, new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
-            TextView nameText = text(14, true); nameText.setText(info.name); textLayout.addView(nameText);
-            TextView statusText = text(12, false); statusText.setText(info.installed ? "Installed" : "Not installed"); statusText.setTextColor(ContextCompat.getColor(getContext(), info.installed ? R.color.status_success : R.color.text_secondary));
-            LinearLayout.LayoutParams statusParams = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT); statusParams.topMargin = dp(2); textLayout.addView(statusText, statusParams);
-            row.setOnClickListener(v -> { dialog.dismiss(); ManagerCompatibility.openInstaller(getContext(), info); });
-            LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT); rowParams.bottomMargin = dp(8); box.addView(row, rowParams);
+            row.setBackground(createRoundedBackground(
+                    ContextCompat.getColor(getContext(), R.color.surface_container_low), 14));
+            row.setClickable(true);
+            row.setFocusable(true);
+            ImageView icon = new ImageView(getContext());
+            icon.setImageResource(R.drawable.ic_shield_check);
+            icon.setColorFilter(ContextCompat.getColor(getContext(), R.color.icon_tint));
+            row.addView(icon, new LinearLayout.LayoutParams(dp(24), dp(24)));
+            LinearLayout textLayout = new LinearLayout(getContext());
+            textLayout.setOrientation(LinearLayout.VERTICAL);
+            textLayout.setPadding(dp(12), 0, 0, 0);
+            row.addView(textLayout, new LinearLayout.LayoutParams(
+                    0, LayoutParams.WRAP_CONTENT, 1f));
+            TextView nameText = text(14, true);
+            nameText.setText(info.name);
+            textLayout.addView(nameText);
+            TextView statusText = text(12, false);
+            statusText.setText(info.installed ? "Installed" : "Not installed");
+            statusText.setTextColor(ContextCompat.getColor(getContext(),
+                    info.installed ? R.color.status_success : R.color.text_secondary));
+            LinearLayout.LayoutParams statusParams = new LinearLayout.LayoutParams(
+                    LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+            statusParams.topMargin = dp(2);
+            textLayout.addView(statusText, statusParams);
+            row.setOnClickListener(v -> {
+                dialog.dismiss();
+                ManagerCompatibility.openInstaller(getContext(), info);
+            });
+            LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
+                    LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+            rowParams.bottomMargin = dp(8);
+            box.addView(row, rowParams);
         }
-        TextView cancel = text(14, true); cancel.setText("Cancel"); cancel.setGravity(Gravity.CENTER); cancel.setTextColor(ContextCompat.getColor(getContext(), R.color.accent)); cancel.setMinHeight(dp(48)); cancel.setOnClickListener(v -> dialog.dismiss()); box.addView(cancel, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, dp(48)));
-        dialog.setContentView(box); GhostLockModal.apply(dialog, false); dialog.setOnDismissListener(d -> GhostLockModal.clear(dialog)); dialog.show();
+        TextView cancel = text(14, true);
+        cancel.setText("Cancel");
+        cancel.setGravity(Gravity.CENTER);
+        cancel.setTextColor(ContextCompat.getColor(getContext(), R.color.accent));
+        cancel.setMinHeight(dp(48));
+        cancel.setOnClickListener(v -> dialog.dismiss());
+        box.addView(cancel, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, dp(48)));
+        dialog.setContentView(box);
+        GhostLockModal.apply(dialog, false);
+        dialog.setOnDismissListener(d -> GhostLockModal.clear(dialog));
+        dialog.show();
         Window window = dialog.getWindow();
-        if (window != null) window.setLayout(Math.min((int) (getResources().getDisplayMetrics().widthPixels * 0.88f), dp(390)), android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+        if (window != null) {
+            window.setLayout(
+                    Math.min((int) (getResources().getDisplayMetrics().widthPixels * 0.88f), dp(390)),
+                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
     }
 
     private TextView text(int size, boolean bold) {
-        TextView v = new TextView(getContext()); v.setTextSize(size); v.setIncludeFontPadding(false); v.setTextColor(ContextCompat.getColor(getContext(), R.color.text_primary));
-        if (bold) v.setTypeface(null, android.graphics.Typeface.BOLD); return v;
+        TextView v = new TextView(getContext());
+        v.setTextSize(size);
+        v.setIncludeFontPadding(false);
+        v.setTextColor(ContextCompat.getColor(getContext(), R.color.text_primary));
+        if (bold) v.setTypeface(null, android.graphics.Typeface.BOLD);
+        return v;
     }
-    private GradientDrawable createRoundedBackground(int color, int radius) { GradientDrawable d = new GradientDrawable(); d.setColor(color); d.setCornerRadius(dp(radius)); return d; }
-    private void setSurface(int colorRes) { GradientDrawable surface = createRoundedBackground(ContextCompat.getColor(getContext(), colorRes), 16); if (getParent() instanceof View) ((View) getParent()).setBackground(surface); }
-    private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
+
+    private GradientDrawable createRoundedBackground(int color, int radius) {
+        GradientDrawable d = new GradientDrawable();
+        d.setColor(color);
+        d.setCornerRadius(dp(radius));
+        return d;
+    }
+
+    private void setSurface(int colorRes) {
+        GradientDrawable surface = createRoundedBackground(
+                ContextCompat.getColor(getContext(), colorRes), 16);
+        if (getParent() instanceof View) ((View) getParent()).setBackground(surface);
+    }
+
+    private int dp(int value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
+    }
 }
