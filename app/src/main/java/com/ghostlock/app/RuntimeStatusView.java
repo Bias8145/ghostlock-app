@@ -222,7 +222,7 @@ public class RuntimeStatusView extends FrameLayout {
     private ImageView statusIcon(Context context) {
         ImageView icon = new ImageView(context);
         icon.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-        icon.setAlpha(0.18f);
+        icon.setAlpha(1.0f);
         return icon;
     }
 
