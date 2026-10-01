@@ -30,7 +30,6 @@ public final class ManagerCompatibility {
         public final State state;
         public final ManagerInfo manager;
         Result(boolean k, State s, ManagerInfo m) { kernelSupported=k; state=s; manager=m; }
-        /** Recognized managers remain usable when their APK signature differs; spoofed is a warning state. */
         public boolean canRun() { return state == State.READY || (state == State.SPOOFED_MANAGER && manager.recognized); }
     }
 
@@ -39,8 +38,12 @@ public final class ManagerCompatibility {
         Registered(String p, String n, String u, String... c) { pkg=p; name=n; url=u; certs=c; }
     }
 
+    /*
+     * GhostLock's execution path consumes ksud. Keep package identity separate
+     * from signature trust so ReSukiSU/KOWSU are not rejected merely because
+     * their signing certificate is different from KernelSU's.
+     */
     private static final Registered[] REGISTERED = {
-            // Check ReSukiSU before KernelSU so a legacy KernelSU APK cannot mask it.
             new Registered("com.resukisu.resukisu", "ReSukiSU", "https://github.com/ReSukiSU/ReSukiSU/releases"),
             new Registered("me.weishu.kernelsu.pr", "KernelSU PR", "https://github.com/tiann/KernelSU/releases"),
             new Registered("me.weishu.kernelsu", "KernelSU", "https://github.com/tiann/KernelSU/releases", "1417081413bf7ab1de8e440ecbcb62685037c8f28f048f0f8b79e305b31ab916"),
@@ -89,43 +92,66 @@ public final class ManagerCompatibility {
 
     public static ManagerInfo detectManager(Context context) {
         PackageManager pm = context.getPackageManager();
+
+        // Detect by package identity first. This is deliberately independent of
+        // certificate verification: the native execution path only needs ksud.
         for (Registered r : REGISTERED) {
-            try {
-                // Some Android package-manager implementations can expose application
-                // info even when full package metadata lookup is restricted.
-                ApplicationInfo app = applicationInfo(pm, r.pkg);
-                PackageInfo info = packageInfo(pm, r.pkg);
-                boolean verified = r.certs.length > 0 && hasExpectedCertificate(info, r.certs);
-                boolean spoofed = r.certs.length > 0 && !verified;
-                return new ManagerInfo(r.pkg, r.name, r.url, app != null, true, verified, spoofed);
-            } catch (Throwable first) {
+            ApplicationInfo app = findApplication(pm, r.pkg);
+            if (app == null) continue;
+
+            boolean verified = false;
+            if (r.certs.length > 0) {
                 try {
-                    ApplicationInfo app = applicationInfo(pm, r.pkg);
-                    if (app != null) {
-                        // ReSukiSU and the other unpinned managers are recognized by
-                        // package identity. KernelSU remains certificate-pinned.
-                        boolean verified = r.certs.length == 0;
-                        return new ManagerInfo(r.pkg, r.name, r.url, true, true, verified, false);
-                    }
-                } catch (Throwable ignored) {}
+                    verified = hasExpectedCertificate(packageInfo(pm, r.pkg), r.certs);
+                } catch (Throwable ignored) {
+                    // Package is still recognized even when signing metadata is unavailable.
+                }
             }
+
+            // A known package is a recognized manager. Signature mismatch is only
+            // a warning for pinned managers, never a reason to hide ReSukiSU/KOWSU.
+            boolean spoofed = r.certs.length > 0 && !verified;
+            return new ManagerInfo(r.pkg, r.name, r.url, true, true, verified, spoofed);
         }
+
+        // Fallback for renamed/spoofed managers: locate an installed package
+        // that actually ships ksud. This mirrors GhostLock's runtime dependency
+        // instead of treating arbitrary package labels as managers.
         try {
             List<ApplicationInfo> apps = pm.getInstalledApplications(PackageManager.GET_META_DATA);
             for (ApplicationInfo app : apps) {
                 if (app == null || app.packageName == null) continue;
-                String libDir = app.nativeLibraryDir == null ? "" : app.nativeLibraryDir;
-                if (new java.io.File(libDir, "libksud.so").isFile()) {
-                    CharSequence label = app.loadLabel(pm);
-                    return new ManagerInfo(app.packageName, label == null ? app.packageName : label.toString(), "", true, false, false, false);
-                }
+                if (!hasKsud(app)) continue;
+                CharSequence label = app.loadLabel(pm);
+                return new ManagerInfo(
+                        app.packageName,
+                        label == null ? app.packageName : label.toString(),
+                        "",
+                        true,
+                        false,
+                        false,
+                        false);
             }
         } catch (Throwable ignored) {}
+
         return new ManagerInfo("", "", "", false, false, false, false);
     }
 
-    private static ApplicationInfo applicationInfo(PackageManager pm, String pkg) throws PackageManager.NameNotFoundException {
-        return pm.getApplicationInfo(pkg, 0);
+    private static ApplicationInfo findApplication(PackageManager pm, String pkg) {
+        try {
+            return pm.getApplicationInfo(pkg, 0);
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    private static boolean hasKsud(ApplicationInfo app) {
+        String libDir = app.nativeLibraryDir;
+        if (libDir == null || libDir.isEmpty()) return false;
+        java.io.File base = new java.io.File(libDir);
+        return new java.io.File(base, "libksud.so").isFile()
+                || new java.io.File(new java.io.File(base, "arm64"), "libksud.so").isFile()
+                || new java.io.File(new java.io.File(base, "arm"), "libksud.so").isFile();
     }
 
     private static PackageInfo packageInfo(PackageManager pm, String pkg) throws PackageManager.NameNotFoundException {
@@ -156,16 +182,13 @@ public final class ManagerCompatibility {
         List<ManagerInfo> result = new ArrayList<>();
         PackageManager pm = context.getPackageManager();
         for (Registered r : REGISTERED) {
-            boolean installed = false, verified = false;
-            try {
-                PackageInfo info = packageInfo(pm, r.pkg);
-                installed = true;
-                verified = r.certs.length > 0 && hasExpectedCertificate(info, r.certs);
-            } catch (Throwable ignored) {
+            ApplicationInfo app = findApplication(pm, r.pkg);
+            boolean installed = app != null;
+            boolean verified = false;
+            if (installed && r.certs.length > 0) {
                 try {
-                    installed = applicationInfo(pm, r.pkg) != null;
-                    verified = installed && r.certs.length == 0;
-                } catch (Throwable ignoredAgain) {}
+                    verified = hasExpectedCertificate(packageInfo(pm, r.pkg), r.certs);
+                } catch (Throwable ignored) {}
             }
             result.add(new ManagerInfo(r.pkg, r.name, r.url, installed, true, verified, installed && r.certs.length > 0 && !verified));
         }
