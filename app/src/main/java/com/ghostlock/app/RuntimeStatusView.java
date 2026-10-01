@@ -133,7 +133,7 @@ public class RuntimeStatusView extends FrameLayout {
         // Compact three-column metadata: Package • Signature • Integrity.
         LinearLayout details = new LinearLayout(context);
         details.setOrientation(LinearLayout.HORIZONTAL);
-        details.setGravity(Gravity.CENTER_VERTICAL);
+        details.setGravity(Gravity.TOP);
         details.setPadding(0, 0, 0, 0);
 
         LinearLayout packageColumn = metadataColumn(context, "PACKAGE");
@@ -146,7 +146,7 @@ public class RuntimeStatusView extends FrameLayout {
         packageColumn.addView(packageLabel, packageValueParams);
         details.addView(packageColumn, new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
 
-        details.addView(metadataSeparator(context), new LinearLayout.LayoutParams(dp(10), LayoutParams.WRAP_CONTENT));
+        details.addView(metadataSeparator(context), new LinearLayout.LayoutParams(dp(8), LayoutParams.WRAP_CONTENT));
 
         LinearLayout signatureColumn = metadataColumn(context, "SIGNATURE");
         signatureValue = text(12, true);
@@ -321,7 +321,7 @@ public class RuntimeStatusView extends FrameLayout {
             managerStatus.setTextColor(ContextCompat.getColor(getContext(), statusColorRes));
             managerIcon.setImageResource(result.manager.spoofed
                     ? R.drawable.ic_shield_alert : R.drawable.ic_shield_check);
-            packageLabel.setText(result.manager.packageName);
+            packageLabel.setText(result.manager.packageName);\n            packageLabel.setSingleLine(true);\n            packageLabel.setHorizontallyScrolling(true);
             packageLabel.setTextColor(ContextCompat.getColor(getContext(), R.color.text_primary));
             signatureValue.setText(result.manager.identityVerified ? "Verified" : "Not Verified");
             signatureValue.setTextColor(ContextCompat.getColor(getContext(),
