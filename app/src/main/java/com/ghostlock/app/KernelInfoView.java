@@ -5,7 +5,6 @@ import android.content.res.Configuration;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.text.TextUtils;
-import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageView;
@@ -92,7 +91,7 @@ public class KernelInfoView extends LinearLayout {
 
     public void setText(CharSequence text, TextView.BufferType type) {
         String value = text == null ? "" : text.toString();
-        String[] lines = value.split("\n", 2);
+        String[] lines = value.split("\\n", 2);
 
         deviceName = lines.length > 0 ? lines[0].trim() : "";
         if (deviceName.regionMatches(true, 0, "Device:", 0, "Device:".length())) {
@@ -109,12 +108,12 @@ public class KernelInfoView extends LinearLayout {
         chipsContainer.removeAllViews();
 
         if (kernelVisible && !kernelVersion.isEmpty()) {
-            // Parse kernel version
+            // Parse kernel version without adding a redundant "v" prefix.
             String[] parts = kernelVersion.split("-");
             String version = parts.length > 0 ? parts[0] : kernelVersion;
 
             // Version chip
-            addChip("v" + version, R.drawable.ic_chip, R.color.accent_container, R.color.text_primary);
+            addChip(version, R.drawable.ic_chip, R.color.accent_container, R.color.text_primary);
 
             // Architecture chip (assume ARM64 for Android)
             addChip("ARM64", R.drawable.ic_cpu, R.color.surface_container, R.color.text_secondary);
@@ -154,6 +153,7 @@ public class KernelInfoView extends LinearLayout {
         label.setTextSize(10);
         label.setTextColor(ContextCompat.getColor(getContext(), textColorRes));
         label.setTypeface(null, android.graphics.Typeface.BOLD);
+        label.setIncludeFontPadding(false);
         chip.addView(label);
 
         chipsContainer.addView(chip);
