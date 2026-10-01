@@ -144,7 +144,7 @@ public class DashboardStatsView extends LinearLayout {
 
         ImageView icon = new ImageView(getContext());
         icon.setImageResource(iconRes);
-        icon.setColorFilter(getResources().getColor(isError ? R.color.error : R.color.icon_tint));
+        icon.setColorFilter(getResources().getColor(isError ? R.color.status_error : R.color.icon_tint));
         icon.setAlpha(0.75f);
         header.addView(icon, new LinearLayout.LayoutParams(dp(14), dp(14)));
 
