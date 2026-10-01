@@ -19,7 +19,7 @@ public class RuntimeStatusView extends FrameLayout {
     private final TextView statusTitle;
     private final TextView statusLabel;
     private final TextView message;
-    private final LinearLayout managerCard;
+    private final FrameLayout managerCard;
     private final ImageView managerIcon;
     private final TextView managerName;
     private final TextView managerStatus;
@@ -67,11 +67,27 @@ public class RuntimeStatusView extends FrameLayout {
         msgParams.bottomMargin = dp(10);
         content.addView(message, msgParams);
 
-        managerCard = new LinearLayout(context);
-        managerCard.setOrientation(LinearLayout.VERTICAL);
-        managerCard.setPadding(dp(14), dp(12), dp(14), dp(12));
+        managerCard = new FrameLayout(context);
         managerCard.setBackground(createRoundedBackground(
                 ContextCompat.getColor(context, R.color.surface_container_low), 16));
+        managerCard.setClipToOutline(true);
+        managerCard.setOutlineProvider(new android.view.ViewOutlineProvider() {
+            @Override public void getOutline(View view, android.graphics.Outline outline) {
+                outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), dp(16));
+            }
+        });
+
+        managerIndicator = statusIcon(context);
+        FrameLayout.LayoutParams indicatorParams = new FrameLayout.LayoutParams(dp(96), dp(96));
+        indicatorParams.gravity = Gravity.END | Gravity.CENTER_VERTICAL;
+        indicatorParams.rightMargin = dp(-4);
+        managerCard.addView(managerIndicator, indicatorParams);
+
+        LinearLayout cardContent = new LinearLayout(context);
+        cardContent.setOrientation(LinearLayout.VERTICAL);
+        cardContent.setPadding(dp(14), dp(12), dp(14), dp(12));
+        managerCard.addView(cardContent, new FrameLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
         LinearLayout identityRow = new LinearLayout(context);
         identityRow.setOrientation(LinearLayout.HORIZONTAL);
@@ -104,9 +120,7 @@ public class RuntimeStatusView extends FrameLayout {
         managerStatusParams.topMargin = dp(3);
         identityText.addView(managerStatus, managerStatusParams);
 
-        managerIndicator = statusIcon(context);
-        identityRow.addView(managerIndicator, new LinearLayout.LayoutParams(dp(64), dp(64)));
-        managerCard.addView(identityRow);
+        cardContent.addView(identityRow);
 
         View divider = new View(context);
         divider.setBackgroundColor(ContextCompat.getColor(context, R.color.outline_variant));
@@ -133,7 +147,7 @@ public class RuntimeStatusView extends FrameLayout {
                 new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
         details.addView(integrityIndicator = statusIndicator(context),
                 new LinearLayout.LayoutParams(dp(24), dp(24)));
-        managerCard.addView(details);
+        cardContent.addView(details);
 
         LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
@@ -183,7 +197,7 @@ public class RuntimeStatusView extends FrameLayout {
     private ImageView statusIcon(Context context) {
         ImageView icon = new ImageView(context);
         icon.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-        icon.setAlpha(0.14f);
+        icon.setAlpha(0.13f);
         return icon;
     }
 
