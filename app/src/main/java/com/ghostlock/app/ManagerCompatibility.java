@@ -39,12 +39,10 @@ public final class ManagerCompatibility {
         Registered(String p, String n, String u, String... c) { pkg=p; name=n; url=u; certs=c; }
     }
 
-    /* These managers are currently wired into the native ksud preparation path. */
     private static final Registered[] REGISTERED = {
-            // Prefer ReSukiSU when both managers are installed. ReSukiSU supports
-            // multiple manager implementations, so it should not be masked by the
-            // legacy KernelSU manager package being present.
+            // Check ReSukiSU before KernelSU so a legacy KernelSU APK cannot mask it.
             new Registered("com.resukisu.resukisu", "ReSukiSU", "https://github.com/ReSukiSU/ReSukiSU/releases"),
+            new Registered("me.weishu.kernelsu.pr", "KernelSU PR", "https://github.com/tiann/KernelSU/releases"),
             new Registered("me.weishu.kernelsu", "KernelSU", "https://github.com/tiann/KernelSU/releases", "1417081413bf7ab1de8e440ecbcb62685037c8f28f048f0f8b79e305b31ab916"),
             new Registered("com.kowx712.supermanager", "KOWSU", "https://github.com/KOWX712/KernelSU/releases")
     };
@@ -81,8 +79,8 @@ public final class ManagerCompatibility {
             while ((line = reader.readLine()) != null) {
                 int p = line.indexOf("\"release\"");
                 if (p < 0) continue;
-                int first = line.indexOf('\"', p + 9);
-                int second = first < 0 ? -1 : line.indexOf('\"', first + 1);
+                int first = line.indexOf('"', p + 9);
+                int second = first < 0 ? -1 : line.indexOf('"', first + 1);
                 if (first >= 0 && second > first && version.equals(line.substring(first + 1, second))) return true;
             }
         } catch (Throwable ignored) {}
@@ -93,11 +91,24 @@ public final class ManagerCompatibility {
         PackageManager pm = context.getPackageManager();
         for (Registered r : REGISTERED) {
             try {
+                // Some Android package-manager implementations can expose application
+                // info even when full package metadata lookup is restricted.
+                ApplicationInfo app = applicationInfo(pm, r.pkg);
                 PackageInfo info = packageInfo(pm, r.pkg);
                 boolean verified = r.certs.length > 0 && hasExpectedCertificate(info, r.certs);
                 boolean spoofed = r.certs.length > 0 && !verified;
-                return new ManagerInfo(r.pkg, r.name, r.url, true, true, verified, spoofed);
-            } catch (Throwable ignored) {}
+                return new ManagerInfo(r.pkg, r.name, r.url, app != null, true, verified, spoofed);
+            } catch (Throwable first) {
+                try {
+                    ApplicationInfo app = applicationInfo(pm, r.pkg);
+                    if (app != null) {
+                        // ReSukiSU and the other unpinned managers are recognized by
+                        // package identity. KernelSU remains certificate-pinned.
+                        boolean verified = r.certs.length == 0;
+                        return new ManagerInfo(r.pkg, r.name, r.url, true, true, verified, false);
+                    }
+                } catch (Throwable ignored) {}
+            }
         }
         try {
             List<ApplicationInfo> apps = pm.getInstalledApplications(PackageManager.GET_META_DATA);
@@ -106,13 +117,15 @@ public final class ManagerCompatibility {
                 String libDir = app.nativeLibraryDir == null ? "" : app.nativeLibraryDir;
                 if (new java.io.File(libDir, "libksud.so").isFile()) {
                     CharSequence label = app.loadLabel(pm);
-                    // A library match is only a diagnostic fallback. It is not a recognized manager
-                    // and must never be treated as a spoofed/approved manager.
                     return new ManagerInfo(app.packageName, label == null ? app.packageName : label.toString(), "", true, false, false, false);
                 }
             }
         } catch (Throwable ignored) {}
         return new ManagerInfo("", "", "", false, false, false, false);
+    }
+
+    private static ApplicationInfo applicationInfo(PackageManager pm, String pkg) throws PackageManager.NameNotFoundException {
+        return pm.getApplicationInfo(pkg, 0);
     }
 
     private static PackageInfo packageInfo(PackageManager pm, String pkg) throws PackageManager.NameNotFoundException {
@@ -144,7 +157,16 @@ public final class ManagerCompatibility {
         PackageManager pm = context.getPackageManager();
         for (Registered r : REGISTERED) {
             boolean installed = false, verified = false;
-            try { PackageInfo info = packageInfo(pm, r.pkg); installed = true; verified = r.certs.length > 0 && hasExpectedCertificate(info, r.certs); } catch (Throwable ignored) {}
+            try {
+                PackageInfo info = packageInfo(pm, r.pkg);
+                installed = true;
+                verified = r.certs.length > 0 && hasExpectedCertificate(info, r.certs);
+            } catch (Throwable ignored) {
+                try {
+                    installed = applicationInfo(pm, r.pkg) != null;
+                    verified = installed && r.certs.length == 0;
+                } catch (Throwable ignoredAgain) {}
+            }
             result.add(new ManagerInfo(r.pkg, r.name, r.url, installed, true, verified, installed && r.certs.length > 0 && !verified));
         }
         return Collections.unmodifiableList(result);
