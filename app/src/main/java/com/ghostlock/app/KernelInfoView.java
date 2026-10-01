@@ -2,6 +2,7 @@ package com.ghostlock.app;
 
 import android.content.Context;
 import android.content.res.Configuration;
+import android.util.AttributeSet;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.text.TextUtils;
