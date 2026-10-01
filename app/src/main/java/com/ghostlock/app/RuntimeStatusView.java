@@ -79,7 +79,7 @@ public class RuntimeStatusView extends FrameLayout {
         managerIndicator = statusIcon(context);
         FrameLayout.LayoutParams indicatorParams = new FrameLayout.LayoutParams(dp(96), dp(96));
         indicatorParams.gravity = Gravity.END | Gravity.CENTER_VERTICAL;
-        indicatorParams.rightMargin = dp(-10);
+        indicatorParams.rightMargin = dp(-12);
         managerCard.addView(managerIndicator, indicatorParams);
 
         LinearLayout cardContent = new LinearLayout(context);
@@ -106,8 +106,8 @@ public class RuntimeStatusView extends FrameLayout {
                 0, LayoutParams.WRAP_CONTENT, 1f));
 
         managerName = text(15, true);
-        managerName.setMaxLines(1);
-        managerName.setEllipsize(TextUtils.TruncateAt.END);
+        managerName.setMaxLines(2);
+        managerName.setEllipsize(null);
         identityText.addView(managerName, new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
@@ -144,7 +144,7 @@ public class RuntimeStatusView extends FrameLayout {
         packageLabel.setMaxLines(1);
         packageLabel.setEllipsize(TextUtils.TruncateAt.END);
         packageColumn.addView(packageLabel, packageValueParams);
-        details.addView(packageColumn, new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
+        details.addView(packageColumn, new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1.15f));
 
         details.addView(metadataSeparator(context), new LinearLayout.LayoutParams(dp(8), LayoutParams.WRAP_CONTENT));
 
@@ -156,7 +156,7 @@ public class RuntimeStatusView extends FrameLayout {
         signatureValue.setMaxLines(1);
         signatureValue.setEllipsize(TextUtils.TruncateAt.END);
         signatureColumn.addView(signatureValue, signatureValueParams);
-        details.addView(signatureColumn, new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
+        details.addView(signatureColumn, new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 0.95f));
 
         details.addView(metadataSeparator(context), new LinearLayout.LayoutParams(dp(10), LayoutParams.WRAP_CONTENT));
 
@@ -168,7 +168,7 @@ public class RuntimeStatusView extends FrameLayout {
         integrityLabel.setMaxLines(1);
         integrityLabel.setEllipsize(TextUtils.TruncateAt.END);
         integrityColumn.addView(integrityLabel, integrityValueParams);
-        details.addView(integrityColumn, new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
+        details.addView(integrityColumn, new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 0.9f));
         cardContent.addView(details);
 
         content.addView(managerCard);
@@ -334,7 +334,7 @@ public class RuntimeStatusView extends FrameLayout {
             managerStatus.setText("Not installed");
             managerStatus.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
             managerIcon.setImageResource(R.drawable.ic_shield_alert);
-            packageLabel.setText("—");
+            packageLabel.setText("—");\n            packageLabel.setMaxLines(1);
             packageLabel.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
             signatureValue.setText("Not Verified");
             signatureValue.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
