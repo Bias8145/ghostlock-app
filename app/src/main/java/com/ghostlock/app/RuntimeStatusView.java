@@ -84,27 +84,28 @@ public class RuntimeStatusView extends FrameLayout {
 
         LinearLayout cardContent = new LinearLayout(context);
         cardContent.setOrientation(LinearLayout.VERTICAL);
-        cardContent.setPadding(dp(14), dp(12), dp(14), dp(12));
+        cardContent.setPadding(dp(16), dp(14), dp(16), dp(14));
         managerCard.addView(cardContent, new FrameLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
         LinearLayout identityRow = new LinearLayout(context);
         identityRow.setOrientation(LinearLayout.HORIZONTAL);
         identityRow.setGravity(Gravity.CENTER_VERTICAL);
+        identityRow.setMinimumHeight(dp(42));
 
         managerIcon = new ImageView(context);
         managerIcon.setScaleType(ImageView.ScaleType.CENTER);
         managerIcon.setColorFilter(ContextCompat.getColor(context, R.color.icon_tint));
-        identityRow.addView(managerIcon, new LinearLayout.LayoutParams(dp(20), dp(20)));
+        identityRow.addView(managerIcon, new LinearLayout.LayoutParams(dp(24), dp(24)));
 
         LinearLayout identityText = new LinearLayout(context);
         identityText.setOrientation(LinearLayout.VERTICAL);
         identityText.setGravity(Gravity.START);
-        identityText.setPadding(dp(9), 0, 0, 0);
+        identityText.setPadding(dp(10), 0, 0, 0);
         identityRow.addView(identityText, new LinearLayout.LayoutParams(
                 0, LayoutParams.WRAP_CONTENT, 1f));
 
-        managerName = text(14, true);
+        managerName = text(15, true);
         managerName.setMaxLines(1);
         managerName.setEllipsize(TextUtils.TruncateAt.END);
         identityText.addView(managerName, new LinearLayout.LayoutParams(
@@ -125,41 +126,51 @@ public class RuntimeStatusView extends FrameLayout {
         divider.setBackgroundColor(ContextCompat.getColor(context, R.color.outline_variant));
         LinearLayout.LayoutParams dividerParams = new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, dp(1));
-        dividerParams.topMargin = dp(10);
-        dividerParams.bottomMargin = dp(9);
-        managerCard.addView(divider, dividerParams);
+        dividerParams.topMargin = dp(12);
+        dividerParams.bottomMargin = dp(12);
+        cardContent.addView(divider, dividerParams);
 
         // Compact three-column metadata: Package • Signature • Integrity.
         LinearLayout details = new LinearLayout(context);
         details.setOrientation(LinearLayout.HORIZONTAL);
         details.setGravity(Gravity.CENTER_VERTICAL);
-        details.setPadding(0, dp(1), 0, dp(1));
+        details.setPadding(0, 0, 0, 0);
 
         LinearLayout packageColumn = metadataColumn(context, "PACKAGE");
         packageLabel = text(12, true);
-        packageColumn.addView(packageLabel, new LinearLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+        LinearLayout.LayoutParams packageValueParams = new LinearLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        packageValueParams.topMargin = dp(5);
+        packageLabel.setMaxLines(1);
+        packageLabel.setEllipsize(TextUtils.TruncateAt.END);
+        packageColumn.addView(packageLabel, packageValueParams);
         details.addView(packageColumn, new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
 
-        details.addView(metadataSeparator(context), new LinearLayout.LayoutParams(dp(14), LayoutParams.WRAP_CONTENT));
+        details.addView(metadataSeparator(context), new LinearLayout.LayoutParams(dp(10), LayoutParams.WRAP_CONTENT));
 
         LinearLayout signatureColumn = metadataColumn(context, "SIGNATURE");
         signatureValue = text(12, true);
-        signatureColumn.addView(signatureValue, new LinearLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+        LinearLayout.LayoutParams signatureValueParams = new LinearLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        signatureValueParams.topMargin = dp(5);
+        signatureValue.setMaxLines(1);
+        signatureValue.setEllipsize(TextUtils.TruncateAt.END);
+        signatureColumn.addView(signatureValue, signatureValueParams);
         details.addView(signatureColumn, new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
 
         details.addView(metadataSeparator(context), new LinearLayout.LayoutParams(dp(14), LayoutParams.WRAP_CONTENT));
 
         LinearLayout integrityColumn = metadataColumn(context, "INTEGRITY");
         integrityLabel = text(12, true);
-        integrityColumn.addView(integrityLabel, new LinearLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+        LinearLayout.LayoutParams integrityValueParams = new LinearLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        integrityValueParams.topMargin = dp(5);
+        integrityLabel.setMaxLines(1);
+        integrityLabel.setEllipsize(TextUtils.TruncateAt.END);
+        integrityColumn.addView(integrityLabel, integrityValueParams);
         details.addView(integrityColumn, new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
         cardContent.addView(details);
 
-        LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         content.addView(managerCard);
 
         actionButtons = new LinearLayout(context);
@@ -181,25 +192,10 @@ public class RuntimeStatusView extends FrameLayout {
         refresh();
     }
 
-    private LinearLayout detailRow(Context context, TextView value, TextView indicator) {
-        LinearLayout row = new LinearLayout(context);
-        row.setOrientation(LinearLayout.HORIZONTAL);
-        row.setGravity(Gravity.CENTER_VERTICAL);
-        row.setPadding(0, dp(3), 0, dp(3));
-
-        value.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
-        value.setMaxLines(1);
-        value.setEllipsize(TextUtils.TruncateAt.END);
-        row.addView(value, new LinearLayout.LayoutParams(
-                0, LayoutParams.WRAP_CONTENT, 1f));
-        row.addView(indicator, new LinearLayout.LayoutParams(dp(28), dp(28)));
-        return row;
-    }
-
     private LinearLayout metadataColumn(Context context, String label) {
         LinearLayout column = new LinearLayout(context);
         column.setOrientation(LinearLayout.VERTICAL);
-        column.setGravity(Gravity.START);
+        column.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
         TextView title = text(9, false);
         title.setText(label);
         title.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
@@ -218,23 +214,11 @@ public class RuntimeStatusView extends FrameLayout {
         return separator;
     }
 
-    private TextView statusIndicator(Context context) {
-        TextView indicator = text(20, true);
-        indicator.setGravity(Gravity.CENTER);
-        indicator.setAlpha(0.72f);
-        return indicator;
-    }
-
     private ImageView statusIcon(Context context) {
         ImageView icon = new ImageView(context);
         icon.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
         icon.setAlpha(0.13f);
         return icon;
-    }
-
-    private void setIndicator(TextView indicator, String symbol, int colorRes) {
-        indicator.setText(symbol);
-        indicator.setTextColor(ContextCompat.getColor(getContext(), colorRes));
     }
 
     private void setStatusIcon(int drawableRes, int colorRes) {
