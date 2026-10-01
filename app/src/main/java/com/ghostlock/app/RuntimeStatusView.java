@@ -77,9 +77,10 @@ public class RuntimeStatusView extends FrameLayout {
         });
 
         managerIndicator = statusIcon(context);
-        FrameLayout.LayoutParams indicatorParams = new FrameLayout.LayoutParams(dp(96), dp(96));
-        indicatorParams.gravity = Gravity.END | Gravity.CENTER_VERTICAL;
-        indicatorParams.rightMargin = dp(-12);
+        FrameLayout.LayoutParams indicatorParams = new FrameLayout.LayoutParams(dp(112), dp(112));
+        indicatorParams.gravity = Gravity.TOP | Gravity.END;
+        indicatorParams.topMargin = dp(-10);
+        indicatorParams.rightMargin = dp(-10);
         managerCard.addView(managerIndicator, indicatorParams);
 
         LinearLayout cardContent = new LinearLayout(context);
@@ -221,7 +222,7 @@ public class RuntimeStatusView extends FrameLayout {
     private ImageView statusIcon(Context context) {
         ImageView icon = new ImageView(context);
         icon.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-        icon.setAlpha(0.13f);
+        icon.setAlpha(0.18f);
         return icon;
     }
 
