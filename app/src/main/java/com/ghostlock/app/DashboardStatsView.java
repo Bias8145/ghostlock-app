@@ -97,7 +97,7 @@ public class DashboardStatsView extends LinearLayout {
         // Row 2: Three equal metric panels.
         LinearLayout metricsRow = new LinearLayout(getContext());
         metricsRow.setOrientation(HORIZONTAL);
-        metricsRow.setGravity(Gravity.CENTER_VERTICAL);
+        metricsRow.setGravity(Gravity.TOP);
 
         LinearLayout.LayoutParams metricParams = new LinearLayout.LayoutParams(
                 0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
@@ -128,7 +128,11 @@ public class DashboardStatsView extends LinearLayout {
         failureParams.leftMargin = dp(4);
         metricsRow.addView(failurePanel, failureParams);
 
-        addView(metricsRow);
+        LayoutParams metricsParams = new LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        metricsParams.topMargin = 0;
+        metricsParams.bottomMargin = dp(2);
+        addView(metricsRow, metricsParams);
         refreshStats();
     }
 
