@@ -27,7 +27,6 @@ public class RuntimeStatusView extends FrameLayout {
     private final TextView packageLabel;
     private final TextView integrityLabel;
     private final TextView signatureValue;
-    private final TextView packageIndicator;
     private final TextView integrityIndicator;
     private final LinearLayout actionButtons;
     private final TextView installButton;
@@ -354,7 +353,6 @@ public class RuntimeStatusView extends FrameLayout {
             managerIcon.setImageResource(R.drawable.ic_shield_alert);
             packageLabel.setText("—");
             packageLabel.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
-            setIndicator(packageIndicator, "!", R.color.text_secondary);
             signatureValue.setText("Not Verified");
             signatureValue.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
             integrityLabel.setText("Not available");
