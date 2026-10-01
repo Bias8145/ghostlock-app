@@ -26,6 +26,7 @@ public class RuntimeStatusView extends FrameLayout {
     private final ImageView managerIndicator;
     private final TextView packageLabel;
     private final TextView integrityLabel;
+    private final TextView signatureValue;
     private final TextView packageIndicator;
     private final TextView integrityIndicator;
     private final LinearLayout actionButtons;
@@ -130,23 +131,33 @@ public class RuntimeStatusView extends FrameLayout {
         dividerParams.bottomMargin = dp(9);
         managerCard.addView(divider, dividerParams);
 
-        // Package and Integrity stay compact on a single metadata line.
+        // Compact three-column metadata: Package • Signature • Integrity.
         LinearLayout details = new LinearLayout(context);
         details.setOrientation(LinearLayout.HORIZONTAL);
         details.setGravity(Gravity.CENTER_VERTICAL);
-        details.addView(packageLabel = text(11, false),
-                new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
-        details.addView(packageIndicator = statusIndicator(context),
-                new LinearLayout.LayoutParams(dp(24), dp(24)));
-        TextView separator = text(12, false);
-        separator.setText("·");
-        separator.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
-        separator.setGravity(Gravity.CENTER);
-        details.addView(separator, new LinearLayout.LayoutParams(dp(20), dp(24)));
-        details.addView(integrityLabel = text(11, false),
-                new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
-        details.addView(integrityIndicator = statusIndicator(context),
-                new LinearLayout.LayoutParams(dp(24), dp(24)));
+        details.setPadding(0, dp(1), 0, dp(1));
+
+        LinearLayout packageColumn = metadataColumn(context, "PACKAGE");
+        packageLabel = text(12, true);
+        packageColumn.addView(packageLabel, new LinearLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+        details.addView(packageColumn, new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
+
+        details.addView(metadataSeparator(context), new LinearLayout.LayoutParams(dp(14), LayoutParams.WRAP_CONTENT));
+
+        LinearLayout signatureColumn = metadataColumn(context, "SIGNATURE");
+        signatureValue = text(12, true);
+        signatureColumn.addView(signatureValue, new LinearLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+        details.addView(signatureColumn, new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
+
+        details.addView(metadataSeparator(context), new LinearLayout.LayoutParams(dp(14), LayoutParams.WRAP_CONTENT));
+
+        LinearLayout integrityColumn = metadataColumn(context, "INTEGRITY");
+        integrityLabel = text(12, true);
+        integrityColumn.addView(integrityLabel, new LinearLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+        details.addView(integrityColumn, new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
         cardContent.addView(details);
 
         LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
@@ -185,6 +196,28 @@ public class RuntimeStatusView extends FrameLayout {
                 0, LayoutParams.WRAP_CONTENT, 1f));
         row.addView(indicator, new LinearLayout.LayoutParams(dp(28), dp(28)));
         return row;
+    }
+
+    private LinearLayout metadataColumn(Context context, String label) {
+        LinearLayout column = new LinearLayout(context);
+        column.setOrientation(LinearLayout.VERTICAL);
+        column.setGravity(Gravity.START);
+        TextView title = text(9, false);
+        title.setText(label);
+        title.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
+        title.setMaxLines(1);
+        column.addView(title, new LinearLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+        return column;
+    }
+
+    private TextView metadataSeparator(Context context) {
+        TextView separator = text(12, false);
+        separator.setText("•");
+        separator.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
+        separator.setGravity(Gravity.CENTER);
+        separator.setAlpha(0.55f);
+        return separator;
     }
 
     private TextView statusIndicator(Context context) {
@@ -308,16 +341,12 @@ public class RuntimeStatusView extends FrameLayout {
                     ? R.drawable.ic_shield_alert : R.drawable.ic_shield_check);
             packageLabel.setText(result.manager.packageName);
             packageLabel.setTextColor(ContextCompat.getColor(getContext(), R.color.text_primary));
-            integrityLabel.setText(result.manager.identityVerified
-                    ? "Signature verified"
-                    : result.manager.recognized
-                            ? "Signature not verified"
-                            : "Unrecognized package");
+            signatureValue.setText(result.manager.identityVerified ? "Verified" : "Not Verified");
+            signatureValue.setTextColor(ContextCompat.getColor(getContext(),
+                    result.manager.identityVerified ? R.color.status_success : R.color.text_secondary));
+            integrityLabel.setText(result.manager.identityVerified ? "✓ Verified" : "Not Verified");
             integrityLabel.setTextColor(ContextCompat.getColor(getContext(),
                     result.manager.identityVerified ? R.color.status_success : R.color.text_secondary));
-            setIndicator(integrityIndicator,
-                    result.manager.identityVerified ? "✓" : result.manager.recognized ? "!" : "×",
-                    result.manager.identityVerified ? R.color.status_success : R.color.text_secondary);
         } else {
             managerName.setText("No Manager");
             managerStatus.setText("Not installed");
@@ -326,9 +355,10 @@ public class RuntimeStatusView extends FrameLayout {
             packageLabel.setText("—");
             packageLabel.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
             setIndicator(packageIndicator, "!", R.color.text_secondary);
+            signatureValue.setText("Not Verified");
+            signatureValue.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
             integrityLabel.setText("Not available");
             integrityLabel.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
-            setIndicator(integrityIndicator, "×", R.color.text_secondary);
         }
         actionButtons.setVisibility(showInstall ? View.VISIBLE : View.GONE);
         if (showInstall) installButton.setOnClickListener(v -> showManagerPicker());
