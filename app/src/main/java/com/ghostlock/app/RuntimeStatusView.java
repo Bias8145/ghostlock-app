@@ -128,15 +128,16 @@ public class RuntimeStatusView extends FrameLayout {
         managerSection.addView(managerCard, cardParams);
         content.addView(managerSection);
 
-        // Full-width explanatory copy keeps the two-column header clean.
-        message = text(12, false);
+        // Keep the explanatory message inside the manager card, directly
+        // below the manager identity/status and above Package/Integrity.
+        message = text(11, false);
         message.setGravity(Gravity.START);
         message.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
         message.setLineSpacing(dp(1), 1.0f);
         LinearLayout.LayoutParams msgParams = new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        msgParams.topMargin = dp(8);
-        content.addView(message, msgParams);
+        msgParams.topMargin = dp(5);
+        managerCard.addView(message, msgParams);
 
         actionButtons = new LinearLayout(context);
         actionButtons.setOrientation(LinearLayout.HORIZONTAL);
