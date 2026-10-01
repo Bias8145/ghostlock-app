@@ -27,7 +27,6 @@ public class RuntimeStatusView extends FrameLayout {
     private final TextView packageLabel;
     private final TextView integrityLabel;
     private final TextView signatureValue;
-    private final TextView integrityIndicator;
     private final LinearLayout actionButtons;
     private final TextView installButton;
 
