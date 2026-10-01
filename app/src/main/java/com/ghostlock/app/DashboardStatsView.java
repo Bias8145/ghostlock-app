@@ -158,7 +158,7 @@ public class DashboardStatsView extends LinearLayout {
         panel.addView(header);
 
         TextView valueText = text(value, 18,
-                isError ? R.color.error : R.color.text_primary, Typeface.BOLD);
+                isError ? R.color.status_error : R.color.text_primary, Typeface.BOLD);
         valueText.setIncludeFontPadding(false);
         LayoutParams valueParams = new LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
