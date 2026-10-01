@@ -45,7 +45,7 @@ public class RuntimeStatusView extends FrameLayout {
         statusHeader.setOrientation(LinearLayout.VERTICAL);
         statusHeader.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
         statusTitle = text(10, true);
-        statusTitle.setText("MANAGER");
+        statusTitle.setText("RUNTIME MANAGER");
         statusTitle.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
         statusTitle.setGravity(Gravity.START);
         statusHeader.addView(statusTitle, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
@@ -54,7 +54,7 @@ public class RuntimeStatusView extends FrameLayout {
         statusLabel.setMaxLines(2);
         statusLabel.setEllipsize(TextUtils.TruncateAt.END);
         LinearLayout.LayoutParams statusParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        statusParams.topMargin = dp(5);
+        statusParams.topMargin = dp(4);
         statusHeader.addView(statusLabel, statusParams);
         content.addView(statusHeader);
         message = text(11, false);
@@ -79,7 +79,7 @@ public class RuntimeStatusView extends FrameLayout {
         managerIndicator = statusIcon(context);
         FrameLayout.LayoutParams indicatorParams = new FrameLayout.LayoutParams(dp(96), dp(96));
         indicatorParams.gravity = Gravity.END | Gravity.CENTER_VERTICAL;
-        indicatorParams.rightMargin = dp(-4);
+        indicatorParams.rightMargin = dp(-10);
         managerCard.addView(managerIndicator, indicatorParams);
 
         LinearLayout cardContent = new LinearLayout(context);
@@ -158,7 +158,7 @@ public class RuntimeStatusView extends FrameLayout {
         signatureColumn.addView(signatureValue, signatureValueParams);
         details.addView(signatureColumn, new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
 
-        details.addView(metadataSeparator(context), new LinearLayout.LayoutParams(dp(14), LayoutParams.WRAP_CONTENT));
+        details.addView(metadataSeparator(context), new LinearLayout.LayoutParams(dp(10), LayoutParams.WRAP_CONTENT));
 
         LinearLayout integrityColumn = metadataColumn(context, "INTEGRITY");
         integrityLabel = text(12, true);
@@ -180,9 +180,9 @@ public class RuntimeStatusView extends FrameLayout {
         installButton = text(12, true);
         installButton.setText("Install Manager");
         installButton.setGravity(Gravity.CENTER);
-        installButton.setPadding(dp(12), dp(7), dp(12), dp(7));
+        installButton.setPadding(dp(16), dp(9), dp(16), dp(9));
         installButton.setBackground(createRoundedBackground(
-                ContextCompat.getColor(context, R.color.accent), 10));
+                ContextCompat.getColor(context, R.color.accent), 12));
         installButton.setTextColor(ContextCompat.getColor(context, R.color.on_accent));
         actionButtons.addView(installButton);
         LinearLayout.LayoutParams btnParams = new LinearLayout.LayoutParams(
@@ -210,7 +210,7 @@ public class RuntimeStatusView extends FrameLayout {
         separator.setText("•");
         separator.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
         separator.setGravity(Gravity.CENTER);
-        separator.setAlpha(0.55f);
+        separator.setAlpha(0.42f);
         return separator;
     }
 
