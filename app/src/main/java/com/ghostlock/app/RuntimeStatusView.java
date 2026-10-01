@@ -23,7 +23,6 @@ public class RuntimeStatusView extends FrameLayout {
     private final ImageView managerIcon;
     private final TextView managerName;
     private final TextView managerStatus;
-    private final ImageView managerIndicator;
     private final TextView packageLabel;
     private final TextView integrityLabel;
     private final TextView signatureValue;
@@ -75,13 +74,6 @@ public class RuntimeStatusView extends FrameLayout {
                 outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), dp(16));
             }
         });
-
-        managerIndicator = statusIcon(context);
-        FrameLayout.LayoutParams indicatorParams = new FrameLayout.LayoutParams(dp(112), dp(112));
-        indicatorParams.gravity = Gravity.TOP | Gravity.END;
-        indicatorParams.topMargin = dp(-10);
-        indicatorParams.rightMargin = dp(-10);
-        managerCard.addView(managerIndicator, indicatorParams);
 
         LinearLayout cardContent = new LinearLayout(context);
         cardContent.setOrientation(LinearLayout.VERTICAL);
@@ -219,18 +211,6 @@ public class RuntimeStatusView extends FrameLayout {
         return separator;
     }
 
-    private ImageView statusIcon(Context context) {
-        ImageView icon = new ImageView(context);
-        icon.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-        icon.setAlpha(1.0f);
-        return icon;
-    }
-
-    private void setStatusIcon(int drawableRes, int colorRes) {
-        managerIndicator.setImageResource(drawableRes);
-        managerIndicator.setColorFilter(ContextCompat.getColor(getContext(), colorRes));
-    }
-
     @Override protected void onAttachedToWindow() { super.onAttachedToWindow(); refresh(); }
 
     public void refresh() {
@@ -287,24 +267,6 @@ public class RuntimeStatusView extends FrameLayout {
         statusLabel.setText(statusText);
         statusLabel.setTextColor(ContextCompat.getColor(getContext(), statusColor));
         message.setText(messageText);
-        switch (result.state) {
-            case READY:
-                setStatusIcon(R.drawable.ic_check_circle, R.color.status_success);
-                break;
-            case MANAGER_REQUIRED:
-            case KERNEL_UNSUPPORTED_MANAGER_REQUIRED:
-                setStatusIcon(R.drawable.ic_shield_alert, R.color.accent);
-                break;
-            case KERNEL_UNSUPPORTED:
-            case SPOOFED_MANAGER:
-            case UNSUPPORTED_MANAGER:
-                setStatusIcon(R.drawable.ic_error, R.color.status_error);
-                break;
-            default:
-                setStatusIcon(R.drawable.ic_analytics, R.color.text_secondary);
-                break;
-        }
-
         if (result.manager.installed) {
             managerName.setText(result.manager.name);
             String status;
