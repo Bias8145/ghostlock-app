@@ -2,6 +2,7 @@ package com.ghostlock.app;
 
 import android.content.Context;
 import android.graphics.drawable.GradientDrawable;
+import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
@@ -38,16 +39,16 @@ public class RuntimeStatusView extends FrameLayout {
         content.setPadding(dp(16), dp(14), dp(16), dp(13));
         addView(content, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
-        // Keep the status indicator and manager card on the same row.
-        // The card retains its existing internal layout; only the outer
-        // composition changes to use the available horizontal space better.
+        // The status block is deliberately compact and vertically centered
+        // against the card, while the card gets the majority of the width.
         LinearLayout managerSection = new LinearLayout(context);
         managerSection.setOrientation(LinearLayout.HORIZONTAL);
-        managerSection.setGravity(Gravity.TOP);
+        managerSection.setGravity(Gravity.CENTER_VERTICAL);
 
         statusHeader = new LinearLayout(context);
         statusHeader.setOrientation(LinearLayout.VERTICAL);
-        statusHeader.setGravity(Gravity.START);
+        statusHeader.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
+
         statusTitle = text(10, true);
         statusTitle.setText("MANAGER");
         statusTitle.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
@@ -55,27 +56,30 @@ public class RuntimeStatusView extends FrameLayout {
         statusHeader.addView(statusTitle, new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
-        statusLabel = text(13, true);
+        statusLabel = text(12, true);
         statusLabel.setGravity(Gravity.START);
+        statusLabel.setMaxLines(2);
+        statusLabel.setEllipsize(TextUtils.TruncateAt.END);
         LinearLayout.LayoutParams statusParams = new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        statusParams.topMargin = dp(4);
+        statusParams.topMargin = dp(5);
         statusHeader.addView(statusLabel, statusParams);
 
         LinearLayout.LayoutParams statusHeaderParams = new LinearLayout.LayoutParams(
-                dp(88), LayoutParams.WRAP_CONTENT);
-        statusHeaderParams.rightMargin = dp(10);
+                0, LayoutParams.WRAP_CONTENT, 0.31f);
+        statusHeaderParams.rightMargin = dp(12);
         managerSection.addView(statusHeader, statusHeaderParams);
 
         managerCard = new LinearLayout(context);
         managerCard.setOrientation(LinearLayout.VERTICAL);
-        managerCard.setPadding(dp(12), dp(11), dp(12), dp(11));
+        managerCard.setPadding(dp(13), dp(11), dp(13), dp(11));
         managerCard.setBackground(createRoundedBackground(
-                ContextCompat.getColor(context, R.color.surface_container_low), 12));
+                ContextCompat.getColor(context, R.color.surface_container_low), 14));
 
         LinearLayout identityRow = new LinearLayout(context);
         identityRow.setOrientation(LinearLayout.HORIZONTAL);
         identityRow.setGravity(Gravity.CENTER_VERTICAL);
+
         managerIcon = new ImageView(context);
         managerIcon.setScaleType(ImageView.ScaleType.CENTER);
         managerIcon.setColorFilter(ContextCompat.getColor(context, R.color.icon_tint));
@@ -84,14 +88,20 @@ public class RuntimeStatusView extends FrameLayout {
         LinearLayout identityText = new LinearLayout(context);
         identityText.setOrientation(LinearLayout.VERTICAL);
         identityText.setGravity(Gravity.START);
-        identityText.setPadding(dp(10), 0, 0, 0);
+        identityText.setPadding(dp(9), 0, 0, 0);
         identityRow.addView(identityText, new LinearLayout.LayoutParams(
                 0, LayoutParams.WRAP_CONTENT, 1f));
+
         managerName = text(14, true);
+        managerName.setMaxLines(1);
+        managerName.setEllipsize(TextUtils.TruncateAt.END);
         identityText.addView(managerName, new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+
         managerStatus = text(11, false);
         managerStatus.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
+        managerStatus.setMaxLines(1);
+        managerStatus.setEllipsize(TextUtils.TruncateAt.END);
         LinearLayout.LayoutParams managerStatusParams = new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         managerStatusParams.topMargin = dp(3);
@@ -102,12 +112,11 @@ public class RuntimeStatusView extends FrameLayout {
         divider.setBackgroundColor(ContextCompat.getColor(context, R.color.outline_variant));
         LinearLayout.LayoutParams dividerParams = new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, dp(1));
-        dividerParams.topMargin = dp(10);
-        dividerParams.bottomMargin = dp(9);
+        dividerParams.topMargin = dp(9);
+        dividerParams.bottomMargin = dp(8);
         managerCard.addView(divider, dividerParams);
 
-        // Keep package and integrity details; kernel status is already exposed
-        // in the app header, so repeating it here adds no useful information.
+        // Package and Integrity remain the only details inside the card.
         LinearLayout details = new LinearLayout(context);
         details.setOrientation(LinearLayout.VERTICAL);
         details.addView(detailRow(context, "Package", packageLabel = text(11, false)));
@@ -115,12 +124,11 @@ public class RuntimeStatusView extends FrameLayout {
         managerCard.addView(details);
 
         LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
-                0, LayoutParams.WRAP_CONTENT, 1f);
+                0, LayoutParams.WRAP_CONTENT, 0.69f);
         managerSection.addView(managerCard, cardParams);
         content.addView(managerSection);
 
-        // Keep the explanatory message below both panels so it can use the
-        // full available width instead of being squeezed beside the card.
+        // Full-width explanatory copy keeps the two-column header clean.
         message = text(12, false);
         message.setGravity(Gravity.START);
         message.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
@@ -154,12 +162,17 @@ public class RuntimeStatusView extends FrameLayout {
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
         row.setPadding(0, dp(3), 0, dp(3));
+
         TextView key = text(11, false);
         key.setText(label);
         key.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
         row.addView(key, new LinearLayout.LayoutParams(dp(62), LayoutParams.WRAP_CONTENT));
-        value.setGravity(Gravity.START);
-        row.addView(value, new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
+
+        value.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
+        value.setMaxLines(1);
+        value.setEllipsize(TextUtils.TruncateAt.END);
+        row.addView(value, new LinearLayout.LayoutParams(
+                0, LayoutParams.WRAP_CONTENT, 1f));
         return row;
     }
 
