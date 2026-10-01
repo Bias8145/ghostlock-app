@@ -23,7 +23,7 @@ public class RuntimeStatusView extends FrameLayout {
     private final ImageView managerIcon;
     private final TextView managerName;
     private final TextView managerStatus;
-    private final TextView managerIndicator;
+    private final ImageView managerIndicator;
     private final TextView packageLabel;
     private final TextView integrityLabel;
     private final TextView packageIndicator;
@@ -104,11 +104,8 @@ public class RuntimeStatusView extends FrameLayout {
         managerStatusParams.topMargin = dp(3);
         identityText.addView(managerStatus, managerStatusParams);
 
-        managerIndicator = statusIndicator(context);
-        managerIndicator.setTextSize(20);
-        managerIndicator.setAlpha(0.68f);
-        managerIndicator.setGravity(Gravity.CENTER);
-        identityRow.addView(managerIndicator, new LinearLayout.LayoutParams(dp(28), dp(28)));
+        managerIndicator = statusIcon(context);
+        identityRow.addView(managerIndicator, new LinearLayout.LayoutParams(dp(38), dp(38)));
         managerCard.addView(identityRow);
 
         View divider = new View(context);
@@ -183,9 +180,21 @@ public class RuntimeStatusView extends FrameLayout {
         return indicator;
     }
 
+    private ImageView statusIcon(Context context) {
+        ImageView icon = new ImageView(context);
+        icon.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+        icon.setAlpha(0.42f);
+        return icon;
+    }
+
     private void setIndicator(TextView indicator, String symbol, int colorRes) {
         indicator.setText(symbol);
         indicator.setTextColor(ContextCompat.getColor(getContext(), colorRes));
+    }
+
+    private void setStatusIcon(int drawableRes, int colorRes) {
+        managerIndicator.setImageResource(drawableRes);
+        managerIndicator.setColorFilter(ContextCompat.getColor(getContext(), colorRes));
     }
 
     @Override protected void onAttachedToWindow() { super.onAttachedToWindow(); refresh(); }
@@ -244,6 +253,23 @@ public class RuntimeStatusView extends FrameLayout {
         statusLabel.setText(statusText);
         statusLabel.setTextColor(ContextCompat.getColor(getContext(), statusColor));
         message.setText(messageText);
+        switch (result.state) {
+            case READY:
+                setStatusIcon(R.drawable.ic_check_circle, R.color.status_success);
+                break;
+            case MANAGER_REQUIRED:
+            case KERNEL_UNSUPPORTED_MANAGER_REQUIRED:
+                setStatusIcon(R.drawable.ic_shield_alert, R.color.accent);
+                break;
+            case KERNEL_UNSUPPORTED:
+            case SPOOFED_MANAGER:
+            case UNSUPPORTED_MANAGER:
+                setStatusIcon(R.drawable.ic_error, R.color.status_error);
+                break;
+            default:
+                setStatusIcon(R.drawable.ic_analytics, R.color.text_secondary);
+                break;
+        }
 
         if (result.manager.installed) {
             managerName.setText(result.manager.name);
