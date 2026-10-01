@@ -41,8 +41,11 @@ public final class ManagerCompatibility {
 
     /* These managers are currently wired into the native ksud preparation path. */
     private static final Registered[] REGISTERED = {
-            new Registered("me.weishu.kernelsu", "KernelSU", "https://github.com/tiann/KernelSU/releases", "1417081413bf7ab1de8e440ecbcb62685037c8f28f048f0f8b79e305b31ab916"),
+            // Prefer ReSukiSU when both managers are installed. ReSukiSU supports
+            // multiple manager implementations, so it should not be masked by the
+            // legacy KernelSU manager package being present.
             new Registered("com.resukisu.resukisu", "ReSukiSU", "https://github.com/ReSukiSU/ReSukiSU/releases"),
+            new Registered("me.weishu.kernelsu", "KernelSU", "https://github.com/tiann/KernelSU/releases", "1417081413bf7ab1de8e440ecbcb62685037c8f28f048f0f8b79e305b31ab916"),
             new Registered("com.kowx712.supermanager", "KOWSU", "https://github.com/KOWX712/KernelSU/releases")
     };
 
