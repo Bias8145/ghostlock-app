@@ -132,7 +132,7 @@ public class DashboardStatsView extends LinearLayout {
         refreshStats();
     }
 
-    private LinearLayout createMetricPanel(String label, String value, int iconRes, boolean error) {
+    private LinearLayout createMetricPanel(String label, String value, int iconRes, boolean isError) {
         LinearLayout panel = new LinearLayout(getContext());
         panel.setOrientation(VERTICAL);
         panel.setPadding(dp(10), dp(10), dp(10), dp(10));
@@ -144,7 +144,7 @@ public class DashboardStatsView extends LinearLayout {
 
         ImageView icon = new ImageView(getContext());
         icon.setImageResource(iconRes);
-        icon.setColorFilter(getResources().getColor(error ? R.color.error : R.color.icon_tint));
+        icon.setColorFilter(getResources().getColor(isError ? R.color.error : R.color.icon_tint));
         icon.setAlpha(0.75f);
         header.addView(icon, new LinearLayout.LayoutParams(dp(14), dp(14)));
 
@@ -158,7 +158,7 @@ public class DashboardStatsView extends LinearLayout {
         panel.addView(header);
 
         TextView valueText = text(value, 18,
-                error ? R.color.error : R.color.text_primary, Typeface.BOLD);
+                isError ? R.color.error : R.color.text_primary, Typeface.BOLD);
         valueText.setIncludeFontPadding(false);
         LayoutParams valueParams = new LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
