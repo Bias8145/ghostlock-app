@@ -208,6 +208,7 @@
     <string name="field_execution_stages_w3_settle_us">w3_settle_us</string>
     <string name="field_kernel_major">kernel_major</string>
     <string name="field_kernel_phys_load">kernel_phys_load</string>
+    <string name="field_kernel_phys_offset">kernel_phys_offset</string>
     <string name="field_kernelsnitch_collisions">kernelsnitch_collisions</string>
     <string name="field_mcast_buffer_size">mcast_buffer_size</string>
     <string name="field_mcast_lock_offset">mcast_lock_offset</string>

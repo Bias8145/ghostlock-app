@@ -631,6 +631,9 @@ fn run(cli: &Cli) -> Result<i32> {
         report::render_conf(&report::ConfInputs {
             release: release_text,
             phys: kernel_phys_load,
+            /* DRAM base is not derivable from the image; leave it for the
+             * profile author / runtime iomem to fill. */
+            phys_offset: None,
             symbols: &symbol_offsets,
             structs: &struct_offsets,
             route: route.as_deref(),

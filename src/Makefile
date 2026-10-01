@@ -121,7 +121,7 @@ NATIVE_HOST_TESTS := \
   target_constants_test native_resource_test \
   profile_binary_test futex_hash_test number_parse_test \
   runtime_paths_test handoff_probe_test victim_context_test \
-  run_state_test cpp_link_probe_test
+  run_state_test address_space_test cpp_link_probe_test
 
 native-host-tests: $(addprefix $(HOST_BUILD_DIR)/,$(NATIVE_HOST_TESTS))
 	@status=0; for test in $^; do $$test || status=1; done; exit $$status
@@ -160,6 +160,10 @@ $(HOST_BUILD_DIR)/native_resource_test: core/tests/native_resource_test.cpp core
 $(HOST_BUILD_DIR)/run_state_test: core/tests/run_state_test.cpp core/support/run_state.cpp core/support/run_state.hpp
 	@mkdir -p $(HOST_BUILD_DIR)
 	$(HOST_CXX) $(HOST_CXXFLAGS) -Icore core/tests/run_state_test.cpp core/support/run_state.cpp -o $@
+
+$(HOST_BUILD_DIR)/address_space_test: core/tests/address_space_test.cpp core/memory/address_space.cpp core/memory/address_space.h core/profile/model.h
+	@mkdir -p $(HOST_BUILD_DIR)
+	$(HOST_CXX) $(HOST_CXXFLAGS) -Icore core/tests/address_space_test.cpp core/memory/address_space.cpp -o $@
 
 $(HOST_BUILD_DIR)/route_status_test: core/tests/route_status_test.cpp core/route/route_status.h
 	@mkdir -p $(HOST_BUILD_DIR)

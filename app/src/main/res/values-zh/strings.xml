@@ -208,6 +208,7 @@
     <string name="field_execution_stages_w3_settle_us">W3 稳定时间（微秒）</string>
     <string name="field_kernel_major">内核主版本</string>
     <string name="field_kernel_phys_load">内核物理加载地址</string>
+    <string name="field_kernel_phys_offset">DRAM 物理基址</string>
     <string name="field_kernelsnitch_collisions">碰撞数量</string>
     <string name="field_mcast_buffer_size">多播缓冲区大小</string>
     <string name="field_mcast_lock_offset">多播锁偏移</string>

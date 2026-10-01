@@ -708,6 +708,7 @@ internal class AndroidProfileConfigController(
     ): ValueMap {
         val out = profile.copyValue().asValueMap() ?: return profile
         if (!out.containsKey("kernel_phys_load")) out["kernel_phys_load"] = null
+        if (!out.containsKey("kernel_phys_offset")) out["kernel_phys_offset"] = null
         completeSection(out, "task_struct", TaskStructFieldNames)
         completeSection(out, "cred", CredFieldNames)
         completeSection(out, "offset", OffsetFieldNames)

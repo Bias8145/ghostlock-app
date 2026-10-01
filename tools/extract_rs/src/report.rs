@@ -285,6 +285,9 @@ fn push_conf_block(lines: &mut Vec<String>, name: &str, entries: &[(String, Stri
 pub struct ConfInputs<'a> {
     pub release: &'a str,
     pub phys: Option<u64>,
+    /// DRAM base (linear-map PHYS_OFFSET); normally supplied by hand, so the
+    /// extractor writes an explicit `null` unless one is known.
+    pub phys_offset: Option<u64>,
     pub symbols: &'a BTreeMap<String, Option<u64>>,
     pub structs: &'a BTreeMap<String, Option<u32>>,
     pub route: Option<&'a str>,
@@ -316,6 +319,10 @@ pub fn render_conf(input: &ConfInputs<'_>) -> String {
         // silently dropped on import. An unknown phys is an explicit `null`.
         Some(phys) => format!("kernel_phys_load = {phys}"),
         None => "kernel_phys_load = null".to_string(),
+    });
+    lines.push(match input.phys_offset {
+        Some(offset) => format!("kernel_phys_offset = {offset}"),
+        None => "kernel_phys_offset = null".to_string(),
     });
     if let Some(route) = input.route {
         // The chosen route keeps its whole field universe even when no
@@ -483,6 +490,7 @@ mod tests {
         let out = render_conf(&ConfInputs {
             release: "6.6.89-android15-8-g0889fe95bb10-ab14402178-4k",
             phys: Some(0x4000_0000),
+            phys_offset: None,
             symbols: &symbols,
             structs: &structs,
             route: Some("select_stack"),
@@ -513,6 +521,7 @@ mod tests {
         let out = render_conf(&ConfInputs {
             release: "6.1.118-android14-11-gca0ef6d17716-ab13624819",
             phys: None,
+            phys_offset: None,
             symbols: &symbols,
             structs: &structs,
             route: Some("tcp_zerocopy"),
@@ -548,6 +557,7 @@ mod tests {
         let out = render_conf(&ConfInputs {
             release: "5.15.189-android13-8-00016-g51bba4309aac-ab14546557",
             phys: None,
+            phys_offset: None,
             symbols: &symbols,
             structs: &structs,
             route: Some("multicast_waiter"),
@@ -677,6 +687,7 @@ mod tests {
         let out = render_conf(&ConfInputs {
             release: "5.15.178-g3575c47dc7ce-dirty",
             phys: None,
+            phys_offset: None,
             symbols: &symbols,
             structs: &structs,
             route: Some("multicast_waiter"),
@@ -697,6 +708,7 @@ mod tests {
         let out = render_conf(&ConfInputs {
             release: "6.7.1-generic",
             phys: None,
+            phys_offset: None,
             symbols: &symbols,
             structs: &structs,
             route: None,
@@ -721,6 +733,7 @@ mod tests {
         let out = render_conf(&ConfInputs {
             release: "5.15.178-g3575c47dc7ce-dirty",
             phys: None,
+            phys_offset: None,
             symbols: &symbols,
             structs: &structs,
             route: Some("multicast_waiter"),
@@ -881,6 +894,7 @@ mod tests {
         let generated = render_conf(&ConfInputs {
             release: &release,
             phys: None,
+            phys_offset: None,
             symbols: &symbols,
             structs: &structs,
             route: Some("multicast_waiter"),
