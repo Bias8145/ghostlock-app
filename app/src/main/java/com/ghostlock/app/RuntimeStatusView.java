@@ -42,6 +42,31 @@ public class RuntimeStatusView extends FrameLayout {
         content.setPadding(dp(16), dp(14), dp(16), dp(13));
         addView(content, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
+        statusHeader = new LinearLayout(context);
+        statusHeader.setOrientation(LinearLayout.VERTICAL);
+        statusHeader.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
+        statusTitle = text(10, true);
+        statusTitle.setText("MANAGER");
+        statusTitle.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
+        statusTitle.setGravity(Gravity.START);
+        statusHeader.addView(statusTitle, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+        statusLabel = text(12, true);
+        statusLabel.setGravity(Gravity.START);
+        statusLabel.setMaxLines(2);
+        statusLabel.setEllipsize(TextUtils.TruncateAt.END);
+        LinearLayout.LayoutParams statusParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        statusParams.topMargin = dp(5);
+        statusHeader.addView(statusLabel, statusParams);
+        content.addView(statusHeader);
+        message = text(11, false);
+        message.setGravity(Gravity.START);
+        message.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
+        message.setLineSpacing(dp(1), 1.0f);
+        LinearLayout.LayoutParams msgParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        msgParams.topMargin = dp(5);
+        msgParams.bottomMargin = dp(10);
+        content.addView(message, msgParams);
+
         managerCard = new LinearLayout(context);
         managerCard.setOrientation(LinearLayout.VERTICAL);
         managerCard.setPadding(dp(14), dp(12), dp(14), dp(12));
