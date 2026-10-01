@@ -22,7 +22,6 @@ public class RuntimeStatusView extends FrameLayout {
     private final ImageView managerIcon;
     private final TextView managerName;
     private final TextView managerStatus;
-    private final ImageView managerChevron;
     private final LinearLayout actionButtons;
     private final TextView installButton;
 
@@ -37,7 +36,6 @@ public class RuntimeStatusView extends FrameLayout {
         content.setPadding(dp(16), dp(14), dp(16), dp(13));
         addView(content, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
-        // Status header: icon + label, with no artificial left offset.
         statusHeader = new LinearLayout(context);
         statusHeader.setOrientation(LinearLayout.HORIZONTAL);
         statusHeader.setGravity(Gravity.CENTER_VERTICAL);
@@ -50,27 +48,24 @@ public class RuntimeStatusView extends FrameLayout {
 
         statusLabel = text(13, true);
         statusLabel.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
-        statusHeader.addView(statusLabel, new LinearLayout.LayoutParams(
-                0, dp(20), 1f));
+        statusHeader.addView(statusLabel, new LinearLayout.LayoutParams(0, dp(20), 1f));
         content.addView(statusHeader);
 
         message = text(12, false);
         message.setGravity(Gravity.START);
         message.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
         message.setLineSpacing(dp(1), 1.0f);
-        LinearLayout.LayoutParams msgParams = new LinearLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        LinearLayout.LayoutParams msgParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         msgParams.topMargin = dp(5);
         msgParams.leftMargin = dp(26);
         content.addView(message, msgParams);
 
-        // Informative manager block: clear hierarchy without a heavy nested card.
+        // Manager identity block: useful information only, with no decorative affordance.
         managerCard = new LinearLayout(context);
         managerCard.setOrientation(LinearLayout.HORIZONTAL);
         managerCard.setGravity(Gravity.CENTER_VERTICAL);
-        managerCard.setPadding(dp(12), dp(10), dp(8), dp(10));
-        managerCard.setBackground(createRoundedBackground(
-                ContextCompat.getColor(context, R.color.surface_container_low), 12));
+        managerCard.setPadding(dp(12), dp(10), dp(12), dp(10));
+        managerCard.setBackground(createRoundedBackground(ContextCompat.getColor(context, R.color.surface_container_low), 12));
 
         managerIcon = new ImageView(context);
         managerIcon.setScaleType(ImageView.ScaleType.CENTER);
@@ -80,31 +75,21 @@ public class RuntimeStatusView extends FrameLayout {
         LinearLayout managerText = new LinearLayout(context);
         managerText.setOrientation(LinearLayout.VERTICAL);
         managerText.setGravity(Gravity.START);
-        managerText.setPadding(dp(10), 0, dp(8), 0);
-        managerCard.addView(managerText, new LinearLayout.LayoutParams(
-                0, LayoutParams.WRAP_CONTENT, 1f));
+        managerText.setPadding(dp(10), 0, 0, 0);
+        managerCard.addView(managerText, new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
 
         managerName = text(14, true);
         managerName.setGravity(Gravity.START);
-        managerText.addView(managerName, new LinearLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+        managerText.addView(managerName, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
         managerStatus = text(11, false);
         managerStatus.setGravity(Gravity.START);
         managerStatus.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
-        LinearLayout.LayoutParams managerStatusParams = new LinearLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        LinearLayout.LayoutParams managerStatusParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         managerStatusParams.topMargin = dp(3);
         managerText.addView(managerStatus, managerStatusParams);
 
-        managerChevron = new ImageView(context);
-        managerChevron.setImageResource(R.drawable.ic_chevron_right);
-        managerChevron.setAlpha(0.5f);
-        managerChevron.setScaleType(ImageView.ScaleType.CENTER);
-        managerCard.addView(managerChevron, new LinearLayout.LayoutParams(dp(28), dp(28)));
-
-        LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         cardParams.topMargin = dp(12);
         content.addView(managerCard, cardParams);
 
@@ -117,13 +102,11 @@ public class RuntimeStatusView extends FrameLayout {
         installButton.setText("Install Manager");
         installButton.setGravity(Gravity.CENTER);
         installButton.setPadding(dp(12), dp(7), dp(12), dp(7));
-        installButton.setBackground(createRoundedBackground(
-                ContextCompat.getColor(context, R.color.accent), 10));
+        installButton.setBackground(createRoundedBackground(ContextCompat.getColor(context, R.color.accent), 10));
         installButton.setTextColor(ContextCompat.getColor(context, R.color.on_accent));
         actionButtons.addView(installButton);
 
-        LinearLayout.LayoutParams btnParams = new LinearLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        LinearLayout.LayoutParams btnParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         btnParams.topMargin = dp(9);
         content.addView(actionButtons, btnParams);
         refresh();
