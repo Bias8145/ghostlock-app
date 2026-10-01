@@ -41,10 +41,11 @@ public class DashboardStatsView extends LinearLayout {
         titleParams.setMargins(0, 0, 0, dp(8));
         addView(title, titleParams);
 
-        LinearLayout panel = new LinearLayout(getContext());
-        panel.setOrientation(VERTICAL);
-        panel.setPadding(dp(14), dp(12), dp(14), dp(12));
-        panel.setBackground(roundBackground(R.color.surface_container, 14));
+        // Row 1: Success rate panel.
+        LinearLayout ratePanel = new LinearLayout(getContext());
+        ratePanel.setOrientation(VERTICAL);
+        ratePanel.setPadding(dp(14), dp(12), dp(14), dp(12));
+        ratePanel.setBackground(roundBackground(R.color.surface_container, 14));
 
         LinearLayout heroRow = new LinearLayout(getContext());
         heroRow.setOrientation(HORIZONTAL);
@@ -52,7 +53,8 @@ public class DashboardStatsView extends LinearLayout {
 
         LinearLayout heroText = new LinearLayout(getContext());
         heroText.setOrientation(VERTICAL);
-        heroText.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        heroText.setLayoutParams(new LinearLayout.LayoutParams(
+                0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
 
         TextView heroLabel = text("Success rate", 11, R.color.text_secondary, Typeface.NORMAL);
         heroLabel.setIncludeFontPadding(false);
@@ -73,7 +75,7 @@ public class DashboardStatsView extends LinearLayout {
         icon.setAlpha(0.8f);
         heroRow.addView(icon, new LinearLayout.LayoutParams(dp(20), dp(20)));
 
-        panel.addView(heroRow);
+        ratePanel.addView(heroRow);
 
         LinearLayout progressTrack = new LinearLayout(getContext());
         progressTrack.setClipToOutline(true);
@@ -81,37 +83,60 @@ public class DashboardStatsView extends LinearLayout {
         LayoutParams trackParams = new LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, dp(5));
         trackParams.topMargin = dp(9);
-        panel.addView(progressTrack, trackParams);
+        ratePanel.addView(progressTrack, trackParams);
 
         progressFill = new View(getContext());
         progressFill.setBackground(roundBackground(R.color.accent, 3));
-        progressTrack.addView(progressFill, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT));
+        progressTrack.addView(progressFill,
+                new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT));
 
-        View divider = new View(getContext());
-        divider.setBackgroundColor(getResources().getColor(R.color.outline_variant));
-        LayoutParams dividerParams = new LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, dp(1));
-        dividerParams.topMargin = dp(12);
-        dividerParams.bottomMargin = dp(10);
-        panel.addView(divider, dividerParams);
+        LayoutParams ratePanelParams = new LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        addView(ratePanel, ratePanelParams);
 
-        LinearLayout metrics = new LinearLayout(getContext());
-        metrics.setOrientation(HORIZONTAL);
-        metrics.setWeightSum(3);
+        // Row 2: Three equal metric panels.
+        LinearLayout metricsRow = new LinearLayout(getContext());
+        metricsRow.setOrientation(HORIZONTAL);
+        metricsRow.setGravity(Gravity.CENTER_VERTICAL);
 
-        metrics.addView(createMetric("Total", "0", R.drawable.ic_check_circle, false));
-        metrics.addView(createMetric("Success", "0", R.drawable.ic_check_circle, false));
-        metrics.addView(createMetric("Failed", "0", R.drawable.ic_error, true));
-        panel.addView(metrics);
+        LinearLayout.LayoutParams metricParams = new LinearLayout.LayoutParams(
+                0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
 
-        addView(panel);
+        LinearLayout totalPanel = createMetricPanel(
+                "Total", "0", R.drawable.ic_check_circle, false);
+        LinearLayout successPanel = createMetricPanel(
+                "Success", "0", R.drawable.ic_check_circle, false);
+        LinearLayout failurePanel = createMetricPanel(
+                "Failed", "0", R.drawable.ic_error, true);
+
+        LinearLayout.LayoutParams totalParams = new LinearLayout.LayoutParams(
+                0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        totalParams.topMargin = dp(8);
+        totalParams.rightMargin = dp(4);
+        metricsRow.addView(totalPanel, totalParams);
+
+        LinearLayout.LayoutParams successParams = new LinearLayout.LayoutParams(
+                0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        successParams.topMargin = dp(8);
+        successParams.leftMargin = dp(4);
+        successParams.rightMargin = dp(4);
+        metricsRow.addView(successPanel, successParams);
+
+        LinearLayout.LayoutParams failureParams = new LinearLayout.LayoutParams(
+                0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        failureParams.topMargin = dp(8);
+        failureParams.leftMargin = dp(4);
+        metricsRow.addView(failurePanel, failureParams);
+
+        addView(metricsRow);
         refreshStats();
     }
 
-    private View createMetric(String label, String value, int iconRes, boolean error) {
-        LinearLayout item = new LinearLayout(getContext());
-        item.setOrientation(VERTICAL);
-        item.setPadding(0, 0, dp(8), 0);
+    private LinearLayout createMetricPanel(String label, String value, int iconRes, boolean error) {
+        LinearLayout panel = new LinearLayout(getContext());
+        panel.setOrientation(VERTICAL);
+        panel.setPadding(dp(10), dp(10), dp(10), dp(10));
+        panel.setBackground(roundBackground(R.color.surface_container, 12));
 
         LinearLayout header = new LinearLayout(getContext());
         header.setOrientation(HORIZONTAL);
@@ -130,20 +155,21 @@ public class DashboardStatsView extends LinearLayout {
         labelParams.leftMargin = dp(5);
         header.addView(labelText, labelParams);
 
-        item.addView(header);
+        panel.addView(header);
 
-        TextView valueText = text(value, 18, error ? R.color.error : R.color.text_primary, Typeface.BOLD);
+        TextView valueText = text(value, 18,
+                error ? R.color.error : R.color.text_primary, Typeface.BOLD);
         valueText.setIncludeFontPadding(false);
         LayoutParams valueParams = new LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        valueParams.topMargin = dp(4);
-        item.addView(valueText, valueParams);
+        valueParams.topMargin = dp(5);
+        panel.addView(valueText, valueParams);
 
         if ("Total".equals(label)) totalRunsText = valueText;
         else if ("Success".equals(label)) successCountText = valueText;
         else if ("Failed".equals(label)) failureCountText = valueText;
 
-        return item;
+        return panel;
     }
 
     public void refreshStats() {
@@ -159,12 +185,16 @@ public class DashboardStatsView extends LinearLayout {
             successRateText.setText(String.format(Locale.ROOT, "%.1f%%", successRate));
         }
 
-        if (progressFill != null) {
-            float ratio = Math.max(0f, Math.min(1f, successRate / 100f));
-            ViewGroup.LayoutParams params = progressFill.getLayoutParams();
-            params.width = ratio == 0f ? 0 : Math.max(dp(2), Math.round(getWidth() * ratio));
-            progressFill.setLayoutParams(params);
-        }
+        updateProgressFill(successRate);
+    }
+
+    private void updateProgressFill(float successRate) {
+        if (progressFill == null || getWidth() <= 0) return;
+
+        float ratio = Math.max(0f, Math.min(1f, successRate / 100f));
+        ViewGroup.LayoutParams params = progressFill.getLayoutParams();
+        params.width = ratio == 0f ? 0 : Math.max(dp(2), Math.round(getWidth() * ratio));
+        progressFill.setLayoutParams(params);
     }
 
     private TextView text(String value, float size, int colorRes, int style) {
@@ -187,7 +217,9 @@ public class DashboardStatsView extends LinearLayout {
     @Override
     protected void onSizeChanged(int width, int height, int oldWidth, int oldHeight) {
         super.onSizeChanged(width, height, oldWidth, oldHeight);
-        refreshStats();
+        if (width > 0) {
+            updateProgressFill(analytics.getSuccessRate());
+        }
     }
 
     private int dp(int value) {
