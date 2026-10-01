@@ -23,7 +23,6 @@ public class RuntimeStatusView extends FrameLayout {
     private final TextView managerStatus;
     private final TextView packageLabel;
     private final TextView integrityLabel;
-    private final TextView kernelLabel;
     private final LinearLayout actionButtons;
     private final TextView installButton;
 
@@ -97,11 +96,12 @@ public class RuntimeStatusView extends FrameLayout {
         dividerParams.bottomMargin = dp(9);
         managerCard.addView(divider, dividerParams);
 
+        // Keep package and integrity details; kernel status is already exposed
+        // in the app header, so repeating it here adds no useful information.
         LinearLayout details = new LinearLayout(context);
         details.setOrientation(LinearLayout.VERTICAL);
         details.addView(detailRow(context, "Package", packageLabel = text(11, false)));
         details.addView(detailRow(context, "Integrity", integrityLabel = text(11, false)));
-        details.addView(detailRow(context, "Kernel", kernelLabel = text(11, false)));
         managerCard.addView(details);
 
         LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
@@ -239,9 +239,6 @@ public class RuntimeStatusView extends FrameLayout {
             integrityLabel.setText("Not available");
             integrityLabel.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
         }
-        kernelLabel.setText(result.kernelSupported ? "Supported" : "Unsupported");
-        kernelLabel.setTextColor(ContextCompat.getColor(getContext(),
-                result.kernelSupported ? R.color.status_success : R.color.status_error));
         actionButtons.setVisibility(showInstall ? View.VISIBLE : View.GONE);
         if (showInstall) installButton.setOnClickListener(v -> showManagerPicker());
         setSurface(bgColor);
