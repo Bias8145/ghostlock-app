@@ -325,7 +325,9 @@ public class RuntimeStatusView extends FrameLayout {
             managerStatus.setTextColor(ContextCompat.getColor(getContext(), statusColorRes));
             managerIcon.setImageResource(result.manager.spoofed
                     ? R.drawable.ic_shield_alert : R.drawable.ic_shield_check);
-            packageLabel.setText(result.manager.packageName);\n            packageLabel.setSingleLine(true);\n            packageLabel.setHorizontallyScrolling(true);
+            packageLabel.setText(result.manager.packageName);
+            packageLabel.setSingleLine(true);
+            packageLabel.setHorizontallyScrolling(true);
             packageLabel.setTextColor(ContextCompat.getColor(getContext(), R.color.text_primary));
             signatureValue.setText(result.manager.identityVerified ? "Verified" : "Not Verified");
             signatureValue.setTextColor(ContextCompat.getColor(getContext(),
@@ -338,7 +340,8 @@ public class RuntimeStatusView extends FrameLayout {
             managerStatus.setText("Not installed");
             managerStatus.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
             managerIcon.setImageResource(R.drawable.ic_shield_alert);
-            packageLabel.setText("—");\n            packageLabel.setMaxLines(1);
+            packageLabel.setText("—");
+            packageLabel.setMaxLines(1);
             packageLabel.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
             signatureValue.setText("Not Verified");
             signatureValue.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
