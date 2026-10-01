@@ -21,7 +21,7 @@ public class RuntimeStatusView extends FrameLayout {
     private final ImageView managerIcon;
     private final TextView managerName;
     private final TextView managerStatus;
-    private final TextView managerChevron;
+    private final ImageView managerChevron;
     private final LinearLayout actionButtons;
     private final TextView installButton;
 
@@ -35,36 +35,39 @@ public class RuntimeStatusView extends FrameLayout {
 
         content = new LinearLayout(context);
         content.setOrientation(LinearLayout.VERTICAL);
-        content.setPadding(dp(16), dp(12), dp(16), dp(12));
+        content.setPadding(dp(16), dp(11), dp(16), dp(11));
         addView(content, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
         // Compact status label.
         statusBadge = new LinearLayout(context);
         statusBadge.setOrientation(LinearLayout.HORIZONTAL);
         statusBadge.setGravity(Gravity.CENTER_VERTICAL);
-        statusBadge.setPadding(dp(9), dp(5), dp(9), dp(5));
+        statusBadge.setPadding(dp(10), dp(5), dp(10), dp(5));
         statusBadge.setBackground(createRoundedBackground(
                 ContextCompat.getColor(context, R.color.accent_container), 10));
 
         statusLabel = text(12, true);
+        statusLabel.setIncludeFontPadding(false);
         statusBadge.addView(statusLabel, new LinearLayout.LayoutParams(
                 LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
         content.addView(statusBadge, new LinearLayout.LayoutParams(
                 LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
 
         message = text(12, false);
+        message.setIncludeFontPadding(false);
+        message.setPadding(0, dp(1), 0, dp(1));
         message.setLineSpacing(dp(1), 1.0f);
         message.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
         LinearLayout.LayoutParams msgParams = new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        msgParams.topMargin = dp(7);
+        msgParams.topMargin = dp(8);
         content.addView(message, msgParams);
 
         // Manager detection is intentionally a flat row, not a card inside the panel.
         managerCard = new LinearLayout(context);
         managerCard.setOrientation(LinearLayout.HORIZONTAL);
         managerCard.setGravity(Gravity.CENTER_VERTICAL);
-        managerCard.setPadding(0, dp(8), 0, dp(2));
+        managerCard.setPadding(0, dp(7), 0, dp(3));
         managerCard.setBackgroundColor(android.graphics.Color.TRANSPARENT);
 
         managerIcon = new ImageView(context);
@@ -74,26 +77,28 @@ public class RuntimeStatusView extends FrameLayout {
 
         LinearLayout managerText = new LinearLayout(context);
         managerText.setOrientation(LinearLayout.VERTICAL);
-        managerText.setPadding(dp(9), 0, dp(6), 0);
+        managerText.setPadding(dp(10), 0, dp(8), 0);
         LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(
                 0, LayoutParams.WRAP_CONTENT, 1f);
         managerCard.addView(managerText, textParams);
 
         managerName = text(13, true);
+        managerName.setIncludeFontPadding(false);
         managerText.addView(managerName);
 
         managerStatus = text(11, false);
+        managerStatus.setIncludeFontPadding(false);
         managerStatus.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
+        managerStatus.setPadding(0, dp(2), 0, 0);
         LinearLayout.LayoutParams statusParams = new LinearLayout.LayoutParams(
                 LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         statusParams.topMargin = dp(1);
         managerText.addView(managerStatus, statusParams);
 
-        managerChevron = text(20, false);
-        managerChevron.setText("›");
-        managerChevron.setGravity(Gravity.CENTER);
-        managerChevron.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
-        managerChevron.setPadding(dp(4), 0, 0, 0);
+        managerChevron = new ImageView(context);
+        managerChevron.setImageResource(R.drawable.ic_chevron_right);
+        managerChevron.setAlpha(0.65f);
+        managerChevron.setPadding(dp(2), dp(2), 0, dp(2));
         managerCard.addView(managerChevron, new LinearLayout.LayoutParams(
                 dp(24), dp(28)));
 
@@ -108,6 +113,7 @@ public class RuntimeStatusView extends FrameLayout {
         actionButtons.setVisibility(View.GONE);
 
         installButton = text(12, true);
+        installButton.setIncludeFontPadding(false);
         installButton.setText("Install Manager");
         installButton.setGravity(Gravity.CENTER);
         installButton.setPadding(dp(12), dp(7), dp(12), dp(7));
@@ -118,7 +124,7 @@ public class RuntimeStatusView extends FrameLayout {
 
         LinearLayout.LayoutParams btnParams = new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        btnParams.topMargin = dp(5);
+        btnParams.topMargin = dp(7);
         content.addView(actionButtons, btnParams);
 
         refresh();
@@ -333,6 +339,7 @@ public class RuntimeStatusView extends FrameLayout {
     private TextView text(int size, boolean bold) {
         TextView v = new TextView(getContext());
         v.setTextSize(size);
+        v.setIncludeFontPadding(false);
         v.setTextColor(ContextCompat.getColor(getContext(), R.color.text_primary));
         if (bold) v.setTypeface(null, android.graphics.Typeface.BOLD);
         return v;
