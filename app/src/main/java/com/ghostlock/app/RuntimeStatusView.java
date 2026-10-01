@@ -72,9 +72,9 @@ public class RuntimeStatusView extends FrameLayout {
 
         managerCard = new LinearLayout(context);
         managerCard.setOrientation(LinearLayout.VERTICAL);
-        managerCard.setPadding(dp(13), dp(11), dp(13), dp(11));
+        managerCard.setPadding(dp(14), dp(12), dp(14), dp(12));
         managerCard.setBackground(createRoundedBackground(
-                ContextCompat.getColor(context, R.color.surface_container_low), 14));
+                ContextCompat.getColor(context, R.color.surface_container_low), 16));
 
         LinearLayout identityRow = new LinearLayout(context);
         identityRow.setOrientation(LinearLayout.HORIZONTAL);
@@ -112,8 +112,8 @@ public class RuntimeStatusView extends FrameLayout {
         divider.setBackgroundColor(ContextCompat.getColor(context, R.color.outline_variant));
         LinearLayout.LayoutParams dividerParams = new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, dp(1));
-        dividerParams.topMargin = dp(9);
-        dividerParams.bottomMargin = dp(8);
+        dividerParams.topMargin = dp(10);
+        dividerParams.bottomMargin = dp(9);
         managerCard.addView(divider, dividerParams);
 
         // Package and Integrity remain the only details inside the card.
@@ -161,7 +161,7 @@ public class RuntimeStatusView extends FrameLayout {
         LinearLayout row = new LinearLayout(context);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
-        row.setPadding(0, dp(3), 0, dp(3));
+        row.setPadding(0, dp(4), 0, dp(4));
 
         TextView key = text(11, false);
         key.setText(label);
