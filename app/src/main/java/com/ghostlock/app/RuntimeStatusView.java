@@ -11,7 +11,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.core.content.ContextCompat;
 
-/** Modern manager status card with improved visual hierarchy and proper icons. */
+/** Compact Figma-style manager status component. */
 public class RuntimeStatusView extends FrameLayout {
     private final LinearLayout content;
     private final LinearLayout statusBadge;
@@ -21,6 +21,7 @@ public class RuntimeStatusView extends FrameLayout {
     private final ImageView managerIcon;
     private final TextView managerName;
     private final TextView managerStatus;
+    private final TextView managerChevron;
     private final LinearLayout actionButtons;
     private final TextView installButton;
 
@@ -34,46 +35,48 @@ public class RuntimeStatusView extends FrameLayout {
 
         content = new LinearLayout(context);
         content.setOrientation(LinearLayout.VERTICAL);
-        content.setPadding(dp(16), dp(14), dp(16), dp(14));
+        content.setPadding(dp(16), dp(12), dp(16), dp(12));
         addView(content, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
-        // Status badge
+        // Compact status label.
         statusBadge = new LinearLayout(context);
         statusBadge.setOrientation(LinearLayout.HORIZONTAL);
         statusBadge.setGravity(Gravity.CENTER_VERTICAL);
-        statusBadge.setPadding(dp(10), dp(6), dp(10), dp(6));
-        statusBadge.setBackground(createRoundedBackground(ContextCompat.getColor(context, R.color.accent_container), 12));
+        statusBadge.setPadding(dp(9), dp(5), dp(9), dp(5));
+        statusBadge.setBackground(createRoundedBackground(
+                ContextCompat.getColor(context, R.color.accent_container), 10));
 
-        // Status header intentionally uses text only; the manager card below carries the contextual icon.
-        statusLabel = text(13, true);
-        statusBadge.addView(statusLabel, new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+        statusLabel = text(12, true);
+        statusBadge.addView(statusLabel, new LinearLayout.LayoutParams(
+                LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+        content.addView(statusBadge, new LinearLayout.LayoutParams(
+                LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
 
-        content.addView(statusBadge, new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
-
-        // Message text
         message = text(12, false);
-        message.setLineSpacing(dp(2), 1.0f);
+        message.setLineSpacing(dp(1), 1.0f);
         message.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
-        LinearLayout.LayoutParams msgParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        msgParams.topMargin = dp(10);
+        LinearLayout.LayoutParams msgParams = new LinearLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        msgParams.topMargin = dp(7);
         content.addView(message, msgParams);
 
-        // Manager info card
+        // Manager detection is intentionally a flat row, not a card inside the panel.
         managerCard = new LinearLayout(context);
         managerCard.setOrientation(LinearLayout.HORIZONTAL);
         managerCard.setGravity(Gravity.CENTER_VERTICAL);
-        managerCard.setPadding(dp(12), dp(10), dp(12), dp(10));
-        managerCard.setBackground(createRoundedBackground(ContextCompat.getColor(context, R.color.surface_container), 14));
+        managerCard.setPadding(0, dp(8), 0, dp(2));
+        managerCard.setBackgroundColor(android.graphics.Color.TRANSPARENT);
 
         managerIcon = new ImageView(context);
-        managerIcon.setLayoutParams(new LinearLayout.LayoutParams(dp(20), dp(20)));
+        managerIcon.setLayoutParams(new LinearLayout.LayoutParams(dp(18), dp(18)));
         managerIcon.setColorFilter(ContextCompat.getColor(context, R.color.icon_tint));
         managerCard.addView(managerIcon);
 
         LinearLayout managerText = new LinearLayout(context);
         managerText.setOrientation(LinearLayout.VERTICAL);
-        managerText.setPadding(dp(10), 0, 0, 0);
-        LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f);
+        managerText.setPadding(dp(9), 0, dp(6), 0);
+        LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(
+                0, LayoutParams.WRAP_CONTENT, 1f);
         managerCard.addView(managerText, textParams);
 
         managerName = text(13, true);
@@ -81,30 +84,41 @@ public class RuntimeStatusView extends FrameLayout {
 
         managerStatus = text(11, false);
         managerStatus.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
-        LinearLayout.LayoutParams statusParams = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        statusParams.topMargin = dp(2);
+        LinearLayout.LayoutParams statusParams = new LinearLayout.LayoutParams(
+                LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        statusParams.topMargin = dp(1);
         managerText.addView(managerStatus, statusParams);
 
-        LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        cardParams.topMargin = dp(12);
+        managerChevron = text(20, false);
+        managerChevron.setText("›");
+        managerChevron.setGravity(Gravity.CENTER);
+        managerChevron.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
+        managerChevron.setPadding(dp(4), 0, 0, 0);
+        managerCard.addView(managerChevron, new LinearLayout.LayoutParams(
+                dp(24), dp(28)));
+
+        LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        cardParams.topMargin = dp(5);
         content.addView(managerCard, cardParams);
 
-        // Action buttons
         actionButtons = new LinearLayout(context);
         actionButtons.setOrientation(LinearLayout.HORIZONTAL);
-        actionButtons.setGravity(Gravity.CENTER);
+        actionButtons.setGravity(Gravity.END | Gravity.CENTER_VERTICAL);
         actionButtons.setVisibility(View.GONE);
 
-        installButton = text(13, true);
+        installButton = text(12, true);
         installButton.setText("Install Manager");
         installButton.setGravity(Gravity.CENTER);
-        installButton.setPadding(dp(16), dp(12), dp(16), dp(12));
-        installButton.setBackground(createRoundedBackground(ContextCompat.getColor(context, R.color.accent), 14));
+        installButton.setPadding(dp(12), dp(7), dp(12), dp(7));
+        installButton.setBackground(createRoundedBackground(
+                ContextCompat.getColor(context, R.color.accent), 10));
         installButton.setTextColor(ContextCompat.getColor(context, R.color.on_accent));
         actionButtons.addView(installButton);
 
-        LinearLayout.LayoutParams btnParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        btnParams.topMargin = dp(14);
+        LinearLayout.LayoutParams btnParams = new LinearLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        btnParams.topMargin = dp(5);
         content.addView(actionButtons, btnParams);
 
         refresh();
@@ -175,15 +189,13 @@ public class RuntimeStatusView extends FrameLayout {
                 break;
         }
 
-        // Update status badge
         statusLabel.setText(statusText);
         statusLabel.setTextColor(ContextCompat.getColor(getContext(), statusColor));
-        statusBadge.setBackground(createRoundedBackground(ContextCompat.getColor(getContext(), bgColor), 12));
+        statusBadge.setBackground(createRoundedBackground(
+                ContextCompat.getColor(getContext(), bgColor), 10));
 
-        // Update message
         message.setText(messageText);
 
-        // Update manager info
         if (result.manager.installed) {
             managerName.setText(result.manager.name);
 
@@ -209,28 +221,29 @@ public class RuntimeStatusView extends FrameLayout {
         } else {
             managerName.setText("No Manager");
             managerStatus.setText("Not installed");
-            managerStatus.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
+            managerStatus.setTextColor(ContextCompat.getColor(
+                    getContext(), R.color.text_secondary));
             managerIcon.setImageResource(R.drawable.ic_shield_alert);
         }
 
-        // Update action buttons
         actionButtons.setVisibility(showInstall ? View.VISIBLE : View.GONE);
         if (showInstall) {
             installButton.setOnClickListener(v -> showManagerPicker());
         }
 
-        // Update background
         setSurface(bgColor);
     }
 
     private void showManagerPicker() {
-        final java.util.List<ManagerCompatibility.ManagerInfo> managers = ManagerCompatibility.registeredManagers(getContext());
+        final java.util.List<ManagerCompatibility.ManagerInfo> managers =
+                ManagerCompatibility.registeredManagers(getContext());
         final android.app.Dialog dialog = new android.app.Dialog(getContext());
 
         LinearLayout box = new LinearLayout(getContext());
         box.setOrientation(LinearLayout.VERTICAL);
         box.setPadding(dp(24), dp(22), dp(24), dp(18));
-        box.setBackground(createRoundedBackground(ContextCompat.getColor(getContext(), R.color.surface), 26));
+        box.setBackground(createRoundedBackground(
+                ContextCompat.getColor(getContext(), R.color.surface), 26));
 
         TextView title = text(20, true);
         title.setText("Install Manager");
@@ -240,7 +253,8 @@ public class RuntimeStatusView extends FrameLayout {
         subtitle.setText("Select a supported manager to continue");
         subtitle.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
         subtitle.setLineSpacing(0f, 1.08f);
-        LinearLayout.LayoutParams subtitleParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        LinearLayout.LayoutParams subtitleParams = new LinearLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         subtitleParams.topMargin = dp(6);
         subtitleParams.bottomMargin = dp(16);
         box.addView(subtitle, subtitleParams);
@@ -250,7 +264,8 @@ public class RuntimeStatusView extends FrameLayout {
             row.setOrientation(LinearLayout.HORIZONTAL);
             row.setGravity(Gravity.CENTER_VERTICAL);
             row.setPadding(dp(16), dp(14), dp(16), dp(14));
-            row.setBackground(createRoundedBackground(ContextCompat.getColor(getContext(), R.color.surface_container_low), 14));
+            row.setBackground(createRoundedBackground(
+                    ContextCompat.getColor(getContext(), R.color.surface_container_low), 14));
             row.setClickable(true);
             row.setFocusable(true);
 
@@ -263,7 +278,8 @@ public class RuntimeStatusView extends FrameLayout {
             LinearLayout textLayout = new LinearLayout(getContext());
             textLayout.setOrientation(LinearLayout.VERTICAL);
             textLayout.setPadding(dp(12), 0, 0, 0);
-            LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f);
+            LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(
+                    0, LayoutParams.WRAP_CONTENT, 1f);
             row.addView(textLayout, textParams);
 
             TextView nameText = text(14, true);
@@ -272,8 +288,10 @@ public class RuntimeStatusView extends FrameLayout {
 
             TextView statusText = text(12, false);
             statusText.setText(info.installed ? "Installed" : "Not installed");
-            statusText.setTextColor(ContextCompat.getColor(getContext(), info.installed ? R.color.status_success : R.color.text_secondary));
-            LinearLayout.LayoutParams statusParams = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+            statusText.setTextColor(ContextCompat.getColor(getContext(),
+                    info.installed ? R.color.status_success : R.color.text_secondary));
+            LinearLayout.LayoutParams statusParams = new LinearLayout.LayoutParams(
+                    LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
             statusParams.topMargin = dp(2);
             textLayout.addView(statusText, statusParams);
 
@@ -282,7 +300,8 @@ public class RuntimeStatusView extends FrameLayout {
                 ManagerCompatibility.openInstaller(getContext(), info);
             });
 
-            LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+            LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
+                    LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
             rowParams.bottomMargin = dp(8);
             box.addView(row, rowParams);
         }
@@ -293,7 +312,8 @@ public class RuntimeStatusView extends FrameLayout {
         cancel.setTextColor(ContextCompat.getColor(getContext(), R.color.accent));
         cancel.setMinHeight(dp(48));
         cancel.setOnClickListener(v -> dialog.dismiss());
-        LinearLayout.LayoutParams cancelParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, dp(48));
+        LinearLayout.LayoutParams cancelParams = new LinearLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, dp(48));
         cancelParams.topMargin = dp(8);
         box.addView(cancel, cancelParams);
 
@@ -304,7 +324,8 @@ public class RuntimeStatusView extends FrameLayout {
 
         Window window = dialog.getWindow();
         if (window != null) {
-            int width = Math.min((int) (getResources().getDisplayMetrics().widthPixels * 0.88f), dp(390));
+            int width = Math.min(
+                    (int) (getResources().getDisplayMetrics().widthPixels * 0.88f), dp(390));
             window.setLayout(width, android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
         }
     }
@@ -325,7 +346,8 @@ public class RuntimeStatusView extends FrameLayout {
     }
 
     private void setSurface(int colorRes) {
-        GradientDrawable surface = createRoundedBackground(ContextCompat.getColor(getContext(), colorRes), 20);
+        GradientDrawable surface = createRoundedBackground(
+                ContextCompat.getColor(getContext(), colorRes), 16);
         if (getParent() instanceof View) {
             ((View) getParent()).setBackground(surface);
         }
