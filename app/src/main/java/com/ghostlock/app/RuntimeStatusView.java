@@ -15,6 +15,7 @@ import androidx.core.content.ContextCompat;
 public class RuntimeStatusView extends FrameLayout {
     private final LinearLayout content;
     private final LinearLayout statusHeader;
+    private final TextView statusTitle;
     private final TextView statusLabel;
     private final TextView message;
     private final LinearLayout managerCard;
@@ -37,25 +38,34 @@ public class RuntimeStatusView extends FrameLayout {
         content.setPadding(dp(16), dp(14), dp(16), dp(13));
         addView(content, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
-        // Status is intentionally text-only. The status word already communicates
-        // the state, so a second shield/check icon only adds visual redundancy.
-        statusHeader = new LinearLayout(context);
-        statusHeader.setOrientation(LinearLayout.HORIZONTAL);
-        statusHeader.setGravity(Gravity.CENTER_VERTICAL);
-        statusLabel = text(13, true);
-        statusLabel.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
-        statusHeader.addView(statusLabel, new LinearLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, dp(20)));
-        content.addView(statusHeader);
+        // Keep the status indicator and manager card on the same row.
+        // The card retains its existing internal layout; only the outer
+        // composition changes to use the available horizontal space better.
+        LinearLayout managerSection = new LinearLayout(context);
+        managerSection.setOrientation(LinearLayout.HORIZONTAL);
+        managerSection.setGravity(Gravity.TOP);
 
-        message = text(12, false);
-        message.setGravity(Gravity.START);
-        message.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
-        message.setLineSpacing(dp(1), 1.0f);
-        LinearLayout.LayoutParams msgParams = new LinearLayout.LayoutParams(
+        statusHeader = new LinearLayout(context);
+        statusHeader.setOrientation(LinearLayout.VERTICAL);
+        statusHeader.setGravity(Gravity.START);
+        statusTitle = text(10, true);
+        statusTitle.setText("MANAGER");
+        statusTitle.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
+        statusTitle.setGravity(Gravity.START);
+        statusHeader.addView(statusTitle, new LinearLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+
+        statusLabel = text(13, true);
+        statusLabel.setGravity(Gravity.START);
+        LinearLayout.LayoutParams statusParams = new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        msgParams.topMargin = dp(5);
-        content.addView(message, msgParams);
+        statusParams.topMargin = dp(4);
+        statusHeader.addView(statusLabel, statusParams);
+
+        LinearLayout.LayoutParams statusHeaderParams = new LinearLayout.LayoutParams(
+                dp(88), LayoutParams.WRAP_CONTENT);
+        statusHeaderParams.rightMargin = dp(10);
+        managerSection.addView(statusHeader, statusHeaderParams);
 
         managerCard = new LinearLayout(context);
         managerCard.setOrientation(LinearLayout.VERTICAL);
@@ -105,9 +115,20 @@ public class RuntimeStatusView extends FrameLayout {
         managerCard.addView(details);
 
         LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
+                0, LayoutParams.WRAP_CONTENT, 1f);
+        managerSection.addView(managerCard, cardParams);
+        content.addView(managerSection);
+
+        // Keep the explanatory message below both panels so it can use the
+        // full available width instead of being squeezed beside the card.
+        message = text(12, false);
+        message.setGravity(Gravity.START);
+        message.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
+        message.setLineSpacing(dp(1), 1.0f);
+        LinearLayout.LayoutParams msgParams = new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        cardParams.topMargin = dp(12);
-        content.addView(managerCard, cardParams);
+        msgParams.topMargin = dp(8);
+        content.addView(message, msgParams);
 
         actionButtons = new LinearLayout(context);
         actionButtons.setOrientation(LinearLayout.HORIZONTAL);
