@@ -44,7 +44,7 @@ public class DashboardStatsView extends LinearLayout {
         // Row 1: Success rate panel.
         LinearLayout ratePanel = new LinearLayout(getContext());
         ratePanel.setOrientation(VERTICAL);
-        ratePanel.setPadding(dp(14), dp(12), dp(14), dp(12));
+        ratePanel.setPadding(dp(12), dp(11), dp(12), dp(11));
         ratePanel.setBackground(roundBackground(R.color.surface_container, 14));
 
         LinearLayout heroRow = new LinearLayout(getContext());
@@ -103,7 +103,7 @@ public class DashboardStatsView extends LinearLayout {
                 0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
 
         LinearLayout totalPanel = createMetricPanel(
-                "Total", "0", R.drawable.ic_check_circle, false);
+                "Total", "0", R.drawable.ic_dashboard, false);
         LinearLayout successPanel = createMetricPanel(
                 "Success", "0", R.drawable.ic_check_circle, false);
         LinearLayout failurePanel = createMetricPanel(
@@ -135,7 +135,7 @@ public class DashboardStatsView extends LinearLayout {
     private LinearLayout createMetricPanel(String label, String value, int iconRes, boolean isError) {
         LinearLayout panel = new LinearLayout(getContext());
         panel.setOrientation(VERTICAL);
-        panel.setPadding(dp(10), dp(10), dp(10), dp(10));
+        panel.setPadding(dp(8), dp(9), dp(8), dp(9));
         panel.setBackground(roundBackground(R.color.surface_container, 12));
 
         LinearLayout header = new LinearLayout(getContext());
@@ -146,9 +146,11 @@ public class DashboardStatsView extends LinearLayout {
         icon.setImageResource(iconRes);
         icon.setColorFilter(getResources().getColor(isError ? R.color.status_error : R.color.icon_tint));
         icon.setAlpha(0.75f);
-        header.addView(icon, new LinearLayout.LayoutParams(dp(14), dp(14)));
+        header.addView(icon, new LinearLayout.LayoutParams(dp(16), dp(16)));
 
         TextView labelText = text(label, 10, R.color.text_secondary, Typeface.NORMAL);
+        labelText.setMaxLines(1);
+        labelText.setEllipsize(android.text.TextUtils.TruncateAt.END);
         labelText.setIncludeFontPadding(false);
         LinearLayout.LayoutParams labelParams = new LinearLayout.LayoutParams(
                 0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
@@ -162,7 +164,7 @@ public class DashboardStatsView extends LinearLayout {
         valueText.setIncludeFontPadding(false);
         LayoutParams valueParams = new LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        valueParams.topMargin = dp(5);
+        valueParams.topMargin = dp(4);
         panel.addView(valueText, valueParams);
 
         if ("Total".equals(label)) totalRunsText = valueText;
