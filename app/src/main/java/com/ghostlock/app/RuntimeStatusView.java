@@ -105,7 +105,7 @@ public class RuntimeStatusView extends FrameLayout {
         identityText.addView(managerStatus, managerStatusParams);
 
         managerIndicator = statusIcon(context);
-        identityRow.addView(managerIndicator, new LinearLayout.LayoutParams(dp(38), dp(38)));
+        identityRow.addView(managerIndicator, new LinearLayout.LayoutParams(dp(64), dp(64)));
         managerCard.addView(identityRow);
 
         View divider = new View(context);
@@ -183,7 +183,7 @@ public class RuntimeStatusView extends FrameLayout {
     private ImageView statusIcon(Context context) {
         ImageView icon = new ImageView(context);
         icon.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-        icon.setAlpha(0.42f);
+        icon.setAlpha(0.14f);
         return icon;
     }
 
