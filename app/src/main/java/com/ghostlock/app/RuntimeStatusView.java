@@ -23,6 +23,7 @@ public class RuntimeStatusView extends FrameLayout {
     private final ImageView managerIcon;
     private final TextView managerName;
     private final TextView managerStatus;
+    private final TextView managerIndicator;
     private final TextView packageLabel;
     private final TextView integrityLabel;
     private final TextView packageIndicator;
@@ -40,37 +41,6 @@ public class RuntimeStatusView extends FrameLayout {
         content.setOrientation(LinearLayout.VERTICAL);
         content.setPadding(dp(16), dp(14), dp(16), dp(13));
         addView(content, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
-
-        // The status block is deliberately compact and vertically centered
-        // against the card, while the card gets the majority of the width.
-        LinearLayout managerSection = new LinearLayout(context);
-        managerSection.setOrientation(LinearLayout.HORIZONTAL);
-        managerSection.setGravity(Gravity.CENTER_VERTICAL);
-
-        statusHeader = new LinearLayout(context);
-        statusHeader.setOrientation(LinearLayout.VERTICAL);
-        statusHeader.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
-
-        statusTitle = text(10, true);
-        statusTitle.setText("MANAGER");
-        statusTitle.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
-        statusTitle.setGravity(Gravity.START);
-        statusHeader.addView(statusTitle, new LinearLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
-
-        statusLabel = text(12, true);
-        statusLabel.setGravity(Gravity.START);
-        statusLabel.setMaxLines(2);
-        statusLabel.setEllipsize(TextUtils.TruncateAt.END);
-        LinearLayout.LayoutParams statusParams = new LinearLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        statusParams.topMargin = dp(5);
-        statusHeader.addView(statusLabel, statusParams);
-
-        LinearLayout.LayoutParams statusHeaderParams = new LinearLayout.LayoutParams(
-                0, LayoutParams.WRAP_CONTENT, 0.31f);
-        statusHeaderParams.rightMargin = dp(12);
-        managerSection.addView(statusHeader, statusHeaderParams);
 
         managerCard = new LinearLayout(context);
         managerCard.setOrientation(LinearLayout.VERTICAL);
@@ -108,6 +78,12 @@ public class RuntimeStatusView extends FrameLayout {
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         managerStatusParams.topMargin = dp(3);
         identityText.addView(managerStatus, managerStatusParams);
+
+        managerIndicator = statusIndicator(context);
+        managerIndicator.setTextSize(20);
+        managerIndicator.setAlpha(0.68f);
+        managerIndicator.setGravity(Gravity.CENTER);
+        identityRow.addView(managerIndicator, new LinearLayout.LayoutParams(dp(28), dp(28)));
         managerCard.addView(identityRow);
 
         View divider = new View(context);
@@ -118,28 +94,28 @@ public class RuntimeStatusView extends FrameLayout {
         dividerParams.bottomMargin = dp(9);
         managerCard.addView(divider, dividerParams);
 
-        // Package and Integrity remain the only details inside the card.
+        // Package and Integrity stay compact on a single metadata line.
         LinearLayout details = new LinearLayout(context);
-        details.setOrientation(LinearLayout.VERTICAL);
-        details.addView(detailRow(context, packageLabel = text(11, false), packageIndicator = statusIndicator(context)));
-        details.addView(detailRow(context, integrityLabel = text(11, false), integrityIndicator = statusIndicator(context)));
+        details.setOrientation(LinearLayout.HORIZONTAL);
+        details.setGravity(Gravity.CENTER_VERTICAL);
+        details.addView(packageLabel = text(11, false),
+                new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
+        details.addView(packageIndicator = statusIndicator(context),
+                new LinearLayout.LayoutParams(dp(24), dp(24)));
+        TextView separator = text(12, false);
+        separator.setText("·");
+        separator.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
+        separator.setGravity(Gravity.CENTER);
+        details.addView(separator, new LinearLayout.LayoutParams(dp(20), dp(24)));
+        details.addView(integrityLabel = text(11, false),
+                new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+        details.addView(integrityIndicator = statusIndicator(context),
+                new LinearLayout.LayoutParams(dp(24), dp(24)));
         managerCard.addView(details);
 
         LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
-                0, LayoutParams.WRAP_CONTENT, 0.69f);
-        managerSection.addView(managerCard, cardParams);
-        content.addView(managerSection);
-
-        // Keep the explanatory message inside the manager card, directly
-        // below the manager identity/status and above Package/Integrity.
-        message = text(11, false);
-        message.setGravity(Gravity.START);
-        message.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
-        message.setLineSpacing(dp(1), 1.0f);
-        LinearLayout.LayoutParams msgParams = new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        msgParams.topMargin = dp(5);
-        managerCard.addView(message, msgParams);
+        content.addView(managerCard);
 
         actionButtons = new LinearLayout(context);
         actionButtons.setOrientation(LinearLayout.HORIZONTAL);
@@ -265,6 +241,9 @@ public class RuntimeStatusView extends FrameLayout {
             managerStatus.setTextColor(ContextCompat.getColor(getContext(), statusColorRes));
             managerIcon.setImageResource(result.manager.spoofed
                     ? R.drawable.ic_shield_alert : R.drawable.ic_shield_check);
+            setIndicator(managerIndicator,
+                    result.manager.spoofed ? "×" : "✓",
+                    result.manager.spoofed ? R.color.text_secondary : R.color.status_success);
             packageLabel.setText(result.manager.packageName);
             packageLabel.setTextColor(ContextCompat.getColor(getContext(), R.color.text_primary));
             integrityLabel.setText(result.manager.identityVerified
@@ -282,6 +261,7 @@ public class RuntimeStatusView extends FrameLayout {
             managerStatus.setText("Not installed");
             managerStatus.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
             managerIcon.setImageResource(R.drawable.ic_shield_alert);
+            setIndicator(managerIndicator, "!", R.color.text_secondary);
             packageLabel.setText("—");
             packageLabel.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
             setIndicator(packageIndicator, "!", R.color.text_secondary);
