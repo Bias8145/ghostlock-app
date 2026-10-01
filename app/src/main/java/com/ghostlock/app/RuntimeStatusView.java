@@ -25,6 +25,8 @@ public class RuntimeStatusView extends FrameLayout {
     private final TextView managerStatus;
     private final TextView packageLabel;
     private final TextView integrityLabel;
+    private final TextView packageIndicator;
+    private final TextView integrityIndicator;
     private final LinearLayout actionButtons;
     private final TextView installButton;
 
@@ -119,8 +121,8 @@ public class RuntimeStatusView extends FrameLayout {
         // Package and Integrity remain the only details inside the card.
         LinearLayout details = new LinearLayout(context);
         details.setOrientation(LinearLayout.VERTICAL);
-        details.addView(detailRow(context, "Package", packageLabel = text(11, false)));
-        details.addView(detailRow(context, "Integrity", integrityLabel = text(11, false)));
+        details.addView(detailRow(context, packageLabel = text(11, false), packageIndicator = statusIndicator(context)));
+        details.addView(detailRow(context, integrityLabel = text(11, false), integrityIndicator = statusIndicator(context)));
         managerCard.addView(details);
 
         LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
@@ -158,23 +160,31 @@ public class RuntimeStatusView extends FrameLayout {
         refresh();
     }
 
-    private LinearLayout detailRow(Context context, String label, TextView value) {
+    private LinearLayout detailRow(Context context, TextView value, TextView indicator) {
         LinearLayout row = new LinearLayout(context);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
-        row.setPadding(0, dp(4), 0, dp(4));
-
-        TextView key = text(11, false);
-        key.setText(label);
-        key.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
-        row.addView(key, new LinearLayout.LayoutParams(dp(62), LayoutParams.WRAP_CONTENT));
+        row.setPadding(0, dp(3), 0, dp(3));
 
         value.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
         value.setMaxLines(1);
         value.setEllipsize(TextUtils.TruncateAt.END);
         row.addView(value, new LinearLayout.LayoutParams(
                 0, LayoutParams.WRAP_CONTENT, 1f));
+        row.addView(indicator, new LinearLayout.LayoutParams(dp(28), dp(28)));
         return row;
+    }
+
+    private TextView statusIndicator(Context context) {
+        TextView indicator = text(20, true);
+        indicator.setGravity(Gravity.CENTER);
+        indicator.setAlpha(0.72f);
+        return indicator;
+    }
+
+    private void setIndicator(TextView indicator, String symbol, int colorRes) {
+        indicator.setText(symbol);
+        indicator.setTextColor(ContextCompat.getColor(getContext(), colorRes));
     }
 
     @Override protected void onAttachedToWindow() { super.onAttachedToWindow(); refresh(); }
@@ -264,6 +274,9 @@ public class RuntimeStatusView extends FrameLayout {
                             : "Unrecognized package");
             integrityLabel.setTextColor(ContextCompat.getColor(getContext(),
                     result.manager.identityVerified ? R.color.status_success : R.color.text_secondary));
+            setIndicator(integrityIndicator,
+                    result.manager.identityVerified ? "✓" : result.manager.recognized ? "!" : "×",
+                    result.manager.identityVerified ? R.color.status_success : R.color.text_secondary);
         } else {
             managerName.setText("No Manager");
             managerStatus.setText("Not installed");
@@ -271,8 +284,10 @@ public class RuntimeStatusView extends FrameLayout {
             managerIcon.setImageResource(R.drawable.ic_shield_alert);
             packageLabel.setText("—");
             packageLabel.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
+            setIndicator(packageIndicator, "!", R.color.text_secondary);
             integrityLabel.setText("Not available");
             integrityLabel.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
+            setIndicator(integrityIndicator, "×", R.color.text_secondary);
         }
         actionButtons.setVisibility(showInstall ? View.VISIBLE : View.GONE);
         if (showInstall) installButton.setOnClickListener(v -> showManagerPicker());
