@@ -137,7 +137,11 @@ public class RuntimeStatusView extends FrameLayout {
         details.setPadding(0, 0, 0, 0);
 
         LinearLayout packageColumn = metadataColumn(context, "PACKAGE");
-        packageLabel = text(12, true);
+        packageColumn.setMinimumWidth(dp(0));
+        packageLabel = text(11, true);
+        packageLabel.setSingleLine(true);
+        packageLabel.setHorizontallyScrolling(true);
+        packageLabel.setEllipsize(null);
         LinearLayout.LayoutParams packageValueParams = new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         packageValueParams.topMargin = dp(5);
@@ -149,7 +153,7 @@ public class RuntimeStatusView extends FrameLayout {
         details.addView(metadataSeparator(context), new LinearLayout.LayoutParams(dp(8), LayoutParams.WRAP_CONTENT));
 
         LinearLayout signatureColumn = metadataColumn(context, "SIGNATURE");
-        signatureValue = text(12, true);
+        signatureValue = text(11, true);
         LinearLayout.LayoutParams signatureValueParams = new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         signatureValueParams.topMargin = dp(5);
@@ -158,10 +162,10 @@ public class RuntimeStatusView extends FrameLayout {
         signatureColumn.addView(signatureValue, signatureValueParams);
         details.addView(signatureColumn, new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 0.95f));
 
-        details.addView(metadataSeparator(context), new LinearLayout.LayoutParams(dp(10), LayoutParams.WRAP_CONTENT));
+        details.addView(metadataSeparator(context), new LinearLayout.LayoutParams(dp(16), LayoutParams.WRAP_CONTENT));
 
         LinearLayout integrityColumn = metadataColumn(context, "INTEGRITY");
-        integrityLabel = text(12, true);
+        integrityLabel = text(11, true);
         LinearLayout.LayoutParams integrityValueParams = new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         integrityValueParams.topMargin = dp(5);
