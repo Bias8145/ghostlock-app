@@ -1,125 +1,64 @@
-# GhostLock-App
+# GhostLock：魅族 20 Pro
 
-> English: [README.md](README.md)
+[English](README.md)
 
-## 文档
+为 **Flyme 10.2.0.0A 的魅族 20 Pro** 提供临时 root 配置。
 
-- [Kernel Profile 适配指南](docs/kernel_profiles/README_ZH.md) —— 如何支持一款新内核。GhostLock 按精确 `uname -r` 匹配，未匹配的内核直接拒绝运行并在 App 顶部显示状态。内置配置位于 `app/src/main/assets/kernel_profiles/`：每个 release 一个 HOCON 文件，`index.conf` 保存运行索引，`<major.minor>-template.conf` 提供各内核大版本模板。
-- [支持设备列表](docs/kernel_profiles/SUPPORTED_DEVICES_ZH.md) —— 内置内核清单。
-- [公共执行默认值](docs/kernel_profiles/defaults_ZH.md) —— 每个 `execution` 字段的默认值与取舍。
-- [Profile 结构文档](docs/kernel_profiles/PROFILE_SCHEMA_ZH.md) —— profile 的完整结构、字段语义与数据流。
-- [新增组件指南](docs/development/adding-a-component.md) —— 为 native 添加新 middleware / backend / frontend 的开发者指南。
+## 支持配置
 
-新增设备的完整流程、内核版本模板跳转和公共参数理由见[Kernel Profile 适配指南](docs/kernel_profiles/README_ZH.md)。
+| 项目 | 支持配置 |
+|---|---|
+| 设备 | 魅族 20 Pro |
+| 芯片 | 高通 SM8550 |
+| 固件 | Flyme 10.2.0.0A |
+| Android | 13 |
+| 安全补丁 | 2023-06-01 |
+| 内核 | `5.15.41-android13-8-g8dc4c75ab7d8-ab1673212412` |
+| 路线 | `multicast_waiter` |
+| 执行环境 | Shizuku，ADB shell UID 2000，Seccomp 0 |
+| CPU 对 | 主线程 3，消费者 4 |
+| Root 管理器 | KernelSU v3.3.0，versionCode 32601 |
+| Shizuku | v13.6.0 |
 
-明确标记为**需要 Shizuku**的固件通过 shell UserService 执行。先使用 ADB 启动 Shizuku，再点击顶部支持状态区域授权；其余固件沿用应用内执行路径。
+必须匹配上面的完整内核版本。其他固件或内核需要单独验证。
 
-## 快速开始
+这是临时 root，重启后失效。重启后先启动 Shizuku，再执行 GhostLock。错误的配置可能导致内核崩溃或手机重启。
 
-打开 **GhostLock** 点击 **执行**。需先装 KernelSU（`me.weishu.kernelsu`）、ReSukiSU（`com.resukisu.resukisu`）或 KowSU（`com.kowx712.supermanager`）以提供 `ksud`；缺 `ksud` 时 W1/W2 仍可拿到 uid 0，但不会加载模块。
+## 兼容性
 
-执行链由三类组件构成：frontend（`root_child` 启动/交接）、backend（CVE-2026-43499 futex 原语）与 middleware 路线。**编目组合在构建期实例化，具体运行哪一个由解析后的 profile 选择**。路线是双核竞争：6.6/6.12 树形 waiter 内核上主线程跑 `select` 爆破、consumer 线程扰动 waiter 优先级；6.1 紧凑 waiter 内核上主线程改走 `getsockopt(TCP_ZEROCOPY_RECEIVE)` 打洞页写入；5.15 内核走 multicast waiter 路线。CPU 对同样由解析后的 profile 决定。
+内核配置依据相同版本的官方固件布局及镜像内的 BTF 类型信息。支持范围限定为上面的固件和完整内核版本，重复成功率及长期稳定性尚未确定。
 
-## 命令行调试
+## 使用步骤
 
-adb/shell 环境无 seccomp 过滤，会跳过 W3，适合快速验证：
+1. 执行 `adb shell uname -r`，确认完整内核版本。
+2. 安装 GhostLock、[KernelSU](https://github.com/tiann/KernelSU/releases/tag/v3.3.0) 和 [Shizuku](https://github.com/RikkaApps/Shizuku/releases/tag/v13.6.0)。
+3. 在 Shizuku 的电脑/ADB 启动选项下打开“查看指令”，在电脑执行其显示的命令。
+4. 打开 GhostLock，允许其 Shizuku 授权请求，开启“通过 Shizuku 执行”。
+5. 选择 CPU 对 **3,4**，保持“强制攻击测试”关闭。
+6. 执行一次，再核查 KernelSU 和 `adb shell su -c id`。
 
-```powershell
-make -C src ghostlock
-./gradlew exportKernelProfiles
-adb push build/native/ghostlock /data/local/tmp/ghostlock
-adb push build/kernel-profiles/<release>.bin /data/local/tmp/profile.bin
-adb shell chmod 755 /data/local/tmp/ghostlock
-adb shell /data/local/tmp/ghostlock --load-prebuilt-profile /data/local/tmp/profile.bin
+本分支已将配置加入内置索引。如果使用[上游预发布 APK](https://github.com/YuKongA/ghostlock-app/releases/tag/pre-release)，请在“高级选项 → 参数配置 → 加载配置 → 导入 offsets.conf”中导入[机型 HOCON 配置](app/src/main/assets/kernel_profiles/5.15.41-android13-8-g8dc4c75ab7d8-ab1673212412.conf)，再选择“加载此配置”。
+
+本分支提供源码和内核配置，尚未构建独立的 APK 发布版本。
+
+## 构建
+
+使用 Gradle wrapper 与上游构建工作流声明的工具链：JDK 21、Android SDK、ONDK/NDK、Rust 和 Android arm64 目标。
+
+```sh
+./gradlew :profile-core:exportKernelProfiles
+./gradlew :profile-core:test
+./gradlew :app:assembleDebug
 ```
 
-## 偏移量提取
+现有 GitHub “Build” 工作流支持在本分支手动执行。内置配置位于 `app/src/main/assets/kernel_profiles/`，沿用上游运行时和构建系统。
 
-`tools/extract_rs` 从 `boot.img`（可加 `xbl_config.img`）、完整 OTA zip 或指向它的 `http(s)` 链接解析偏移量。kallsyms 传 `--kallsyms`，或省略以直接恢复镜像内嵌表。`pselect_waiter_shift` 与 `off_slide_loggers_0_1` 由内置 arm64 反汇编器推导。联发科镜像没有 `xbl_config.img` 且通常无内嵌 BTF：物理加载地址由 kallsyms `_text` 推导（可用 `--phys` 覆盖）。
+## 上游与许可证
 
-```powershell
-Push-Location tools/extract_rs
-cargo build --release
-Pop-Location
-build/extract/release/ghostlock-extract.exe boot.img --xbl-config xbl_config.img --format conf --out profile.conf
-build/extract/release/ghostlock-extract.exe OTA.zip --format conf --out profile.conf
-```
+基于 [YuKongA/ghostlock-app](https://github.com/YuKongA/ghostlock-app) 的 `123a469cdde94e0913d57c46427ce0c3bc16b96c`。
 
-提取结果使用 `--format conf` 输出：flatten（无 `include`、凭据/KernelSnitch 常量内联）的自包含 profile。提取器把镜像实际获得的所有字段都写出，未获得的字段直接省略，不会用相邻内核族的猜测值（未验证族的 6.6、缺省 `-2`、5.15 multicast 常量、phys 默认）补齐；route 由 `--analysis` 证据建议、`--route` 可覆盖。输出一律是 **unverified candidate**：可导入、可解析，缺失或无效字段由 App 在执行前校验拦截，不能仅凭生成成功声明设备支持。5.x 还会从 `init_cred` 推导凭据引用修复值、从 BTF 推导 multicast 几何（见 `docs/analysis/extractor-5x-derivation-plan.md`）。`--format json` 保留给 v1 导入路径。新增内置配置时以对应大版本模板为基础补齐和验证字段，再将独立 `.conf` 登记到 `kernel_profiles/index.conf`。旧 C `offsets.h` 注册表已经弃用并移除。
+本分支新增魅族 20 Pro 配置，登记完整内核版本，并提供机型专用的中英文文档。
 
-### 联发科
+原始工作与致谢：[NebuSec/CyberMeowfia](https://github.com/NebuSec/CyberMeowfia)、[JoinChang/ghostlock-oneplus](https://github.com/JoinChang/ghostlock-oneplus)、[x-spy/CVE-2026-43499-popsicle](https://github.com/x-spy/CVE-2026-43499-popsicle)。
 
-联发科镜像没有 `xbl_config.img`，通常也没有内嵌 BTF，提取器无法从镜像推导两个物理地址
-（`kernel_phys_load`、`kernel_phys_offset`），会把它们留成 `null`。运行时按 SoC 公式回退，在联发科上
-会在 W1 失败。请先在已 root 的设备上运行单独的 `tools/mtk-phys/` 提取器（读取 `/proc/iomem`），
-再把两个值填入 App 的高级参数覆盖。参见 [MEDIATEK_ZH.md](docs/kernel_profiles/MEDIATEK_ZH.md)。
-
-### 前置检查
-
-提取器在提取偏移量前先反汇编 `remove_waiter()`。已包含修复的内核以退出码 `6` 拒绝；仅未修复内核继续。
-
-### 手机端运行
-
-完整 OTA 可直接在手机上分析：传完整包时自动提取 `boot` + `xbl_config`。在 App 沙箱内运行时，`--work-dir` 必须指向 App 可写目录。交叉编译后 push：
-
-```powershell
-rustup target add aarch64-linux-android
-$ndk = "$env:ANDROID_HOME\ndk\<version>\toolchains\llvm\prebuilt\windows-x86_64\bin"
-$env:CC_aarch64_linux_android = "$ndk\aarch64-linux-android35-clang.cmd"
-$env:AR_aarch64_linux_android = "$ndk\llvm-ar.exe"
-$env:CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER = $env:CC_aarch64_linux_android
-Push-Location tools/extract_rs
-cargo build --release --target aarch64-linux-android
-Pop-Location
-adb push build/extract/aarch64-linux-android/release/ghostlock-extract /data/local/tmp/
-adb shell /data/local/tmp/ghostlock-extract /sdcard/OTA.zip
-```
-
-### 外部导入偏移，免去重新构建应用
-
-新增内核不再需要重新打包 App：点击 **导入 offsets.conf (HOCON)** 选择提取器产出的扁平 `.conf`，旧 JSON 报告仍可通过 **导入 offsets.json (v1)** 导入。v1 JSON 由 App 侧转成 GLK1，无需再把文件推到设备；native 始终只接收 App 经 stdin 传入的 GLK1 文档，并先按当前 `uname -r` 匹配解析后的 profile，匹配成功才视为受支持。多次导入会合并；新文件含已存内核时，App 会先询问是否覆盖。
-
-App 也能直接生成这份 profile：**解析完整包链接**（完整 OTA zip 的 `http(s)` 链接）与 **解析镜像**（`boot.img` + 可选 `xbl_config.img`）都在 App 进程内跑提取器，成功后把一份扁平 `.conf` 写入 App 数据目录：
-
-```hocon
-# GhostLock kernel profile: 6.12.38-android16-5-g844001fb8721-ab14552068-4k (HOCON, self-contained).
-release = "6.12.38-android16-5-g844001fb8721-ab14552068-4k"
-schema_version = 1
-kernel_major = 6
-recommend_shizuku = 0
-kernel_phys_load = 0xC7800000
-route {
-  select_stack {
-    waiter_shift = 0
-  }
-}
-fallback {
-  to = "none"
-}
-kernelsnitch {
-  collisions = 4
-}
-task_struct {
-  prio = 148
-  cred = 2304
-}
-cred {
-  caps_offset = 48
-  copy_size = 136
-  usage_value = 1
-  caps_count = 5
-  caps_value = -1
-}
-offset {
-  init_task = 37801728
-  init_cred = 37891184
-}
-```
-
-## 来源与许可证
-
-基于以下项目改写，继承 Apache License 2.0（见 [LICENSE](LICENSE)）：
-
-- [NebuSec/CyberMeowfia](https://github.com/NebuSec/CyberMeowfia)
-- [JoinChang/ghostlock-oneplus](https://github.com/JoinChang/ghostlock-oneplus)
-- [x-spy/CVE-2026-43499-popsicle](https://github.com/x-spy/CVE-2026-43499-popsicle)
+[Apache License 2.0](LICENSE)。

@@ -19,3 +19,4 @@ target/
 /.codex/
 /src/.codex/config.toml
 /ghostlock *
+/.local/
