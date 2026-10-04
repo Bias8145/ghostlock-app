@@ -78,3 +78,4 @@ W3 seccomp bypass，即使并非必需，也能节省时间。
 | `6.12.38-android16-5-g665eafb62659-ab14778838-4k`      | NX809J / NX888J                                                  |
 | `6.12.38-android16-5-g74ad46052215-ab14494108-4k`      | Lenovo Legion Y700 Wuji                                          |
 | `6.12.38-android16-5-g844001fb8721-ab14552068-4k`      | OnePlus 15T                                                      |
+| `6.6.89-android15-8-g5a0ffb447c1d-ab13771415-4k`      | Redmi 15C 4G / POCO C85 4G                                                     |
