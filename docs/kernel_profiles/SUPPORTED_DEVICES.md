@@ -23,6 +23,7 @@ bypass there as well, so it saves time even where it isn't required.
 
 | Kernel                                                 | Devices                                                          |
 |--------------------------------------------------------|------------------------------------------------------------------|
+| `6.1.25-android14-11-maybe-dirty` | MEIZU 21 · Flyme 12.6.0.0A |
 | `5.15.41-android13-8-g8dc4c75ab7d8-ab1673212412` | MEIZU 20 Pro · Flyme 10.2.0.0A · Shizuku recommended |
 | `5.15.119-android13-8-g6ff5097ee32a-ab1764665171`  | MEIZU 21 Note                                                  |
 | `5.15.167-android13-8-00017-gb1f32b310a30-ab12826353`  | Red Magic 8 Pro                                                  |
