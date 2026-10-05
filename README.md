@@ -1,64 +1,139 @@
-# GhostLock for MEIZU 20 Pro
+# GhostLock-App
 
-[简体中文](README_ZH.md)
+> 中文: [README_ZH.md](README_ZH.md)
 
-Temporary root support for **MEIZU 20 Pro running Flyme 10.2.0.0A**.
+## Documentation
 
-## Supported configuration
+- [Kernel Profile Porting Guide](docs/kernel_profiles/README.md) - add support for a new kernel. GhostLock matches kernels by exact `uname -r` and rejects unsupported builds, showing the status at the top. Built-in profiles live in `app/src/main/assets/kernel_profiles/`: one HOCON file per release, `index.conf` as the runtime index, and `<major.minor>-template.conf` version-family templates.
+- [Supported devices](docs/kernel_profiles/SUPPORTED_DEVICES.md) - the built-in kernel list.
+- [Shared execution defaults](docs/kernel_profiles/defaults.md) - every execution-tuning field, its default, and why.
+- [Profile schema](docs/kernel_profiles/PROFILE_SCHEMA.md) - full profile structure and data flow.
+- [Adding a component](docs/development/adding-a-component.md) - developer guide for a new native middleware / backend / frontend (Chinese).
 
-| Item | Supported configuration |
-|---|---|
-| Device | MEIZU 20 Pro |
-| SoC | Qualcomm SM8550 |
-| Firmware | Flyme 10.2.0.0A |
-| Android | 13 |
-| Security patch | 2023-06-01 |
-| Kernel | `5.15.41-android13-8-g8dc4c75ab7d8-ab1673212412` |
-| Route | `multicast_waiter` |
-| Execution | Shizuku, ADB shell UID 2000, Seccomp 0 |
-| CPU pair | Main 3, consumer 4 |
-| Root manager | KernelSU v3.3.0, versionCode 32601 |
-| Shizuku | v13.6.0 |
+For the complete device-porting workflow, kernel-family template links, and tuning rationale, see the [Kernel Profile Porting Guide](docs/kernel_profiles/README.md).
 
-Support requires the complete kernel version above. Another firmware or kernel needs its own validation.
+Rows explicitly marked **Shizuku required** run through a shell UserService. Start Shizuku with ADB and tap the status card to grant access; all other rows use the app's normal execution path.
 
-Root is temporary and is lost after a reboot. Restart Shizuku and run GhostLock again to regain it. An incorrect profile can cause a kernel crash or reboot.
+## Quick Start
 
-## Compatibility
+Open **GhostLock** and tap **Run**. KernelSU (`me.weishu.kernelsu`), ReSukiSU (`com.resukisu.resukisu`), or KowSU (`com.kowx712.supermanager`) provides `ksud` for module loading; without it, W1/W2 still grant uid 0 but no module is loaded.
 
-The kernel profile uses the matching official firmware layout and embedded BTF type information. Support is limited to the exact firmware and kernel listed above. Repeatability and long-term stability are not established.
+The execution chain is a pipeline of three components: a frontend (`root_child` startup/handoff), a backend (the CVE-2026-43499 futex primitive), and a middleware route. The catalogued combinations are instantiated at build time; the resolved profile selects which one runs. The route races two cores: on the 6.6/6.12 tree-waiter kernels the main thread hammers `select` while a consumer thread perturbs the waiter's priority; on the 6.1 compact-waiter kernels it drives `getsockopt(TCP_ZEROCOPY_RECEIVE)` through a punched-hole page; the 5.15 kernels use the multicast waiter. The CPU pair also comes from the resolved profile.
 
-## Quick start
+## Command-Line Debugging
 
-1. Check the kernel with `adb shell uname -r`.
-2. Install GhostLock, [KernelSU](https://github.com/tiann/KernelSU/releases/tag/v3.3.0), and [Shizuku](https://github.com/RikkaApps/Shizuku/releases/tag/v13.6.0).
-3. In Shizuku, open **View command** under the computer/ADB startup option and run the displayed command from the computer.
-4. Open GhostLock and grant its Shizuku request. Enable **Run via Shizuku**.
-5. Select CPU pair **3,4** and keep force-attack testing disabled.
-6. Run once and verify KernelSU and `adb shell su -c id`.
+adb/shell has no seccomp filter, so W3 is skipped - handy for quick verification:
 
-This branch registers the profile in the built-in index. When using the [upstream pre-release APK](https://github.com/YuKongA/ghostlock-app/releases/tag/pre-release), import [the supplied HOCON profile](app/src/main/assets/kernel_profiles/5.15.41-android13-8-g8dc4c75ab7d8-ab1673212412.conf) through **Advanced options → Profile configuration → Load configuration → Import offsets.conf**, then select **Load this configuration**.
-
-This branch supplies source and a kernel profile. A separate APK release has not been built.
-
-## Build
-
-Use the toolchain declared by the Gradle wrapper and the upstream build workflow: JDK 21, Android SDK, ONDK/NDK, Rust, and the Android arm64 target.
-
-```sh
-./gradlew :profile-core:exportKernelProfiles
-./gradlew :profile-core:test
-./gradlew :app:assembleDebug
+```powershell
+make -C src ghostlock
+./gradlew exportKernelProfiles
+adb push build/native/ghostlock /data/local/tmp/ghostlock
+adb push build/kernel-profiles/<release>.bin /data/local/tmp/profile.bin
+adb shell chmod 755 /data/local/tmp/ghostlock
+adb shell /data/local/tmp/ghostlock --load-prebuilt-profile /data/local/tmp/profile.bin
 ```
 
-The existing GitHub **Build** workflow supports manual execution for this branch. Built-in profile sources are under `app/src/main/assets/kernel_profiles/`. The upstream runtime and build system are retained.
+## Offset Extraction
 
-## Upstream and license
+`tools/extract_rs` derives offsets from a `boot.img` (plus optional `xbl_config.img`), a full OTA ZIP, or an `http(s)` URL pointing at one. kallsyms come from `--kallsyms` or are recovered from the image's embedded table. `pselect_waiter_shift` and `off_slide_loggers_0_1` are derived by the built-in arm64 disassembler. MediaTek images have no `xbl_config.img` and usually no BTF: the physical load address is derived from kallsyms `_text` (override with `--phys`).
 
-Based on [YuKongA/ghostlock-app](https://github.com/YuKongA/ghostlock-app) at `123a469cdde94e0913d57c46427ce0c3bc16b96c`.
+```powershell
+Push-Location tools/extract_rs
+cargo build --release
+Pop-Location
+build/extract/release/ghostlock-extract.exe boot.img --xbl-config xbl_config.img --format conf --out profile.conf
+build/extract/release/ghostlock-extract.exe OTA.zip --format conf --out profile.conf
+```
 
-This branch adds the MEIZU 20 Pro profile, registers its exact kernel, and provides device-specific English and Chinese documentation.
+`--format conf` is the extractor output: a flattened, self-contained profile (no `include` lines, the shared 6.x credential/KernelSnitch constants inlined, the route selected from `--analysis` evidence unless `--route` overrides it). The extractor emits every field the image actually yields and omits the rest; it never fills gaps from a neighbouring kernel family's guesses (unverified-family 6.6, the default `-2`, the 5.15 multicast constants, or a phys default). Every output is an **unverified candidate**: importable and parseable, with missing or invalid fields blocked by the app's pre-execution validation, so a successful run never implies device support. On 5.x it also derives the credential reference repair from `init_cred` and the multicast geometry from BTF (see `docs/analysis/extractor-5x-derivation-plan.md`). `--format json` stays for the v1 import path. To add a built-in profile, complete and validate the matching version-family template, save it as a standalone `.conf` profile, and add it to `kernel_profiles/index.conf`. The old C `offsets.h` registry is deprecated and removed.
 
-Original work and acknowledgements: [NebuSec/CyberMeowfia](https://github.com/NebuSec/CyberMeowfia), [JoinChang/ghostlock-oneplus](https://github.com/JoinChang/ghostlock-oneplus), and [x-spy/CVE-2026-43499-popsicle](https://github.com/x-spy/CVE-2026-43499-popsicle).
+### MediaTek
 
-[Apache License 2.0](LICENSE).
+MediaTek images have no `xbl_config.img` and usually no embedded BTF, so the
+extractor cannot derive the two physical addresses (`kernel_phys_load`,
+`kernel_phys_offset`) from the image and leaves them `null`. The runtime then
+falls back to the SoC formula, which fails at W1 on MediaTek. Fill both by
+running the separate `tools/mtk-phys/` extractor on a rooted device (it reads
+`/proc/iomem`) and pasting the values into the app's advanced overrides. See
+[MEDIATEK.md](docs/kernel_profiles/MEDIATEK.md).
+
+### Preflight
+
+The extractor disassembles `remove_waiter()` before extracting offsets. Kernels with the fix are rejected with exit code `6`; only vulnerable kernels continue.
+
+### On-device analysis
+
+A full OTA can be analyzed entirely on the phone: `boot` plus `xbl_config`
+are extracted automatically. Pass `--work-dir` an app-writable dir when
+running inside the app sandbox. Cross-compile and push:
+
+```powershell
+rustup target add aarch64-linux-android
+$ndk = "$env:ANDROID_HOME\ndk\<version>\toolchains\llvm\prebuilt\windows-x86_64\bin"
+$env:CC_aarch64_linux_android = "$ndk\aarch64-linux-android35-clang.cmd"
+$env:AR_aarch64_linux_android = "$ndk\llvm-ar.exe"
+$env:CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER = $env:CC_aarch64_linux_android
+Push-Location tools/extract_rs
+cargo build --release --target aarch64-linux-android
+Pop-Location
+adb push build/extract/aarch64-linux-android/release/ghostlock-extract /data/local/tmp/
+adb shell /data/local/tmp/ghostlock-extract /sdcard/OTA.zip
+```
+
+### Importing offsets without rebuilding the app
+
+New kernels no longer need an app rebuild: tap **Import offsets.conf (HOCON)**
+and pick the extractor's flattened `.conf`, or use **Import offsets.json (v1)**
+for an older JSON report. v1 JSON is converted in-app, so nothing has to be
+pushed to the device: native always starts from the GLK1 document the app sends
+on stdin, and matches the current `uname -r` against the resolved profile
+before rejecting the kernel. Imports merge across files; a release already
+stored prompts before overwrite.
+
+The app can also generate the profile itself — **Parse OTA link** (full OTA ZIP
+URL) and **Parse image** (`boot.img` + optional `xbl_config.img`) run the
+extractor in-process and write a flattened `.conf` into the app data dir on
+success:
+
+```hocon
+# GhostLock kernel profile: 6.12.38-android16-5-g844001fb8721-ab14552068-4k (HOCON, self-contained).
+release = "6.12.38-android16-5-g844001fb8721-ab14552068-4k"
+schema_version = 1
+kernel_major = 6
+recommend_shizuku = 0
+kernel_phys_load = 0xC7800000
+route {
+  select_stack {
+    waiter_shift = 0
+  }
+}
+fallback {
+  to = "none"
+}
+kernelsnitch {
+  collisions = 4
+}
+task_struct {
+  prio = 148
+  cred = 2304
+}
+cred {
+  caps_offset = 48
+  copy_size = 136
+  usage_value = 1
+  caps_count = 5
+  caps_value = -1
+}
+offset {
+  init_task = 37801728
+  init_cred = 37891184
+}
+```
+
+## Credits & License
+
+Based on the following projects, licensed under Apache License 2.0 (see [LICENSE](LICENSE)):
+
+- [NebuSec/CyberMeowfia](https://github.com/NebuSec/CyberMeowfia)
+- [JoinChang/ghostlock-oneplus](https://github.com/JoinChang/ghostlock-oneplus)
+- [x-spy/CVE-2026-43499-popsicle](https://github.com/x-spy/CVE-2026-43499-popsicle)
