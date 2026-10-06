@@ -616,7 +616,7 @@ private fun GhostlockDialog(
                         text = stringResource(state.dialogMessageRes),
                         modifier = Modifier.fillMaxWidth(),
                         style = MiuixTheme.textStyles.body2,
-                        color = MiuixTheme.colorScheme.onSurface.copy(alpha = 0.68f)Summary,
+                        color = MiuixTheme.colorScheme.onSurface.copy(alpha = 0.68f),
                     )
                     Row(
                         modifier = Modifier
@@ -643,7 +643,7 @@ private fun GhostlockDialog(
                         text = stringResource(state.dialogMessageRes),
                         modifier = Modifier.fillMaxWidth(),
                         style = MiuixTheme.textStyles.body2,
-                        color = MiuixTheme.colorScheme.onSurface.copy(alpha = 0.68f)Summary,
+                        color = MiuixTheme.colorScheme.onSurface.copy(alpha = 0.68f),
                     )
                     Row(
                         modifier = Modifier
