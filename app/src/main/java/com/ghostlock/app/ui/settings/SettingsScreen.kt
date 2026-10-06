@@ -12,7 +12,6 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
@@ -32,10 +31,6 @@ import com.ghostlock.app.ui.theme.ThemeRepository
 import com.ghostlock.app.ui.theme.UiMode
 import kotlinx.coroutines.launch
 
-/**
- * Interface for actions that the SettingsScreen can trigger.
- * The implementing class (usually an Activity or ViewModel) should provide the actual implementations.
- */
 interface GhostlockActions {
     fun onShizukuClick()
     fun onSafeModeChanged(enabled: Boolean)
@@ -54,7 +49,6 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
 
-    // File picker for importing config
     val openFilePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let { handlePickedFile(context, it, actions) }
     }
@@ -80,14 +74,13 @@ fun SettingsScreen(
                 .padding(vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(settings) { item ->
-                item()
+            items(settings.size) { index ->
+                settings[index].content()
             }
         }
     }
 }
 
-/* ---------- DATA SETTINGS ---------- */
 private data class SettingsItem(
     val title: String,
     val icon: Int? = null,
@@ -104,327 +97,164 @@ private fun SettingsItem(
 private fun settingsItems(
     context: Context,
     themeRepository: ThemeRepository,
-    openFilePicker: ManagedActivityResultLauncher<String, Uri?>,
+    openFilePicker: ActivityResultLauncher<String>,
     actions: GhostlockActions
-): List<SettingsItem> {
-    return listOf(
-        // ---------- DISPLAY ----------
-        SettingsItem(
-            title = "Theme",
-            icon = android.R.drawable.ic_menu_manage, // add this icon to drawable if needed
-            content = { ThemeSelector(themeRepository) }
-        ),
-        SettingsItem(
-            title = "Language",
-            icon = android.R.drawable.ic_menu_sort_by_size,
-            content = { LanguageSelector() }
-        ),
-        SettingsItem(
-            title = "Text size",
-            icon = android.R.drawable.ic_menu_zoom,
-            content = { TextScaleSelector() }
-        ),
-        // ---------- FUNCTIONALITY ----------
-        SettingsItem(
-            title = "Shizuku",
-            icon = android.R.drawable.ic_menu_manage,
-            content = { ShizukuShortcut(actions) }
-        ),
-        SettingsItem(
-            title = "Safe mode",
-            icon = android.R.drawable.ic_lock_lock,
-            content = { SafeModeSwitchPreference(themeRepository, actions) }
-        ),
-        SettingsItem(
-            title = "CPU cores",
-            icon = android.R.drawable.ic_menu_manage,
-            content = { CpuPairPreference(actions) }
-        ),
-        SettingsItem(
-            title = "Advanced",
-            icon = android.R.drawable.ic_menu_preferences,
-            content = { AdvancedShortcut(actions) }
-        ),
-        // ---------- DATA & PRIVACY ----------
-        SettingsItem(
-            title = "Export profile",
-            icon = android.R.drawable.ic_menu_upload,
-            content = { ExportProfileShortcut(actions) }
-        ),
-        SettingsItem(
-            title = "Import config",
-            icon = android.R.drawable.ic_menu_save,
-            content = { ImportConfigShortcut(openFilePicker) }
-        ),
-        SettingsItem(
-            title = "Clear logs",
-            icon = android.R.drawable.ic_menu_delete,
-            content = { ClearLogsShortcut(actions) }
-        ),
-        // ---------- ABOUT ----------
-        SettingsItem(
-            title = "About",
-            icon = android.R.drawable.ic_menu_info_details,
-            content = { AboutShortcut(actions) }
-        ),
-        SettingsItem(
-            title = "GitHub",
-            icon = android.R.drawable.ic_menu_view,
-            content = { GithubShortcut() }
-        )
-    )
-}
-
-/* ---------- SETTINGS COMPONENTS ---------- */
-@Composable
-fun ThemeSelector(repository: ThemeRepository) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = "Choose the app appearance",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 12.dp)
-        ) {
-            UiMode.values().forEach { mode ->
-                val isSelected = repository.uiMode.value == mode
-                RadioButton(
-                    selected = isSelected,
-                    onClick = { repository.setUserChoice(mode) },
-                    enabled = true
-                )
-                Text(
-                    text = when (mode) {
-                        UiMode.SYSTEM -> "System"
-                        UiMode.LIGHT -> "Light"
-                        UiMode.DARK -> "Dark"
-                    },
-                    style = MaterialTheme.typography.labelLarge,
-                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary
-                    else MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(start = 8.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun LanguageSelector() {
-    Text(
-        text = "Not yet implemented",
-        style = MaterialTheme.typography.bodyLarge,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(24.dp)
-    )
-}
-
-@Composable
-fun TextScaleSelector() {
-    var scale by remember { mutableStateOf(1f) }
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = "Adjust text size",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Slider(
-            value = scale,
-            onValueChange = { scale = it },
-            valueRange = 0.8f..1.2f,
-            steps = 4,
-            modifier = Modifier.fillMaxWidth()
-        )
-        Text(
-            text = "${(scale * 100).toInt()}%",
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.align(Alignment.End)
-        )
-    }
-}
-
-@Composable
-fun ShizukuShortcut(actions: GhostlockActions) {
-    ListItem(
-        headline = { Text("Shizuku") },
-        leadingIcon = {
-            Icon(imageVector = Icons.Default.Terminal, contentDescription = null)
-        },
-        onClick = { actions.onShizukuClick() }
-    )
-}
-
-@Composable
-fun SafeModeSwitchPreference(repository: ThemeRepository, actions: GhostlockActions) {
-    val prefs = GhostlockPrefs
-    val context = LocalContext.current
-    var enabled by remember { mutableStateOf(false) }
+): List<@Composable () -> Unit> {
+    val prefs = remember { GhostlockPrefs(context) }
     val scope = rememberCoroutineScope()
-    LaunchedEffect(Unit) { enabled = prefs.isSafeModeEnabled(context) }
-    ListItem(
-        headline = { Text("Safe mode") },
-        leadingIcon = {
-            Icon(imageVector = Icons.Default.Shield, contentDescription = null)
+
+    return listOf(
+        { SectionHeader("General") },
+        { ThemePreference(themeRepository) },
+        { LanguagePreference() },
+        { TextScalePreference() },
+        { SafeModeSwitchPreference(prefs, scope, actions) },
+        { SectionHeader("Runtime") },
+        { ShizukuPreference(actions) },
+        { SectionHeader("Configuration") },
+        { ExportConfigShortcut(actions) },
+        { ImportConfigShortcut(openFilePicker) },
+        { AdvancedShortcut(actions) },
+        { SectionHeader("About") },
+        { AboutShortcut(actions) }
+    )
+}
+
+@Composable
+private fun SectionHeader(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    )
+}
+
+@Composable
+private fun ThemePreference(repository: ThemeRepository) {
+    var mode by remember { mutableStateOf(repository.uiMode.value) }
+    PreferenceCard(
+        title = "Theme",
+        subtitle = when (mode) {
+            UiMode.SYSTEM -> "System default"
+            UiMode.LIGHT -> "Light"
+            UiMode.DARK -> "Dark"
         },
-        trailingIcon = {
-            Switch(
-                checked = enabled,
-                onCheckedChange = {
-                    enabled = it
-                    scope.launch { prefs.setSafeMode(context, it) }
-                    actions.onSafeModeChanged(it)
-                }
-            )
+        onClick = {
+            mode = when (mode) {
+                UiMode.SYSTEM -> UiMode.LIGHT
+                UiMode.LIGHT -> UiMode.DARK
+                UiMode.DARK -> UiMode.SYSTEM
+            }
+            repository.setUiMode(mode)
         }
     )
 }
 
 @Composable
-fun CpuPairPreference(actions: GhostlockActions) {
-    ListItem(
-        headline = { Text("CPU cores") },
-        leadingIcon = {
-            Icon(imageVector = Icons.Default.Speed, contentDescription = null)
-        },
-        onClick = { actions.onOpenAdvanced() }
+private fun LanguagePreference() {
+    PreferenceCard(title = "Language", subtitle = "English", onClick = {})
+}
+
+@Composable
+private fun TextScalePreference() {
+    PreferenceCard(title = "Text size", subtitle = "Default", onClick = {})
+}
+
+@Composable
+private fun SafeModeSwitchPreference(
+    prefs: GhostlockPrefs,
+    scope: kotlinx.coroutines.CoroutineScope,
+    actions: GhostlockActions
+) {
+    var enabled by remember { mutableStateOf(false) }
+    PreferenceCard(
+        title = "Safe mode",
+        subtitle = if (enabled) "Enabled" else "Disabled",
+        onClick = {
+            enabled = !enabled
+            scope.launch { prefs.setSafeMode(enabled) }
+            actions.onSafeModeChanged(enabled)
+        }
     )
 }
 
 @Composable
-fun AdvancedShortcut(actions: GhostlockActions) {
-    ListItem(
-        headline = { Text("Advanced") },
-        leadingIcon = {
-            Icon(imageVector = Icons.Default.Settings, contentDescription = null)
-        },
-        onClick = { actions.onOpenAdvanced() }
-    )
+private fun ShizukuPreference(actions: GhostlockActions) {
+    PreferenceCard(title = "Shizuku", subtitle = "Tap to configure", onClick = actions::onShizukuClick)
 }
 
 @Composable
-fun ExportProfileShortcut(actions: GhostlockActions) {
-    ListItem(
-        headline = { Text("Export profile") },
-        leadingIcon = {
-            Icon(imageVector = Icons.Default.FileUpload, contentDescription = null)
-        },
-        onClick = { actions.onExportProfile() }
-    )
+private fun ExportConfigShortcut(actions: GhostlockActions) {
+    PreferenceCard(title = "Export configuration", subtitle = "Save current settings", onClick = actions::onExportProfile)
 }
 
 @Composable
-fun ImportConfigShortcut(openFilePicker: ActivityResultLauncher<String>) {
-    ListItem(
-        headline = { Text("Import config") },
-        leadingIcon = {
-            Icon(imageVector = Icons.Default.FileDownload, contentDescription = null)
-        },
+private fun ImportConfigShortcut(openFilePicker: ActivityResultLauncher<String>) {
+    PreferenceCard(
+        title = "Import configuration",
+        subtitle = "Load a configuration file",
         onClick = { openFilePicker.launch("*/*") }
     )
 }
 
 @Composable
-fun ClearLogsShortcut(actions: GhostlockActions) {
-    ListItem(
-        headline = { Text("Clear logs") },
-        leadingIcon = {
-            Icon(imageVector = Icons.Default.Delete, contentDescription = null)
-        },
-        onClick = {
-            actions.onCloseParameters() // placeholder; replace with actual confirm dialog
-        }
-    )
+private fun AdvancedShortcut(actions: GhostlockActions) {
+    PreferenceCard(title = "Advanced", subtitle = "Advanced runtime parameters", onClick = actions::onOpenAdvanced)
 }
 
 @Composable
-fun AboutShortcut(actions: GhostlockActions) {
-    ListItem(
-        headline = { Text("About") },
-        leadingIcon = {
-            Icon(imageVector = Icons.Default.Info, contentDescription = null)
-        },
-        onClick = { actions.onShowAbout() }
-    )
+private fun AboutShortcut(actions: GhostlockActions) {
+    PreferenceCard(title = "About", subtitle = "GhostLock information", onClick = actions::onShowAbout)
 }
 
 @Composable
-fun GithubShortcut() {
-    ListItem(
-        headline = { Text("GitHub") },
-        leadingIcon = {
-            Icon(imageVector = Icons.Default.Web, contentDescription = null)
-        },
-        onClick = {
-            val context = LocalContext.current
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Bias8145/ghostlock-app"))
-            context.startActivity(intent)
-        }
-    )
-}
-
-/* ---------- HELPER: ListItem ---------- */
-@Composable
-fun ListItem(
-    headline: @Composable () -> Unit,
-    leadingIcon: @Composable () -> Unit = {},
-    trailingIcon: @Composable () -> Unit = {},
-    onClick: () -> Unit = {}
+private fun PreferenceCard(
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant)
+            .padding(horizontal = 12.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(18.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth()
-        ) {
-            leadingIcon()
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                headline()
-            }
-            Spacer(modifier = Modifier.width(12.dp))
-            trailingIcon()
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+            Text(title, style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(4.dp))
+            Text(
+                subtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
 
-/* ---------- HELPER: HANDLE PICKED FILE ---------- */
-fun handlePickedFile(context: Context, uri: Uri, actions: GhostlockActions) {
-    val contentResolver = context.contentResolver
-    val displayName = runCatching { contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }.let {
-        val cursor = contentResolver.query(uri, null, null, null, null)
-        cursor?.use {
-            if (it != null && it.moveToFirst()) {
-                it.getString(it.getColumnIndex(OpenableColumns.DISPLAY_NAME))
-            } else null
-        } ?: uri.lastPathSegment
-    } ?: "unknown_file"
+private fun handlePickedFile(context: Context, uri: Uri, actions: GhostlockActions) {
+    runCatching {
+        context.contentResolver.takePersistableUriPermission(
+            uri,
+            Intent.FLAG_GRANT_READ_URI_PERMISSION
+        )
+    }
 
-    if (displayName.endsWith(".conf", ignoreCase = true) ||
-        displayName.endsWith(".hocon", ignoreCase = true)) {
-        val input = contentResolver.openInputStream(uri)
-        input.use { stream ->
-            val text = stream.bufferedReader().use { it.readText() }
-            actions.onImportOffsetsHocon(text)
+    val name = runCatching {
+        context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+            val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+            if (index >= 0 && cursor.moveToFirst()) cursor.getString(index) else null
         }
-    } else if (displayName.endsWith(".json", ignoreCase = true)) {
-        val input = contentResolver.openInputStream(uri)
-        input.use { stream ->
-            val text = stream.bufferedReader().use { it.readText() }
-            actions.onImportOffsetsJson(text)
-        }
-    } else {
-        // Unsupported format; could show a toast or dialog (omitted for brevity)
+    }.getOrNull() ?: uri.lastPathSegment.orEmpty()
+
+    val content = runCatching {
+        context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
+    }.getOrNull() ?: return
+
+    when {
+        name.endsWith(".hocon", ignoreCase = true) -> actions.onImportOffsetsHocon(content)
+        name.endsWith(".json", ignoreCase = true) -> actions.onImportOffsetsJson(content)
     }
 }
