@@ -486,7 +486,7 @@ private fun LogPanel(
                 if (lines.isEmpty()) {
                     item {
                         Text(
-                            text = stringResource(R.string.log_empty),
+                            text = "No execution log yet.",
                             color = MiuixTheme.colorScheme.onSurface.copy(alpha = 0.68f),
                             fontFamily = FontFamily.Monospace,
                             fontSize = 12.sp,
@@ -1164,3 +1164,7 @@ private fun RunButton(
                 modifier = Modifier
                     .matchParentSize()
                     .clickable { onBlockedClick() },
+            )
+        }
+    }
+}
