@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.content.pm.Signature;
 import android.net.Uri;
 import android.os.Build;
@@ -42,12 +43,16 @@ public final class ManagerCompatibility {
      * BakaSU is the current rebrand of ReSukiSU.
      * Official builds keep com.resukisu.resukisu, while development/PR builds
      * may use com.resukisu.resukisu.dev or com.resukisu.resukisu.pr<number>.
-     * Keep all ReSukiSU identities compatible.
+     *
+     * Package names and labels are not reliable for spoofed builds.
+     * The manager APK embeds libksud.so, so an unknown package is accepted
+     * when that native fingerprint is present.
      */
     private static final String RESUKISU_PACKAGE = "com.resukisu.resukisu";
     private static final String RESUKISU_PREFIX = "com.resukisu.resukisu.";
+    private static final String BAKASU_URL = "https://github.com/Baka-SU/BakaSU";
     private static final Registered[] REGISTERED = {
-            new Registered(RESUKISU_PACKAGE, "ReSukiSU / BakaSU", "https://github.com/Baka-SU/BakaSU"),
+            new Registered(RESUKISU_PACKAGE, "ReSukiSU / BakaSU", BAKASU_URL),
             new Registered("me.weishu.kernelsu.pr", "KernelSU PR", "https://github.com/tiann/KernelSU/releases"),
             new Registered("me.weishu.kernelsu", "KernelSU", "https://github.com/tiann/KernelSU/releases", "1417081413bf7ab1de8e440ecbcb62685037c8f28f048f0f8b79e305b31ab916"),
             new Registered("com.kowx712.supermanager", "KOWSU", "https://github.com/KOWX712/KernelSU/releases")
@@ -96,64 +101,81 @@ public final class ManagerCompatibility {
     public static ManagerInfo detectManager(Context context) {
         PackageManager pm = context.getPackageManager();
 
-        // First check known package IDs, including BakaSU/ReSukiSU dev and PR variants.
+        // First check known package IDs.
         for (Registered r : REGISTERED) {
             ApplicationInfo app = findApplication(pm, r.pkg);
             if (app == null) continue;
             return buildManagerInfo(pm, r.pkg, app, r);
         }
 
+        // Inspect visible launcher applications. Android 11+ filters package
+        // enumeration, while launcher queries can still expose user-facing managers.
         try {
-            List<ApplicationInfo> apps = pm.getInstalledApplications(PackageManager.GET_META_DATA);
-            for (ApplicationInfo app : apps) {
-                if (app == null || app.packageName == null) continue;
-
-                String pkg = app.packageName;
-                String lowerLabel = "";
-                try {
-                    CharSequence label = app.loadLabel(pm);
-                    if (label != null) lowerLabel = label.toString().trim().toLowerCase(Locale.ROOT);
-                } catch (Throwable ignored) {}
-
-                // BakaSU/ReSukiSU official, dev, PR, or repackaged builds.
-                boolean resukisuFamily = pkg.equals(RESUKISU_PACKAGE) || pkg.startsWith(RESUKISU_PREFIX);
-                boolean bakaLabel = lowerLabel.contains("bakasu") || lowerLabel.contains("resukisu");
-                if (!resukisuFamily && !bakaLabel) continue;
-
-                if (!hasKsud(app) && !resukisuFamily) continue;
-
-                String name = lowerLabel.contains("bakasu") ? "BakaSU"
-                        : lowerLabel.contains("resukisu") ? "ReSukiSU"
-                        : "BakaSU / ReSukiSU";
-                return new ManagerInfo(
-                        pkg,
-                        name,
-                        "https://github.com/Baka-SU/BakaSU",
-                        true,
-                        true,
-                        false,
-                        false);
+            Intent launcher = new Intent(Intent.ACTION_MAIN);
+            launcher.addCategory(Intent.CATEGORY_LAUNCHER);
+            List<ResolveInfo> launchers = queryLauncherActivities(pm, launcher);
+            for (ResolveInfo info : launchers) {
+                ApplicationInfo app = info.activityInfo == null ? null : info.activityInfo.applicationInfo;
+                ManagerInfo detected = inspectCandidate(pm, app);
+                if (detected != null) return detected;
             }
         } catch (Throwable ignored) {}
 
-        // Final runtime fallback: locate a manager that actually ships ksud.
+        // Fallback to installed applications for environments where launcher
+        // visibility is unavailable.
         try {
             List<ApplicationInfo> apps = pm.getInstalledApplications(PackageManager.GET_META_DATA);
             for (ApplicationInfo app : apps) {
-                if (app == null || app.packageName == null || !hasKsud(app)) continue;
-                CharSequence label = app.loadLabel(pm);
-                return new ManagerInfo(
-                        app.packageName,
-                        label == null ? app.packageName : label.toString(),
-                        "",
-                        true,
-                        false,
-                        false,
-                        false);
+                ManagerInfo detected = inspectCandidate(pm, app);
+                if (detected != null) return detected;
             }
         } catch (Throwable ignored) {}
 
         return new ManagerInfo("", "", "", false, false, false, false);
+    }
+
+    private static List<ResolveInfo> queryLauncherActivities(PackageManager pm, Intent launcher) {
+        if (Build.VERSION.SDK_INT >= 33) {
+            return pm.queryIntentActivities(launcher, PackageManager.ResolveInfoFlags.of(PackageManager.MATCH_ALL));
+        }
+        return pm.queryIntentActivities(launcher, PackageManager.MATCH_ALL);
+    }
+
+    private static ManagerInfo inspectCandidate(PackageManager pm, ApplicationInfo app) {
+        if (app == null || app.packageName == null) return null;
+
+        String pkg = app.packageName;
+        String label = "";
+        try {
+            CharSequence value = app.loadLabel(pm);
+            if (value != null) label = value.toString().trim();
+        } catch (Throwable ignored) {}
+        String lowerLabel = label.toLowerCase(Locale.ROOT);
+
+        boolean resukisuFamily = pkg.equals(RESUKISU_PACKAGE) || pkg.startsWith(RESUKISU_PREFIX);
+        boolean bakaLabel = lowerLabel.contains("bakasu") || lowerLabel.contains("resukisu");
+        boolean ksud = hasKsud(app);
+
+        // Package/label identity is preferred, but libksud.so is the
+        // authoritative fingerprint for randomized/spoofed manager APKs.
+        if (!resukisuFamily && !bakaLabel && !ksud) return null;
+
+        if (resukisuFamily || bakaLabel) {
+            String name = lowerLabel.contains("bakasu") ? "BakaSU"
+                    : lowerLabel.contains("resukisu") ? "ReSukiSU"
+                    : "BakaSU / ReSukiSU";
+            return new ManagerInfo(pkg, name, BAKASU_URL, true, true, false, false);
+        }
+
+        // Unknown package + libksud.so = spoofed/repackaged BakaSU/ReSukiSU.
+        return new ManagerInfo(
+                pkg,
+                label.isEmpty() ? "BakaSU / ReSukiSU (Spoofed)" : label,
+                BAKASU_URL,
+                true,
+                true,
+                false,
+                true);
     }
 
     private static ManagerInfo buildManagerInfo(PackageManager pm, String pkg, ApplicationInfo app, Registered r) {
@@ -169,7 +191,7 @@ public final class ManagerCompatibility {
         return new ManagerInfo(
                 pkg,
                 displayName,
-                r.pkg.equals(RESUKISU_PACKAGE) ? "https://github.com/Baka-SU/BakaSU" : r.url,
+                r.pkg.equals(RESUKISU_PACKAGE) ? BAKASU_URL : r.url,
                 true,
                 true,
                 verified,
@@ -243,11 +265,38 @@ public final class ManagerCompatibility {
                 } catch (Throwable ignored) {}
             }
             String displayName = installed ? resolveManagerName(pm, app, r) : r.name;
-            String installUrl = r.pkg.equals(RESUKISU_PACKAGE)
-                    ? "https://github.com/Baka-SU/BakaSU"
-                    : r.url;
+            String installUrl = r.pkg.equals(RESUKISU_PACKAGE) ? BAKASU_URL : r.url;
             result.add(new ManagerInfo(r.pkg, displayName, installUrl, installed, true, verified, installed && r.certs.length > 0 && !verified));
         }
+
+        // Expose randomized/spoofed managers too.
+        try {
+            Intent launcher = new Intent(Intent.ACTION_MAIN);
+            launcher.addCategory(Intent.CATEGORY_LAUNCHER);
+            for (ResolveInfo info : queryLauncherActivities(pm, launcher)) {
+                ApplicationInfo app = info.activityInfo == null ? null : info.activityInfo.applicationInfo;
+                if (app == null || !hasKsud(app)) continue;
+                boolean alreadyKnown = false;
+                for (ManagerInfo existing : result) {
+                    if (existing.packageName.equals(app.packageName)) {
+                        alreadyKnown = true;
+                        break;
+                    }
+                }
+                if (!alreadyKnown) {
+                    CharSequence label = app.loadLabel(pm);
+                    result.add(new ManagerInfo(
+                            app.packageName,
+                            label == null ? "BakaSU / ReSukiSU (Spoofed)" : label.toString(),
+                            BAKASU_URL,
+                            true,
+                            true,
+                            false,
+                            true));
+                }
+            }
+        } catch (Throwable ignored) {}
+
         return Collections.unmodifiableList(result);
     }
 
