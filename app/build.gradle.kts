@@ -183,6 +183,7 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.2.0")
     implementation("androidx.compose.foundation:foundation:1.12.1")
     implementation("androidx.compose.material:material-icons-extended:1.7.8")
+    implementation("androidx.compose.material3:material3:1.4.0")
     implementation("com.typesafe:config:1.4.9")
     implementation("org.apache.commons:commons-compress:1.28.0")
     implementation("dev.rikka.shizuku:api:13.1.5")
