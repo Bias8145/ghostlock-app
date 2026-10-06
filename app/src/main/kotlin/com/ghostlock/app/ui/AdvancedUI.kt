@@ -25,7 +25,9 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
@@ -82,7 +84,7 @@ private fun profileDocsUrl(): String =
     }
 
 private fun Modifier.preferencePageItem(): Modifier =
-    this.fillMaxWidth().padding(horizontal = 12.dp).padding(bottom = 12.dp)
+    this.fillMaxWidth().clip(RoundedCornerShape(18.dp)).padding(horizontal = 12.dp).padding(bottom = 10.dp)
 
 private fun Modifier.profileTreeItem(depth: Int): Modifier =
     this.fillMaxWidth().padding(start = (12 + depth * 12).dp, end = 12.dp, bottom = 12.dp)
@@ -173,7 +175,7 @@ internal fun AdvancedScreen(
                 .overScrollVertical()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
             contentPadding = pageContentPadding(paddingValues),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             item(key = "forceAttack") {
                 Card {
@@ -1042,7 +1044,7 @@ private fun ProfileTree(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                            .padding(horizontal = 14.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
