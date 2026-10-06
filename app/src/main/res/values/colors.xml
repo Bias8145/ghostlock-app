@@ -1,8 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="bg">#FFF7F8FA</color>
-    <color name="text_primary">#FF111827</color>
-    <color name="text_secondary">#FF6B7280</color>
-    <color name="accent">#FF2563EB</color>
-    <color name="launcher_icon_background">#FFF1F3F5</color>
+    <color name="bg">#FFF9F6EE</color>
+    <color name="surface">#FFFFFCF7</color>
+    <color name="surface_container_low">#FFF1ECE2</color>
+    <color name="surface_container">#FFE9E1D0</color>
+    <color name="text_primary">#FF29261F</color>
+    <color name="text_secondary">#FF756F64</color>
+    <color name="icon_tint">#FF8A784B</color>
+    <color name="accent">#FFDCC58A</color>
+    <color name="primary">#FFDCC58A</color>
+    <color name="accent_pressed">#FFC7AE70</color>
+    <color name="accent_disabled">#FFE8DEC3</color>
+    <color name="accent_container">#FFF3E8C8</color>
+    <color name="on_accent">#FF3C321D</color>
+    <color name="on_accent_container">#FF514323</color>
+    <color name="status_success">#FF5F806A</color>
+    <color name="status_success_bg">#FFDDEEDF</color>
+    <color name="status_error">#FF9A5E68</color>
+    <color name="status_error_bg">#FFF5DDE1</color>
+    <color name="launcher_icon_background">#FFF3E8C8</color>
 </resources>
