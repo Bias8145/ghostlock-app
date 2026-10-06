@@ -1,24 +1,19 @@
-# GhostLock V2
+# GhostLock V2.3.0
 
 ## Changelog
 
-- Complete UI/UX redesign with a cleaner and more consistent interface.
-- Redesigned Home and Settings pages with improved layout and spacing.
-- Added dynamic expandable CPU Pair and frequency selection.
-- Improved CPU and kernel compatibility.
-- Added verified support for Motorola G67 Power 5G with the supported kernel configuration.
-- Improved light and dark theme adaptation.
-- Moved developer and external resources into dedicated Settings panels.
-- Improved logging interface and overall stability.
-- Fixed first-launch crashes and legacy UI issues.
-- Updated build workflow and project documentation.
+- Added BakaSU manager detection while preserving ReSukiSU compatibility.
+- Expanded BakaSU package discovery to cover renamed, development, and pull-request package variants.
+- Added ksud fingerprint detection to recognize spoofed manager packages.
+- Improved manager compatibility detection across renamed and spoofed installations.
+- Refined manager status handling without reintroducing the removed status ornament.
 
 ## Recommendation
 
-For the best compatibility and experience, ReSukiSU is recommended when using GhostLock V2, especially on supported Motorola G67 Power 5G configurations.
+For the best compatibility and experience, use a current ReSukiSU or BakaSU manager build with GhostLock V2.3.0.
 
 ## Credits
 
 Special thanks to YuKongA for the original GhostLock project and its foundation.
 
-GhostLock V2 is independently adapted and developed by Khaliq, with a focus on the requirements of the Motorola G67 Power 5G.
+GhostLock V2 is independently adapted and developed by Khaliq.
