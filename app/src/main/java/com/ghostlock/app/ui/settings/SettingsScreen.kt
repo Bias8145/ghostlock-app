@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.OpenableColumns
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -11,16 +12,17 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.material3.icon.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.Unit
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodelScope
-import androidx.lifecycle.viewModels
 import com.ghostlock.app.R
 import com.ghostlock.app.data.GhostlockPrefs
 import com.ghostlock.app.ui.theme.ThemeRepository
@@ -45,31 +47,16 @@ interface GhostlockActions {
 @Composable
 fun SettingsScreen(
     actions: GhostlockActions,
-    themeRepository: ThemeRepository = viewModelFactory() // will be provided by NavHost
+    themeRepository: ThemeRepository
 ) {
     val context = LocalContext.current
-    val scaffoldState = rememberScaffoldState()
-    CoroutineScope(viewModelScope).launch {
-        // Sync theme with system when user selects System
-        themeRepository.uiMode.collect { mode ->
-            when (mode) {
-                UiMode.SYSTEM -> { /* no action needed */ }
-                UiMode.LIGHT -> Unit
-                UiMode.DARK -> Unit
-            }
-        }
-    }
 
     // File picker for importing config
-    val openFilePicker = remember {
-        val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-            uri?.let { handlePickedFile(uri, actions) }
-        }
-        launcher
+    val openFilePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let { handlePickedFile(context, it, actions) }
     }
 
     Scaffold(
-        scaffoldState = scaffoldState,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.settings_title)) },
@@ -108,10 +95,11 @@ private fun SettingsItem(
     content: @Composable () -> Unit
 ) = SettingsItem(title, icon, content)
 
+@Composable
 private fun settingsItems(
     context: Context,
     themeRepository: ThemeRepository,
-    openFilePicker: (Uri?) -> Unit,
+    openFilePicker: ManagedActivityResultLauncher<String, Uri?>,
     actions: GhostlockActions
 ): List<SettingsItem> {
     return listOf(
@@ -140,7 +128,7 @@ private fun settingsItems(
         SettingsItem(
             title = stringResource(R.string.settings_safe_mode),
             icon = R.drawable.ic_safe_mode,
-            content = { SafeModeSwitchPreference(themeRepository) }
+            content = { SafeModeSwitchPreference(themeRepository, actions) }
         ),
         SettingsItem(
             title = stringResource(R.string.settings_cpu_pair),
@@ -266,13 +254,12 @@ fun ShizukuShortcut(actions: GhostlockActions) {
 }
 
 @Composable
-fun SafeModeSwitchPreference(repository: ThemeRepository) {
+fun SafeModeSwitchPreference(repository: ThemeRepository, actions: GhostlockActions) {
     val prefs = GhostlockPrefs
     val context = LocalContext.current
-    val enabled by remember { mutableStateOf(prefs.isSafeModeEnabled(context)) }
-    LaunchedEffect(Unit) {
-        enabled.value = prefs.isSafeModeEnabled(context)
-    }
+    var enabled by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    LaunchedEffect(Unit) { enabled = prefs.isSafeModeEnabled(context) }
     ListItem(
         headline = { Text(stringResource(R.string.settings_safe_mode)) },
         leadingIcon = {
@@ -282,8 +269,8 @@ fun SafeModeSwitchPreference(repository: ThemeRepository) {
             Switch(
                 checked = enabled.value,
                 onCheckedChange = {
-                    prefs.setSafeMode(context, it)
-                    enabled.value = it
+                    enabled = it
+                    scope.launch { prefs.setSafeMode(context, it) }
                     actions.onSafeModeChanged(it)
                 }
             )
@@ -331,7 +318,7 @@ fun ImportConfigShortcut(openFilePicker: (Uri?) -> Unit) {
         leadingIcon = {
             Icon(imageVector = Icons.Default.FileDownload, contentDescription = null)
         },
-        onClick = { openFilePicker.call("*/*") }
+        onClick = { openFilePicker.launch("*/*") }
     )
 }
 
@@ -408,14 +395,9 @@ fun ListItem(
 }
 
 /* ---------- HELPER: HANDLE PICKED FILE ---------- */
-@Composable
-fun handlePickedFile(uri: Uri, actions: GhostlockActions) {
-    val context = LocalContext.current
+fun handlePickedFile(context: Context, uri: Uri, actions: GhostlockActions) {
     val contentResolver = context.contentResolver
-    val displayName = contentResolver.takePersistableUriPermission(
-        uri,
-        Intent.FLAG_GRANT_READ_URI_PERMISSION
-    ).let {
+    val displayName = runCatching { contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }.let {
         val cursor = contentResolver.query(uri, null, null, null, null)
         cursor?.use {
             if (it != null && it.moveToFirst()) {
