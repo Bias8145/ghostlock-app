@@ -54,7 +54,7 @@ private enum class ParseDialogStage { Mode, Attach }
 class GhostlockViewModel(
     private val repository: GhostlockRepository,
     private val context: Context,
-) : ViewModel() {
+) : ViewModel(), GhostlockActions {
     private val effectChannel = Channel<GhostlockEffect>(Channel.BUFFERED)
     private val mutableState = MutableStateFlow(GhostlockUiState())
     private var initialized = false
