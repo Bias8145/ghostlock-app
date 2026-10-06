@@ -59,6 +59,8 @@ fun SettingsScreen(
         uri?.let { handlePickedFile(context, it, actions) }
     }
 
+    val settings = settingsItems(context, themeRepository, openFilePicker, actions)
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -78,7 +80,7 @@ fun SettingsScreen(
                 .padding(vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(settingsItems(context, themeRepository, openFilePicker, actions)) { item ->
+            items(settings) { item ->
                 item()
             }
         }
