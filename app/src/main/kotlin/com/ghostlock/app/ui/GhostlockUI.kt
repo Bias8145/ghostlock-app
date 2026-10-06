@@ -309,7 +309,6 @@ private fun ghostlockLightColors() = lightColorScheme(
     surface = Color(0xFFFFFCF7),
     onSurface = Color(0xFF29261F),
     surfaceVariant = Color(0xFFF1ECE2),
-    onSurfaceVariant = Color(0xFF756F64),
     error = Color(0xFF9A5E68),
     onError = Color(0xFFFFFFFF),
     errorContainer = Color(0xFFF5DDE1),
@@ -330,7 +329,6 @@ private fun ghostlockDarkColors() = darkColorScheme(
     surface = Color(0xFF292820),
     onSurface = Color(0xFFF5F0E5),
     surfaceVariant = Color(0xFF322F25),
-    onSurfaceVariant = Color(0xFFCCC3B2),
     error = Color(0xFFFFB5BF),
     onError = Color(0xFF5A343D),
     errorContainer = Color(0xFF5A343D),
@@ -568,7 +566,7 @@ private fun GhostlockDialog(
                         text = stringResource(state.dialogMessageRes),
                         modifier = Modifier.fillMaxWidth(),
                         style = MiuixTheme.textStyles.body2,
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        color = MiuixTheme.colorScheme.onSurface.copy(alpha = 0.68f)Summary,
                     )
                     Row(
                         modifier = Modifier
@@ -595,7 +593,7 @@ private fun GhostlockDialog(
                         text = stringResource(state.dialogMessageRes),
                         modifier = Modifier.fillMaxWidth(),
                         style = MiuixTheme.textStyles.body2,
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        color = MiuixTheme.colorScheme.onSurface.copy(alpha = 0.68f)Summary,
                     )
                     Row(
                         modifier = Modifier
@@ -714,7 +712,7 @@ private fun SectionLabel(
         modifier = modifier.padding(start = 2.dp, bottom = 2.dp),
         fontSize = 10.sp,
         fontWeight = FontWeight.Bold,
-        color = MiuixTheme.colorScheme.onSurfaceVariant,
+        color = MiuixTheme.colorScheme.onSurface.copy(alpha = 0.68f),
     )
 }
 
@@ -1011,7 +1009,7 @@ private fun ManagerStatusCard(
 ) {
     val dark = isSystemInDarkTheme()
     val statusColor = when {
-        !manager.installed -> MiuixTheme.colorScheme.onSurfaceVariant
+        !manager.installed -> MiuixTheme.colorScheme.onSurface.copy(alpha = 0.68f)
         manager.spoofed -> MiuixTheme.colorScheme.error
         manager.identityVerified -> Color(0xFF4D9B67)
         else -> MiuixTheme.colorScheme.primary
@@ -1033,7 +1031,7 @@ private fun ManagerStatusCard(
                 text = "RUNTIME MANAGER",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
-                color = MiuixTheme.colorScheme.onSurfaceVariant,
+                color = MiuixTheme.colorScheme.onSurface.copy(alpha = 0.68f),
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
@@ -1069,7 +1067,7 @@ private fun ManagerStatusCard(
 @Composable
 private fun ManagerMeta(label: String, value: String, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
-        Text(label, fontSize = 9.sp, fontWeight = FontWeight.SemiBold, color = MiuixTheme.colorScheme.onSurfaceVariant)
+        Text(label, fontSize = 9.sp, fontWeight = FontWeight.SemiBold, color = MiuixTheme.colorScheme.onSurface.copy(alpha = 0.68f))
         Text(value, modifier = Modifier.padding(top = 3.dp), fontSize = 11.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
     }
 }
