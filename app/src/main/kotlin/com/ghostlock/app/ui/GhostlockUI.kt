@@ -293,14 +293,55 @@ private fun closeScreen(screen: GhostlockScreen, actions: GhostlockActions) {
     }
 }
 
+private fun ghostlockLightColors() = lightColorScheme(
+    primary = Color(0xFFDCC58A),
+    onPrimary = Color(0xFF3C321D),
+    primaryContainer = Color(0xFFF3E8C8),
+    onPrimaryContainer = Color(0xFF514323),
+    secondary = Color(0xFF8A784B),
+    onSecondary = Color(0xFFFFFFFF),
+    secondaryContainer = Color(0xFFE9E1D0),
+    onSecondaryContainer = Color(0xFF29261F),
+    background = Color(0xFFF9F6EE),
+    onBackground = Color(0xFF29261F),
+    surface = Color(0xFFFFFCF7),
+    onSurface = Color(0xFF29261F),
+    surfaceVariant = Color(0xFFF1ECE2),
+    onSurfaceVariant = Color(0xFF756F64),
+    error = Color(0xFF9A5E68),
+    onError = Color(0xFFFFFFFF),
+    errorContainer = Color(0xFFF5DDE1),
+    onErrorContainer = Color(0xFF5C2832),
+)
+
+private fun ghostlockDarkColors() = darkColorScheme(
+    primary = Color(0xFFE3C982),
+    onPrimary = Color(0xFF3B3017),
+    primaryContainer = Color(0xFF574A2F),
+    onPrimaryContainer = Color(0xFFF8E9B7),
+    secondary = Color(0xFFE6D29A),
+    onSecondary = Color(0xFF3B3017),
+    secondaryContainer = Color(0xFF3B362A),
+    onSecondaryContainer = Color(0xFFF5F0E5),
+    background = Color(0xFF201F1B),
+    onBackground = Color(0xFFF5F0E5),
+    surface = Color(0xFF292820),
+    onSurface = Color(0xFFF5F0E5),
+    surfaceVariant = Color(0xFF322F25),
+    onSurfaceVariant = Color(0xFFCCC3B2),
+    error = Color(0xFFFFB5BF),
+    onError = Color(0xFF5A343D),
+    errorContainer = Color(0xFF5A343D),
+    onErrorContainer = Color(0xFFFFDADF),
+)
+
 @Composable
 internal fun GhostlockApp(
     state: GhostlockUiState,
     actions: GhostlockActions,
 ) {
-    MiuixTheme(
-        colors = if (isSystemInDarkTheme()) darkColorScheme() else lightColorScheme(),
-    ) {
+    val colors = if (isSystemInDarkTheme()) ghostlockDarkColors() else ghostlockLightColors()
+    MiuixTheme(colors = colors) {
         val desiredPath = navigationPath(state)
         val backStack = remember {
             navBackStackOf(GhostlockScreen.Main).apply { addAll(desiredPath.drop(1)) }
@@ -400,8 +441,8 @@ private fun MainScreen(
 @Composable
 internal fun pageContentPadding(
     scaffoldPadding: PaddingValues,
-    top: Dp = 8.dp,
-    bottom: Dp = 12.dp,
+    top: Dp = 6.dp,
+    bottom: Dp = 10.dp,
     horizontalMin: Dp = 12.dp,
 ): PaddingValues {
     val windowWidth = with(LocalDensity.current) {
@@ -629,7 +670,7 @@ private fun MainContent(
             .nestedScroll(scrollBehavior.nestedScrollConnection)
             .imePadding(),
         contentPadding = pageContentPadding(scaffoldPadding),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         item(key = "controls") {
             ControlPanel(
@@ -793,7 +834,7 @@ private fun ActivationStatusCard(
         onParametersClick
     }
     Card(
-        modifier = modifier,
+        modifier = modifier.clip(RoundedCornerShape(18.dp)),
         colors = CardDefaults.defaultColors(color = backgroundColor),
         onClick = action,
         showIndication = true,
@@ -802,7 +843,7 @@ private fun ActivationStatusCard(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 110.dp)
+                 .heightIn(min = 104.dp)
         ) {
             Icon(
                 imageVector = icon,
@@ -825,20 +866,20 @@ private fun ActivationStatusCard(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .offset(x = 27.dp, y = 31.dp)
-                    .size(110.dp),
+                    .size(96.dp),
             )
             Column(
-                modifier = Modifier.padding(start = 16.dp, top = 14.dp, end = 120.dp, bottom = 14.dp),
+                modifier = Modifier.padding(start = 16.dp, top = 14.dp, end = 110.dp, bottom = 14.dp),
             ) {
                 Text(
                     text = stringResource(title),
-                    fontSize = 22.sp,
+                    fontSize = 20.sp,
                     fontWeight = FontWeight.SemiBold,
                 )
                 Spacer(modifier = Modifier.height(1.dp))
                 Text(
                     text = stringResource(summary),
-                    fontSize = 15.sp,
+                    fontSize = 13.sp,
                 )
             }
         }
@@ -853,13 +894,13 @@ private fun DeviceInfoCard(
     modifier: Modifier = Modifier,
 ) {
     Card(
-        modifier = modifier,
-        insideMargin = PaddingValues(16.dp),
+        modifier = modifier.clip(RoundedCornerShape(18.dp)),
+        insideMargin = PaddingValues(14.dp),
     ) {
         SelectionContainer {
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(20.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 DeviceInfoItem(
                     title = stringResource(R.string.device_label),
@@ -887,14 +928,14 @@ private fun DeviceInfoItem(
     Column(modifier = modifier) {
         Text(
             text = title,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Medium,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold,
             color = MiuixTheme.colorScheme.onSurface,
         )
         Text(
             text = value,
             modifier = Modifier.padding(top = 2.dp),
-            fontSize = 14.sp,
+            fontSize = 13.sp,
             color = MiuixTheme.colorScheme.onSurface.copy(alpha = 0.68f),
         )
     }
@@ -982,8 +1023,8 @@ private fun LogPanel(
     }
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(Color(0xFF0B1220))
+             .clip(RoundedCornerShape(18.dp))
+            .background(if (isSystemInDarkTheme()) Color(0xFF1B1915) else Color(0xFFF4EFE3))
             .padding(12.dp),
     ) {
         SelectionContainer {
@@ -997,7 +1038,7 @@ private fun LogPanel(
                 items(lines) { line ->
                     Text(
                         text = line.text.trimEnd('\r', '\n'),
-                        color = lineColor(line.color),
+                        color = lineColor(line.color, isSystemInDarkTheme()),
                         fontFamily = FontFamily.Monospace,
                         fontSize = 12.sp,
                         lineHeight = 16.sp,
@@ -1008,10 +1049,10 @@ private fun LogPanel(
     }
 }
 
-private fun lineColor(color: Int): Color = when (color) {
+private fun lineColor(color: Int, dark: Boolean): Color = when (color) {
     0xFFFF6B6B.toInt() -> Color(0xFFFF6B6B)
     0xFF5FD68A.toInt() -> Color(0xFF5FD68A)
     0xFFFFC94D.toInt() -> Color(0xFFFFC94D)
     0xFF60A5FA.toInt() -> Color(0xFF60A5FA)
-    else -> Color(0xFFD1D5DB)
+    else -> if (dark) Color(0xFFF3EDE1) else Color(0xFF302C25)
 }
