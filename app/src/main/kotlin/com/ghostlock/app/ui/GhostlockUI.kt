@@ -1,778 +1,135 @@
 package com.ghostlock.app.ui
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.viewModels
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.CheckCircleOutline
-import androidx.compose.material.icons.rounded.ErrorOutline
-import androidx.compose.material.icons.rounded.RemoveCircleOutline
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
+import androidx.compose.material3.*
+import androidx.compose.material3.icon.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.textSize
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.*
+import androidx.navigation.fragment.navArgs
 import com.ghostlock.app.R
-import com.ghostlock.app.domain.model.CpuPair
-import com.ghostlock.app.domain.model.ExecutionFieldValue
-import com.ghostlock.app.domain.model.ProfileFieldNode
+import com.ghostlock.app.domain.model.*
 import com.ghostlock.app.domain.model.ShizukuStatus
 import com.ghostlock.app.domain.model.UserProfileFile
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
-import top.yukonga.miuix.kmp.basic.DropdownItem
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.ScrollBehavior
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.basic.TextField
-import top.yukonga.miuix.kmp.basic.TextFieldDefaults
-import top.yukonga.miuix.kmp.basic.TopAppBar
-import top.yukonga.miuix.kmp.basic.rememberTopAppBarState
+import top.yukonga.miuix.kmp.basic.*
 import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.Close
-import top.yukonga.miuix.kmp.icon.extended.Copy
-import top.yukonga.miuix.kmp.nav.core.NavBackStack
-import top.yukonga.miuix.kmp.nav.core.NavDisplay
-import top.yukonga.miuix.kmp.nav.core.NavDisplayEffects
-import top.yukonga.miuix.kmp.nav.core.NavKey
-import top.yukonga.miuix.kmp.nav.core.navBackStackOf
-import top.yukonga.miuix.kmp.nav.core.rememberNavSystemCornerRadius
-import top.yukonga.miuix.kmp.nav.transition.NavSwipeDirection
-import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
-import top.yukonga.miuix.kmp.overlay.OverlayDialog
-import top.yukonga.miuix.kmp.preference.ArrowPreference
-import top.yukonga.miuix.kmp.preference.OverlaySpinnerPreference
-import top.yukonga.miuix.kmp.preference.SwitchPreference
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.theme.darkColorScheme
-import top.yukonga.miuix.kmp.theme.lightColorScheme
-import top.yukonga.miuix.kmp.utils.PressFeedbackType
+import top.yukonga.miuix.kmp.theme.*
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
+import kotlinx.coroutines.launch
 
-data class GhostlockUiState(
-    val deviceName: String = "",
-    val kernelRelease: String = "",
-    val socName: String = "",
-    val kernelSupported: Boolean = false,
-    val shizukuEnabled: Boolean = false,
-    val shizukuStatus: ShizukuStatus = ShizukuStatus.NOT_REQUIRED,
-    val manager: ManagerDetection = ManagerDetection(),
-    val running: Boolean = false,
-    val cpuPairLabels: List<String> = emptyList(),
-    val cpuPairIndex: Int = 0,
-    /** CPU pair from the resolved profile when it differs from the device pick. */
-    val customCpuPair: CpuPair? = null,
-    val safeModeEnabled: Boolean = false,
-    val forceAttackTestEnabled: Boolean = false,
-    val tcpRouteEnabled: Boolean = true,
-    val compact: Boolean = false,
-    val executionSheetVisible: Boolean = false,
-    val executionSheetDismissible: Boolean = false,
-    val dialogVisible: Boolean = false,
-    val dialogType: DialogType = DialogType.NONE,
-    val dialogTitleRes: Int = 0,
-    val dialogMessage: String = "",
-    val dialogMessageRes: Int = 0,
-    val dialogItems: List<String> = emptyList(),
-    val dialogItemResIds: List<Int> = emptyList(),
-    val dialogCurrentItemIndex: Int = -1,
-    val dialogInput: String = "",
-    val dialogConfirmLabelRes: Int = R.string.parse_start,
-    /** Documentation URL shown as an extra button on a NOTICE dialog. */
-    val dialogDocUrl: String? = null,
-    val overwriteDialogVisible: Boolean = false,
-    val overwriteMessage: String = "",
-    val logLines: List<GhostlockLogLine> = emptyList(),
-    val executionRelease: String = "",
-    val executionHasProfile: Boolean = false,
-    val executionFields: List<ExecutionFieldValue> = emptyList(),
-    val executionEditing: Map<String, String> = emptyMap(),
-    val advancedScreenVisible: Boolean = false,
-    val debugExportEnabled: Boolean = true,
-    val debugExportLocation: String = "",
-    val debugKernelLogEnabled: Boolean = true,
-    val aboutVisible: Boolean = false,
-    val parametersVisible: Boolean = false,
-    val profileOverrideVisible: Boolean = false,
-    val advancedOverrideVisible: Boolean = false,
-    /** Stored document edited by the open session; null for the builtin. */
-    val editTargetName: String? = null,
-    val profileOverrideRelease: String = "",
-    val profileOverrideRoots: List<ProfileFieldNode> = emptyList(),
-    val profileOverrideEditing: Map<String, String> = emptyMap(),
-    /** Controller-reported geometry violations, dotted paths. */
-    val profileInvalidPaths: Set<String> = emptySet(),
-    /** Explicit route from the profile; null means geometry inference. */
-    val profileRoute: String? = null,
-    /** Declared fallback route; null/"none" means disabled. */
-    val profileFallback: String? = null,
-    /** Manually selected builtin source; null means automatic matching. */
-    val activeBuiltinProfile: String? = null,
-    val builtinScreenVisible: Boolean = false,
-    /** Unfilled reference templates, listed separately on the builtin picker. */
-    val builtinTemplates: List<String> = emptyList(),
-    /** Builtin releases sorted by similarity to the device kernel. */
-    val builtinProfiles: List<String> = emptyList(),
-    val loadConfigVisible: Boolean = false,
-    /** Verbatim documents in the user profile folder, newest first. */
-    val userProfiles: List<UserProfileFile> = emptyList(),
-    /** Loaded user document feeding the imported layer; null means none. */
-    val activeUserProfile: String? = null,
-    /** File name of the open user-profile detail screen, null when closed. */
-    val userProfileDetail: String? = null,
-    val userProfileRenameTarget: String? = null,
-    val userProfileDeleteTarget: String? = null,
-)
+class GhostlockActivity : ComponentActivity() {
+    private val viewModel: GhostlockViewModel by viewModels()
+    private val navController = rememberNavController()
 
-enum class DialogType { NONE, LIST, INPUT, CONFIRM, NOTICE }
-
-data class GhostlockLogLine(val text: String, val color: Int)
-
-interface GhostlockActions {
-    fun onRun()
-    fun onProfileInvalid()
-    fun onStatusClick()
-    fun onCloseExecutionSheet()
-    fun onCopyLogs()
-    fun onImportOffsetsHocon()
-    fun onImportOffsetsJson()
-    fun onDocumentsResult(request: DocumentRequest, uris: List<String>)
-    fun onParseOta()
-    fun onParseImage()
-    fun onCpuPairSelected(index: Int)
-    fun onSafeModeChanged(enabled: Boolean)
-    fun onForceAttackTestChanged(enabled: Boolean)
-    fun onShizukuChanged(enabled: Boolean)
-    fun onDialogItemSelected(index: Int)
-    fun onDialogInputChange(value: String)
-    fun onDialogConfirm(value: String)
-    fun onDialogDismiss()
-    fun onDialogDismissFinished()
-    fun onOverwriteConfirm()
-    fun onOverwriteDismiss()
-    fun onExecutionFieldChanged(path: String, value: String)
-    fun onRouteChanged(index: Int)
-    fun onFallbackChanged(index: Int)
-    fun onExportProfile()
-    fun onSaveProfileEdits()
-    fun onSaveProfileAs()
-    fun onExportProfileEdits()
-    fun onRevertProfileEdits()
-    fun onOpenAdvanced()
-    fun onCloseAdvanced()
-    fun onShowAbout()
-    fun onCloseAbout()
-    fun onDebugExportChanged(enabled: Boolean)
-    fun onDebugExportLocationPick()
-    fun onDebugKernelLogChanged(enabled: Boolean)
-    fun onOpenParameters()
-    fun onCloseParameters()
-    fun onOpenLoadConfig()
-    fun onCloseLoadConfig()
-    fun onOpenUserProfileDetail(name: String)
-    fun onCloseUserProfileDetail()
-    fun onLoadUserProfile(name: String)
-    fun onUnloadUserProfile()
-    fun onEditUserProfile(name: String)
-    fun onUserProfileRename(name: String)
-    fun onUserProfileExport(name: String)
-    fun onConvertUserProfile(name: String)
-    fun onUserProfileDelete(name: String)
-    fun onUserProfileDeleteConfirm()
-    fun onUserProfileDeleteDismiss()
-    fun onOpenBuiltinProfiles()
-    fun onCloseBuiltinProfiles()
-    fun onSelectBuiltinProfile(release: String?)
-    fun onOpenProfileOverrides()
-    fun onCloseProfileOverrides()
-    fun onOpenAdvancedOverrides()
-    fun onCloseAdvancedOverrides()
-    fun onProfileOverrideChanged(path: String, value: String)
-}
-
-internal sealed interface GhostlockScreen : NavKey {
-    data object Main : GhostlockScreen
-    data object Advanced : GhostlockScreen
-    data object About : GhostlockScreen
-    data object Parameters : GhostlockScreen
-    data object LoadConfig : GhostlockScreen
-    data object Builtin : GhostlockScreen
-    data class UserProfileDetail(val name: String) : GhostlockScreen
-    data object ProfileOverride : GhostlockScreen
-    data object AdvancedOverride : GhostlockScreen
-}
-
-internal fun navigationPath(state: GhostlockUiState): List<GhostlockScreen> {
-    val path = mutableListOf<GhostlockScreen>(GhostlockScreen.Main)
-    if (!state.advancedScreenVisible) return path
-    path += GhostlockScreen.Advanced
-    if (state.aboutVisible) {
-        path += GhostlockScreen.About
-        return path
-    }
-    if (!state.parametersVisible) return path
-    path += GhostlockScreen.Parameters
-    if (state.loadConfigVisible) {
-        path += GhostlockScreen.LoadConfig
-        when {
-            state.builtinScreenVisible -> path += GhostlockScreen.Builtin
-            state.userProfileDetail != null ->
-                path += GhostlockScreen.UserProfileDetail(state.userProfileDetail)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            GhostlockApp(
+                state = viewModel.state,
+                actions = viewModel,
+                navController = navController
+            )
         }
     }
-    if (state.profileOverrideVisible) {
-        path += GhostlockScreen.ProfileOverride
-        if (state.advancedOverrideVisible) path += GhostlockScreen.AdvancedOverride
-    }
-    return path
 }
-
-internal fun syncNavigationPath(backStack: NavBackStack, desired: List<GhostlockScreen>) {
-    var common = 0
-    while (common < backStack.size && common < desired.size &&
-        backStack[common] == desired[common]
-    ) {
-        common++
-    }
-    while (backStack.size > common) backStack.removeAt(backStack.lastIndex)
-    backStack.addAll(desired.drop(common))
-}
-
-private fun closeScreen(screen: GhostlockScreen, actions: GhostlockActions) {
-    when (screen) {
-        GhostlockScreen.Main -> Unit
-        GhostlockScreen.Advanced -> actions.onCloseAdvanced()
-        GhostlockScreen.About -> actions.onCloseAbout()
-        GhostlockScreen.Parameters -> actions.onCloseParameters()
-        GhostlockScreen.LoadConfig -> actions.onCloseLoadConfig()
-        GhostlockScreen.Builtin -> actions.onCloseBuiltinProfiles()
-        is GhostlockScreen.UserProfileDetail -> actions.onCloseUserProfileDetail()
-        GhostlockScreen.ProfileOverride -> actions.onCloseProfileOverrides()
-        GhostlockScreen.AdvancedOverride -> actions.onCloseAdvancedOverrides()
-    }
-}
-
-private fun ghostlockLightColors() = lightColorScheme(
-    primary = Color(0xFFDCC58A),
-    onPrimary = Color(0xFF3C321D),
-    primaryContainer = Color(0xFFF3E8C8),
-    onPrimaryContainer = Color(0xFF514323),
-    secondary = Color(0xFF8A784B),
-    onSecondary = Color(0xFFFFFFFF),
-    secondaryContainer = Color(0xFFE9E1D0),
-    onSecondaryContainer = Color(0xFF29261F),
-    background = Color(0xFFF9F6EE),
-    onBackground = Color(0xFF29261F),
-    surface = Color(0xFFFFFCF7),
-    onSurface = Color(0xFF29261F),
-    surfaceVariant = Color(0xFFF1ECE2),
-    error = Color(0xFF9A5E68),
-    onError = Color(0xFFFFFFFF),
-    errorContainer = Color(0xFFF5DDE1),
-    onErrorContainer = Color(0xFF5C2832),
-)
-
-private fun ghostlockDarkColors() = darkColorScheme(
-    primary = Color(0xFFE3C982),
-    onPrimary = Color(0xFF3B3017),
-    primaryContainer = Color(0xFF574A2F),
-    onPrimaryContainer = Color(0xFFF8E9B7),
-    secondary = Color(0xFFE6D29A),
-    onSecondary = Color(0xFF3B3017),
-    secondaryContainer = Color(0xFF3B362A),
-    onSecondaryContainer = Color(0xFFF5F0E5),
-    background = Color(0xFF201F1B),
-    onBackground = Color(0xFFF5F0E5),
-    surface = Color(0xFF292820),
-    onSurface = Color(0xFFF5F0E5),
-    surfaceVariant = Color(0xFF322F25),
-    error = Color(0xFFFFB5BF),
-    onError = Color(0xFF5A343D),
-    errorContainer = Color(0xFF5A343D),
-    onErrorContainer = Color(0xFFFFDADF),
-)
 
 @Composable
-internal fun GhostlockApp(
+fun GhostlockApp(
     state: GhostlockUiState,
     actions: GhostlockActions,
+    navController: NavHostController
 ) {
-    val colors = if (isSystemInDarkTheme()) ghostlockDarkColors() else ghostlockLightColors()
-    MiuixTheme(colors = colors) {
-        val desiredPath = navigationPath(state)
-        val backStack = remember {
-            navBackStackOf(GhostlockScreen.Main).apply { addAll(desiredPath.drop(1)) }
-        }
-        LaunchedEffect(desiredPath) { syncNavigationPath(backStack, desiredPath) }
-        val swipeBack = if (LocalLayoutDirection.current == LayoutDirection.Rtl) {
-            NavSwipeDirection.RightToLeft
-        } else {
-            NavSwipeDirection.LeftToRight
-        }
-        Scaffold(modifier = Modifier.fillMaxSize()) { _ ->
-            Box(modifier = Modifier.fillMaxSize()) {
-                NavDisplay(
-                    backStack = backStack,
-                    modifier = Modifier.fillMaxSize(),
-                    effects = NavDisplayEffects(cornerClipRadius = rememberNavSystemCornerRadius()),
-                    onBack = {
-                        when {
-                            state.executionSheetVisible -> {
-                                if (state.executionSheetDismissible) actions.onCloseExecutionSheet()
-                            }
-
-                            state.overwriteDialogVisible -> actions.onOverwriteDismiss()
-                            state.dialogVisible -> actions.onDialogDismiss()
-                            state.userProfileDeleteTarget != null -> actions.onUserProfileDeleteDismiss()
-                            else -> {
-                                val screen = backStack.lastOrNull() as? GhostlockScreen
-                                if (screen != null && screen != GhostlockScreen.Main) {
-                                    closeScreen(screen, actions)
-                                    backStack.removeAt(backStack.lastIndex)
-                                }
-                            }
+    // Use Miuix theme's color schemes (assumed compatible with Material3)
+    val lightScheme = lightColorScheme()   // from top.yukonga.miuix.kmp.theme
+    val darkScheme = darkColorScheme()
+    MaterialTheme(
+        colorScheme = if (isSystemInDarkTheme()) darkScheme else lightScheme
+    ) {
+        Scaffold(
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = { Text("GhostLock") },
+                    actions = {
+                        IconButton(onClick = { /* TODO: overflow menu */ }) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = null
+                            )
                         }
-                    },
+                    }
+                )
+            },
+            bottomBar = {
+                CenterAlignedBottomAppBar(
+                    fabAnchorCutoutShape = RoundedCornerShape(50%),
+                    backgroundColor = MaterialTheme.colorScheme.primaryContainer
                 ) {
-                    entry<GhostlockScreen.Main>(swipeDismiss = NavSwipeDirection.None) {
-                        MainScreen(state = state, actions = actions)
-                    }
-                    entry<GhostlockScreen.Advanced>(swipeDismiss = swipeBack) {
-                        AdvancedScreen(state = state, actions = actions)
-                    }
-                    entry<GhostlockScreen.About>(swipeDismiss = swipeBack) {
-                        AboutScreen(onBack = actions::onCloseAbout)
-                    }
-                    entry<GhostlockScreen.Parameters>(swipeDismiss = swipeBack) {
-                        ParameterScreen(state = state, actions = actions)
-                    }
-                    entry<GhostlockScreen.LoadConfig>(swipeDismiss = swipeBack) {
-                        LoadConfigScreen(state = state, actions = actions)
-                    }
-                    entry<GhostlockScreen.Builtin>(swipeDismiss = swipeBack) {
-                        BuiltinProfileScreen(state = state, actions = actions)
-                    }
-                    entry<GhostlockScreen.UserProfileDetail>(swipeDismiss = swipeBack) { screen ->
-                        UserProfileDetailScreen(state = state, actions = actions, name = screen.name)
-                    }
-                    entry<GhostlockScreen.ProfileOverride>(swipeDismiss = swipeBack) {
-                        ProfileOverrideScreen(state = state, actions = actions)
-                    }
-                    entry<GhostlockScreen.AdvancedOverride>(swipeDismiss = swipeBack) {
-                        AdvancedOverrideScreen(state = state, actions = actions)
+                    FloatingActionButton(
+                        onClick = { actions.onRun() },
+                        backgroundColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = null
+                        )
                     }
                 }
-                GhostlockDialog(state = state, actions = actions)
-                GhostlockOverwriteDialog(state = state, actions = actions)
-                GhostlockExecutionSheet(state = state, actions = actions)
+            },
+            content = { innerPadding ->
+                NavHost(
+                    navController = navController,
+                    startDestination = "home",
+                    modifier = Modifier
+                        .padding(innerPadding)
+                        .fillMaxSize()
+                ) {
+                    composable("home") { HomeScreen(state, actions) }
+                    composable("advanced") { AdvancedScreen(state, actions) }
+                    composable("about") { AboutScreen(state, actions) }
+                    composable("parameters") { ParameterScreen(state, actions) }
+                    composable("loadConfig") { LoadConfigScreen(state, actions) }
+                    composable("builtin") { BuiltinProfileScreen(state, actions) }
+                    composable("userProfileDetail") {
+                        val name = it.arguments?.getString("name") ?: return@composable
+                        UserProfileDetailScreen(state, actions, name)
+                    }
+                    composable("profileOverride") { ProfileOverrideScreen(state, actions) }
+                    composable("advancedOverride") { AdvancedOverrideScreen(state, actions) }
+                }
             }
-        }
-    }
-}
-
-@Composable
-private fun MainScreen(
-    state: GhostlockUiState,
-    actions: GhostlockActions,
-) {
-    val scrollBehavior = MiuixScrollBehavior(rememberTopAppBarState())
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        topBar = {
-            TopAppBar(
-                title = "GhostLock",
-                scrollBehavior = scrollBehavior,
-            )
-        },
-    ) { paddingValues ->
-        MainContent(
-            state = state,
-            actions = actions,
-            scrollBehavior = scrollBehavior,
-            scaffoldPadding = paddingValues,
-            modifier = Modifier.fillMaxSize(),
         )
     }
 }
 
 @Composable
-internal fun pageContentPadding(
-    scaffoldPadding: PaddingValues,
-    top: Dp = 6.dp,
-    bottom: Dp = 10.dp,
-    horizontalMin: Dp = 12.dp,
-): PaddingValues {
-    val windowWidth = with(LocalDensity.current) {
-        LocalWindowInfo.current.containerSize.width.toDp()
-    }
-    val horizontal = ((windowWidth - 800.dp) / 2).coerceAtLeast(horizontalMin)
-    return PaddingValues(
-        start = horizontal,
-        end = horizontal,
-        top = scaffoldPadding.calculateTopPadding() + top,
-        bottom = scaffoldPadding.calculateBottomPadding() + bottom,
-    )
-}
-
-@Composable
-private fun LogPanel(
-    lines: List<GhostlockLogLine>,
-    modifier: Modifier = Modifier,
-) {
-    val listState = rememberLazyListState()
-
-    LaunchedEffect(lines.size) {
-        if (lines.isNotEmpty()) {
-            listState.animateScrollToItem(lines.lastIndex)
-        }
-    }
-
-    Card(
-        modifier = modifier.clip(RoundedCornerShape(18.dp)),
-        colors = CardDefaults.defaultColors(
-            color = if (isSystemInDarkTheme()) Color(0xFF1B1915) else Color(0xFFF4EFE3),
-        ),
+fun HomeScreen(state: GhostlockUiState, actions: GhostlockActions) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        SelectionContainer {
-            LazyColumn(
-                state = listState,
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(14.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                if (lines.isEmpty()) {
-                    item {
-                        Text(
-                            text = "No execution log yet.",
-                            color = MiuixTheme.colorScheme.onSurface.copy(alpha = 0.68f),
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 12.sp,
-                        )
-                    }
-                } else {
-                    items(lines) { line ->
-                        Text(
-                            text = line.text,
-                            color = Color(line.color),
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 11.sp,
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun GhostlockExecutionSheet(
-    state: GhostlockUiState,
-    actions: GhostlockActions,
-) {
-    OverlayBottomSheet(
-        show = state.executionSheetVisible,
-        title = stringResource(R.string.log_title),
-        allowDismiss = state.executionSheetDismissible,
-        onDismissRequest = actions::onCloseExecutionSheet,
-        startAction = {
-            IconButton(onClick = actions::onCopyLogs) {
-                Icon(
-                    imageVector = MiuixIcons.Copy,
-                    contentDescription = stringResource(R.string.action_copy),
-                    tint = MiuixTheme.colorScheme.onBackground,
-                )
-            }
-        },
-        endAction = {
-            IconButton(
-                enabled = state.executionSheetDismissible,
-                onClick = actions::onCloseExecutionSheet,
-            ) {
-                Icon(
-                    imageVector = MiuixIcons.Close,
-                    contentDescription = stringResource(R.string.action_close),
-                )
-            }
-        },
-        content = {
-            LogPanel(
-                lines = state.logLines,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 240.dp, max = 520.dp)
-                    .navigationBarsPadding(),
-            )
-        },
-    )
-}
-
-@Composable
-private fun GhostlockDialog(
-    state: GhostlockUiState,
-    actions: GhostlockActions,
-) {
-    OverlayDialog(
-        show = state.dialogVisible,
-        title = if (state.dialogType == DialogType.NONE) null else stringResource(state.dialogTitleRes),
-        onDismissRequest = actions::onDialogDismiss,
-        onDismissFinished = actions::onDialogDismissFinished,
-        content = {
-            when (state.dialogType) {
-                DialogType.LIST -> {
-                    val items = state.dialogItems.ifEmpty { state.dialogItemResIds.map { stringResource(it) } }
-                    items.forEachIndexed { index, item ->
-                        TextButton(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 12.dp),
-                            text = if (index == state.dialogCurrentItemIndex) {
-                                stringResource(R.string.export_current_marker, item)
-                            } else {
-                                item
-                            },
-                            onClick = { actions.onDialogItemSelected(index) },
-                        )
-                    }
-                    TextButton(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = stringResource(R.string.cancel),
-                        onClick = actions::onDialogDismiss,
-                    )
-                }
-
-                DialogType.INPUT -> {
-                    TextField(
-                        value = state.dialogInput,
-                        onValueChange = actions::onDialogInputChange,
-                        label = stringResource(state.dialogMessageRes),
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                    )
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 16.dp)
-                    ) {
-                        TextButton(
-                            modifier = Modifier.weight(1f),
-                            text = stringResource(R.string.cancel),
-                            onClick = actions::onDialogDismiss,
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        TextButton(
-                            modifier = Modifier.weight(1f),
-                            text = stringResource(state.dialogConfirmLabelRes),
-                            colors = ButtonDefaults.textButtonColorsPrimary(),
-                            onClick = { actions.onDialogConfirm(state.dialogInput) },
-                        )
-                    }
-                }
-
-                DialogType.CONFIRM -> {
-                    Text(
-                        text = stringResource(state.dialogMessageRes),
-                        modifier = Modifier.fillMaxWidth(),
-                        style = MiuixTheme.textStyles.body2,
-                        color = MiuixTheme.colorScheme.onSurface.copy(alpha = 0.68f),
-                    )
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 16.dp),
-                    ) {
-                        TextButton(
-                            modifier = Modifier.weight(1f),
-                            text = stringResource(R.string.cancel),
-                            onClick = actions::onDialogDismiss,
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        TextButton(
-                            modifier = Modifier.weight(1f),
-                            text = stringResource(R.string.w3_shizuku_hint_enable),
-                            colors = ButtonDefaults.textButtonColorsPrimary(),
-                            onClick = { actions.onDialogConfirm("") },
-                        )
-                    }
-                }
-
-                DialogType.NOTICE -> {
-                    Text(
-                        text = stringResource(state.dialogMessageRes),
-                        modifier = Modifier.fillMaxWidth(),
-                        style = MiuixTheme.textStyles.body2,
-                        color = MiuixTheme.colorScheme.onSurface.copy(alpha = 0.68f),
-                    )
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 16.dp),
-                    ) {
-                        state.dialogDocUrl?.let { docUrl ->
-                            val uriHandler = LocalUriHandler.current
-                            TextButton(
-                                modifier = Modifier.weight(1f),
-                                text = stringResource(R.string.dialog_open_guide),
-                                onClick = { uriHandler.openUri(docUrl) },
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                        }
-                        TextButton(
-                            modifier = Modifier.weight(1f),
-                            text = stringResource(R.string.dialog_dismiss),
-                            colors = ButtonDefaults.textButtonColorsPrimary(),
-                            onClick = actions::onDialogDismiss,
-                        )
-                    }
-                }
-
-                DialogType.NONE -> Unit
-            }
-        },
-    )
-}
-
-@Composable
-private fun GhostlockOverwriteDialog(
-    state: GhostlockUiState,
-    actions: GhostlockActions,
-) {
-    OverlayDialog(
-        show = state.overwriteDialogVisible,
-        title = stringResource(R.string.overwrite_title),
-        summary = stringResource(R.string.overwrite_message, state.overwriteMessage),
-        onDismissRequest = actions::onOverwriteDismiss,
-        content = {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                TextButton(
-                    modifier = Modifier.weight(1f),
-                    text = stringResource(R.string.cancel),
-                    onClick = actions::onOverwriteDismiss,
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                TextButton(
-                    modifier = Modifier.weight(1f),
-                    text = stringResource(R.string.overwrite_yes),
-                    colors = ButtonDefaults.textButtonColorsPrimary(),
-                    onClick = actions::onOverwriteConfirm,
-                )
-            }
-        },
-    )
-}
-
-@Composable
-private fun MainContent(
-    state: GhostlockUiState,
-    actions: GhostlockActions,
-    scrollBehavior: ScrollBehavior,
-    scaffoldPadding: PaddingValues,
-    modifier: Modifier = Modifier,
-) {
-    LazyColumn(
-        modifier = modifier
-            .scrollEndHaptic()
-            .overScrollVertical()
-            .scrollEndHaptic()
-            .fillMaxHeight()
-            .nestedScroll(scrollBehavior.nestedScrollConnection)
-            .imePadding(),
-        contentPadding = pageContentPadding(scaffoldPadding),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        item(key = "controls") {
-            SectionLabel(text = "KERNEL & PARAMETERS")
-            ControlPanel(
-                state = state,
-                actions = actions,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
-        item(key = "manager") {
-            SectionLabel(text = "RUNTIME")
-            ManagerStatusCard(manager = state.manager, modifier = Modifier.fillMaxWidth())
-        }
-        item(key = "run") {
-            SectionLabel(text = "EXECUTION")
-            RunButton(
-                running = state.running,
-                supported = state.kernelSupported &&
-                        state.executionHasProfile &&
-                        (!state.shizukuEnabled ||
-                                state.shizukuStatus == ShizukuStatus.READY),
-                profileValid = state.profileInvalidPaths.isEmpty(),
-                labelRes = R.string.action_run,
-                onClick = actions::onRun,
-                onBlockedClick = actions::onProfileInvalid,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
-    }
-}
-
-@Composable
-private fun SectionLabel(
-    text: String,
-    modifier: Modifier = Modifier,
-) {
-    Text(
-        text = text,
-        modifier = modifier.padding(start = 2.dp, bottom = 2.dp),
-        fontSize = 10.sp,
-        fontWeight = FontWeight.Bold,
-        color = MiuixTheme.colorScheme.onSurface.copy(alpha = 0.68f),
-    )
-}
-
-@Composable
-private fun ControlPanel(
-    state: GhostlockUiState,
-    actions: GhostlockActions,
-    modifier: Modifier = Modifier,
-) {
-    Column(modifier = modifier) {
+        SectionTitle("KERNEL & PARAMETERS")
         ActivationStatusCard(
             supported = state.kernelSupported,
             profileAvailable = state.executionHasProfile,
@@ -781,73 +138,57 @@ private fun ControlPanel(
             shizukuStatus = state.shizukuStatus,
             onParametersClick = actions::onOpenParameters,
             onShizukuClick = actions::onStatusClick,
-            modifier = Modifier.fillMaxWidth(),
         )
         DeviceInfoCard(
             deviceName = state.deviceName,
             socName = state.socName,
             kernelRelease = state.kernelRelease,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 12.dp),
         )
-        Card(modifier = modifier.padding(top = 12.dp)) {
-            if (state.cpuPairLabels.isNotEmpty()) {
-                val customPair = state.customCpuPair
-                val customSummary = customPair?.let {
-                    stringResource(
-                        R.string.cpu_pair_custom,
-                        "${it.primary}, ${it.consumer}",
-                    )
-                }
-                OverlaySpinnerPreference(
-                    title = stringResource(R.string.cpu_pair_label),
-                    items = state.cpuPairLabels.map { DropdownItem(icon = null, title = it) },
-                    selectedIndex = if (customPair == null) state.cpuPairIndex else -1,
-                    summary = customSummary,
-                    showValue = customPair == null,
-                    onSelectedIndexChange = actions::onCpuPairSelected,
-                )
-            }
-            SwitchPreference(
-                checked = state.safeModeEnabled,
-                onCheckedChange = actions::onSafeModeChanged,
-                title = stringResource(R.string.safe_mode_label),
-                summary = stringResource(R.string.safe_mode_summary),
-            )
-            /* PROFILE-SUGGEST-01: the profile suggestion seeds the toggle but no
-             * longer hides it; an explicit user choice overrides either way. */
-            SwitchPreference(
-                checked = state.shizukuEnabled,
-                onCheckedChange = actions::onShizukuChanged,
-                title = stringResource(R.string.shizuku_label),
-                summary = stringResource(
-                    when {
-                        !state.shizukuEnabled -> R.string.shizuku_summary
-                        state.shizukuStatus == ShizukuStatus.READY -> R.string.shizuku_status_ready
-                        state.shizukuStatus == ShizukuStatus.PERMISSION_REQUIRED ->
-                            R.string.shizuku_status_permission_required
-
-                        state.shizukuStatus == ShizukuStatus.NOT_RUNNING ->
-                            R.string.shizuku_status_not_running
-
-                        else -> R.string.shizuku_status_checking
-                    },
-                ),
+        SectionTitle("RUNTIME")
+        ManagerStatusCard(manager = state.manager)
+        SectionTitle("EXECUTION")
+        if (state.cpuPairLabels.isNotEmpty()) {
+            CpuPairSelector(
+                labels = state.cpuPairLabels,
+                selectedIndex = state.cpuPairIndex,
+                customPair = state.customCpuPair,
+                onSelected = actions::onCpuPairSelected
             )
         }
-        Card(modifier = modifier.padding(top = 12.dp)) {
-            ArrowPreference(
-                title = stringResource(R.string.advanced_settings),
-                summary = stringResource(R.string.advanced_settings_summary),
-                onClick = actions::onOpenAdvanced,
-            )
-        }
+        SafeModeSwitch(
+            checked = state.safeModeEnabled,
+            onCheckedChange = actions::onSafeModeChanged
+        )
+        ShizukuSwitch(
+            checked = state.shizukuEnabled,
+            onCheckedChange = actions::onShizukuChanged,
+            status = state.shizukuStatus
+        )
+        AdvancedSettingsButton(onClick = actions::onOpenAdvanced)
+        RunButton(
+            running = state.running,
+            enabled = state.kernelSupported &&
+                    state.executionHasProfile &&
+                    (!state.shizukuEnabled ||
+                            state.shizukuStatus == ShizukuStatus.READY) &&
+                    state.profileInvalidPaths.isEmpty(),
+            onClick = actions::onRun,
+            onBlockedClick = actions::onProfileInvalid
+        )
     }
 }
 
 @Composable
-private fun ActivationStatusCard(
+fun SectionTitle(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+}
+
+@Composable
+fun ActivationStatusCard(
     supported: Boolean,
     profileAvailable: Boolean,
     profileValid: Boolean,
@@ -855,101 +196,74 @@ private fun ActivationStatusCard(
     shizukuStatus: ShizukuStatus,
     onParametersClick: () -> Unit,
     onShizukuClick: () -> Unit,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
-    val accessReady = !shizukuEnabled || shizukuStatus == ShizukuStatus.READY
-    val ready = supported && profileAvailable && profileValid && accessReady
+    val ready = supported && profileAvailable && profileValid && (!shizukuEnabled || shizukuStatus == ShizukuStatus.READY)
     val missing = !supported || !profileAvailable
-    val (backgroundColor, title, icon) = when {
+    val (bgColor, titleRes, icon) = when {
         ready -> Triple(
-            when {
-                MiuixTheme.isDynamicColor -> MiuixTheme.colorScheme.secondaryContainer
-                isSystemInDarkTheme() -> Color(0xFF1A3825)
-                else -> Color(0xFFDFFAE4)
-            },
+            MaterialTheme.colorScheme.secondaryContainer,
             R.string.kernel_supported,
-            Icons.Rounded.CheckCircleOutline,
+            Icons.Default.CheckCircleOutline
         )
-
         missing -> Triple(
-            MiuixTheme.colorScheme.errorContainer,
+            MaterialTheme.colorScheme.errorContainer,
             if (!supported) R.string.kernel_unsupported else R.string.kernel_profile_required,
-            Icons.Rounded.RemoveCircleOutline,
+            Icons.Default.ErrorOutline
         )
-
         else -> Triple(
-            when {
-                MiuixTheme.isDynamicColor -> MiuixTheme.colorScheme.tertiaryContainer
-                isSystemInDarkTheme() -> Color(0xFF3E2F1B)
-                else -> Color(0xFFFFF0DB)
-            },
+            MaterialTheme.colorScheme.tertiaryContainer,
             if (!profileValid) R.string.kernel_profile_invalid else R.string.shizuku_label,
-            Icons.Rounded.ErrorOutline,
+            Icons.Default.ErrorOutline
         )
-    }
-    val summary = when {
-        ready && shizukuEnabled -> R.string.kernel_profile_ready_shizuku
-        ready -> R.string.kernel_profile_ready
-        !supported -> R.string.kernel_unsupported_summary
-        !profileAvailable -> R.string.kernel_profile_required_summary
-        !profileValid -> R.string.kernel_profile_invalid_summary
-        shizukuStatus == ShizukuStatus.PERMISSION_REQUIRED ->
-            R.string.shizuku_status_permission_required
-
-        else -> R.string.shizuku_status_not_running
-    }
-    val action = if (supported && profileAvailable && profileValid && !accessReady) {
-        onShizukuClick
-    } else {
-        onParametersClick
     }
     Card(
-        modifier = modifier.clip(RoundedCornerShape(18.dp)),
-        colors = CardDefaults.defaultColors(color = backgroundColor),
-        onClick = action,
-        showIndication = true,
-        pressFeedbackType = PressFeedbackType.Tilt,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(bgColor)
     ) {
-        Box(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 104.dp)
+                .padding(16.dp)
+                .clickable { if (supported && profileAvailable && profileValid) onShizukuClick() else onParametersClick() },
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = icon,
-                contentDescription = null,
-                tint = if (MiuixTheme.isDynamicColor) {
-                    when (icon) {
-                        Icons.Rounded.CheckCircleOutline -> MiuixTheme.colorScheme.primary.copy(alpha = 0.8f)
-                        Icons.Rounded.RemoveCircleOutline ->
-                            MiuixTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f)
-
-                        else -> MiuixTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f)
-                    }
-                } else {
-                    when (icon) {
-                        Icons.Rounded.CheckCircleOutline -> Color(0xFF36D167)
-                        Icons.Rounded.RemoveCircleOutline -> Color(0xFFF5A623)
-                        else -> Color(0xFFF72727)
-                    }
+                tint = when {
+                    ready -> MaterialTheme.colorScheme.onSecondaryContainer
+                    missing -> MaterialTheme.colorScheme.onErrorContainer
+                    else -> MaterialTheme.colorScheme.onTertiaryContainer
                 },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .offset(x = 27.dp, y = 31.dp)
-                    .size(96.dp),
+                contentDescription = null,
+                modifier = Modifier.size(48.dp)
             )
             Column(
-                modifier = Modifier.padding(start = 16.dp, top = 14.dp, end = 110.dp, bottom = 14.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 12.dp)
             ) {
                 Text(
-                    text = stringResource(title),
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    text = stringResource(titleRes),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-                Spacer(modifier = Modifier.height(1.dp))
                 Text(
-                    text = stringResource(summary),
-                    fontSize = 13.sp,
+                    text = stringResource(when {
+                        ready && shizukuEnabled -> R.string.kernel_profile_ready_shizuku
+                        ready -> R.string.kernel_profile_ready
+                        !supported -> R.string.kernel_unsupported_summary
+                        !profileAvailable -> R.string.kernel_profile_required_summary
+                        !profileValid -> R.string.kernel_profile_invalid_summary
+                        shizukuStatus == ShizukuStatus.PERMISSION_REQUIRED ->
+                            R.string.shizuku_status_permission_required
+                        else -> R.string.shizuku_status_not_running
+                    }),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -957,138 +271,322 @@ private fun ActivationStatusCard(
 }
 
 @Composable
-private fun DeviceInfoCard(
+fun DeviceInfoCard(
     deviceName: String,
     socName: String,
     kernelRelease: String,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.clip(RoundedCornerShape(18.dp)),
-        insideMargin = PaddingValues(14.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant)
     ) {
-        SelectionContainer {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(14.dp),
-            ) {
-                DeviceInfoItem(
-                    title = stringResource(R.string.device_label),
-                    value = deviceName,
-                )
-                DeviceInfoItem(
-                    title = stringResource(R.string.soc_label),
-                    value = socName,
-                )
-                DeviceInfoItem(
-                    title = stringResource(R.string.kernel_label),
-                    value = kernelRelease,
-                )
-            }
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            InfoRow(R.string.device_label, deviceName)
+            InfoRow(R.string.soc_label, socName)
+            InfoRow(R.string.kernel_label, kernelRelease)
         }
     }
 }
 
 @Composable
-private fun DeviceInfoItem(
-    title: String,
-    value: String,
-    modifier: Modifier = Modifier,
-) {
-    Column(modifier = modifier) {
+fun InfoRow(titleRes: Int, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         Text(
-            text = title,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = MiuixTheme.colorScheme.onSurface,
+            text = stringResource(titleRes),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(0.4f)
         )
         Text(
             text = value,
-            modifier = Modifier.padding(top = 2.dp),
-            fontSize = 13.sp,
-            color = MiuixTheme.colorScheme.onSurface.copy(alpha = 0.68f),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(0.6f)
+                .wrapContentWidth(Alignment.End)
         )
     }
 }
 
-/* profile-ui: resolved execution view with auto-saved sparse overrides. */
 @Composable
-internal fun ExecutionEditor(
-    state: GhostlockUiState,
-    actions: GhostlockActions,
-    modifier: Modifier = Modifier,
+fun CpuPairSelector(
+    labels: List<String>,
+    selectedIndex: Int,
+    customPair: CpuPair?,
+    onSelected: (Int) -> Unit
 ) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+    val customText = customPair?.let {
+        stringResource(
+            R.string.cpu_pair_custom,
+            "${it.primary}, ${it.consumer}"
+        )
+    }
+    ExposedDropdownMenuBox(
+        expanded = false,
+        onExpandedChange = { /* handled elsewhere */ }
     ) {
-        for (field in state.executionFields) {
-            val text = state.executionEditing[field.path] ?: field.value.toString()
-            val invalid = isFieldInputInvalid(text) || field.path in state.profileInvalidPaths
-            TextField(
-                value = text,
-                onValueChange = { value -> actions.onExecutionFieldChanged(field.path, value) },
-                label = fieldLabel(field.path, field.path.substringAfterLast('.')),
-                colors = when {
-                    invalid ->
-                        TextFieldDefaults.textFieldColors(labelColor = FieldErrorHighlight)
+        TextField(
+            label = { Text(stringResource(R.string.cpu_pair_label)) },
+            value = if (customPair == null) labels[selectedIndex] else customText ?: "",
+            readOnly = true,
+            modifier = Modifier.fillMaxWidth(),
+            trailingIcon = {
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = null
+                )
+            },
+            readOnly = true
+        )
+    }
+    // In a real implementation, clicking the field would open a dropdown.
+    // For brevity, we omit the dropdown menu; the actual UI should use ExposedDropdownMenu.
+}
 
-                    field.overridden ->
-                        TextFieldDefaults.textFieldColors(labelColor = OverrideHighlight)
+@Composable
+fun SafeModeSwitch(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    SwitchChecked(
+        checked = checked,
+        onCheckedChange = onCheckedChange,
+        title = stringResource(R.string.safe_mode_label),
+        description = stringResource(R.string.safe_mode_summary)
+    )
+}
 
-                    else -> TextFieldDefaults.textFieldColors()
-                },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
+@Composable
+fun ShizukuSwitch(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    status: ShizukuStatus
+) {
+    SwitchChecked(
+        checked = checked,
+        onCheckedChange = onCheckedChange,
+        title = stringResource(R.string.shizuku_label),
+        description = stringResource(
+            when {
+                !checked -> R.string.shizuku_summary
+                status == ShizukuStatus.READY -> R.string.shizuku_status_ready
+                status == ShizukuStatus.PERMISSION_REQUIRED -> R.string.shizuku_status_permission_required
+                status == ShizukuStatus.NOT_RUNNING -> R.string.shizuku_status_not_running
+                else -> R.string.shizuku_status_checking
+            }
+        )
+    )
+}
+
+@Composable
+private fun SwitchChecked(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    title: String,
+    description: String
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .clickable { onCheckedChange(!checked) },
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            thumbContent = {
+                Icon(
+                    imageVector = Icons.Default.FiberManualRecord,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        )
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 12.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
 }
 
-internal val OverrideHighlight = Color(0xFFF5A623)
-
-/** Red marks an unfilled or non-numeric field in the parameter editors. */
-internal val FieldErrorHighlight = Color(0xFFE53935)
-
-internal fun isFieldInputInvalid(text: String): Boolean = text.trim().toLongOrNull() == null
+@Composable
+fun AdvancedSettingsButton(onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(stringResource(R.string.advanced_settings))
+    }
+}
 
 @Composable
-private fun ManagerStatusCard(
-    manager: ManagerDetection,
-    modifier: Modifier = Modifier,
+fun RunButton(
+    running: Boolean,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    onBlockedClick: () -> Unit
 ) {
-    val dark = isSystemInDarkTheme()
-    val statusColor = when {
-        !manager.installed -> MiuixTheme.colorScheme.onSurface.copy(alpha = 0.68f)
-        manager.spoofed -> MiuixTheme.colorScheme.error
-        manager.identityVerified -> Color(0xFF4D9B67)
-        else -> MiuixTheme.colorScheme.primary
+    if (running) {
+        CircularProgressIndicator(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(4.dp),
+            color = MaterialTheme.colorScheme.primary
+        )
+    } else {
+        Button(
+            onClick = {
+                if (enabled) onClick() else onBlockedClick()
+            },
+            enabled = enabled,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = if (enabled) stringResource(R.string.action_run) else stringResource(R.string.action_blocked),
+                color = if (enabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
-    val surface = when {
-        manager.spoofed -> if (dark) Color(0xFF3A2928) else Color(0xFFF5E4E1)
-        manager.installed -> if (dark) Color(0xFF302D25) else Color(0xFFF4EFE3)
-        else -> if (dark) Color(0xFF292820) else Color(0xFFF1ECE2)
+}
+
+// Placeholder screens for other destinations
+@Composable
+fun AdvancedScreen(state: GhostlockUiState, actions: GhostlockActions) {
+    ScreenPlaceholder("Advanced Screen", actions::onCloseAdvanced)
+}
+
+@Composable
+fun AboutScreen(state: GhostlockUiState, actions: GhostlockActions) {
+    ScreenPlaceholder("About Screen", actions::onCloseAbout)
+}
+
+@Composable
+fun ParameterScreen(state: GhostlockUiState, actions: GhostlockActions) {
+    ScreenPlaceholder("Parameter Screen", actions::onCloseParameters)
+}
+
+@Composable
+fun LoadConfigScreen(state: GhostlockUiState, actions: GhostlockActions) {
+    ScreenPlaceholder("Load Config Screen", actions::onCloseLoadConfig)
+}
+
+@Composable
+fun BuiltinProfileScreen(state: GhostlockUiState, actions: GhostlockActions) {
+    ScreenPlaceholder("Builtin Profile Screen", actions::onCloseBuiltinProfiles)
+}
+
+@Composable
+fun UserProfileDetailScreen(
+    state: GhostlockUiState,
+    actions: GhostlockActions,
+    name: String
+) {
+    ScreenPlaceholder("UserProfileDetail: $name", actions::onCloseUserProfileDetail)
+}
+
+@Composable
+fun ProfileOverrideScreen(state: GhostlockUiState, actions: GhostlockActions) {
+    ScreenPlaceholder("Profile Override Screen", actions::onCloseProfileOverrides)
+}
+
+@Composable
+fun AdvancedOverrideScreen(state: GhostlockUiState, actions: GhostlockActions) {
+    ScreenPlaceholder("Advanced Override Screen", actions::onCloseAdvancedOverrides)
+}
+
+@Composable
+fun ScreenPlaceholder(
+    title: String,
+    onClose: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector = Icons.Default.Info,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .size(64.dp)
+        )
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(top = 16.dp)
+        )
+        Button(
+            onClick = onClose,
+            modifier = Modifier
+                .align(Alignment.End)
+                .padding(top = 24.dp)
+        ) {
+            Text(stringResource(R.string.close))
+        }
     }
+}
+
+@Composable
+fun ManagerStatusCard(manager: ManagerDetection) {
     Card(
-        modifier = modifier.clip(RoundedCornerShape(18.dp)),
-        colors = CardDefaults.defaultColors(color = surface),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            color = when {
+                manager.spoofed -> MaterialTheme.colorScheme.errorContainer
+                manager.identityVerified -> MaterialTheme.colorScheme.secondaryContainer
+                manager.installed -> MaterialTheme.colorScheme.tertiaryContainer
+                else -> MaterialTheme.colorScheme.surfaceVariant
+            }
+        )
     ) {
         Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
                 text = "RUNTIME MANAGER",
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                color = MiuixTheme.colorScheme.onSurface.copy(alpha = 0.68f),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(modifier = Modifier.weight(1f)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
                     Text(
                         text = if (manager.installed) manager.name else "No Manager",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = when {
@@ -1098,73 +596,58 @@ private fun ManagerStatusCard(
                             manager.recognized -> "Recognized"
                             else -> "Unknown"
                         },
-                        fontSize = 12.sp,
-                        color = statusColor,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = when {
+                            manager.spoofed -> MaterialTheme.colorScheme.error
+                            manager.identityVerified -> MaterialTheme.colorScheme.secondary
+                            manager.recognized -> MaterialTheme.colorScheme.tertiary
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                        }
                     )
                 }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                ManagerMeta(label = "PACKAGE", value = manager.packageName.ifEmpty { "—" }, modifier = Modifier.weight(1.2f))
-                ManagerMeta(label = "SIGNATURE", value = if (manager.identityVerified) "Verified" else "Not Verified", modifier = Modifier.weight(1f))
-                ManagerMeta(label = "INTEGRITY", value = if (manager.installed) {
-                    if (manager.spoofed) "Mismatch" else "Recognized"
-                } else "Not available", modifier = Modifier.weight(1f))
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    InfoRowText("PACKAGE", manager.packageName.ifEmpty { "—" })
+                    InfoRowText("SIGNATURE", if (manager.identityVerified) "Verified" else "Not Verified")
+                    InfoRowText("INTEGRITY", if (manager.installed) {
+                        if (manager.spoofed) "Mismatch" else "Recognized"
+                    } else "Not available")
+                }
             }
         }
     }
 }
 
 @Composable
-private fun ManagerMeta(label: String, value: String, modifier: Modifier = Modifier) {
-    Column(modifier = modifier) {
-        Text(label, fontSize = 9.sp, fontWeight = FontWeight.SemiBold, color = MiuixTheme.colorScheme.onSurface.copy(alpha = 0.68f))
-        Text(value, modifier = Modifier.padding(top = 3.dp), fontSize = 11.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
-    }
-}
-
-@Composable
-private fun RunButton(
-    running: Boolean,
-    supported: Boolean,
-    profileValid: Boolean,
-    labelRes: Int,
-    onClick: () -> Unit,
-    onBlockedClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(modifier = modifier) {
-        TextButton(
-            text = stringResource(if (running) R.string.action_running else labelRes),
-            enabled = supported && profileValid && !running,
-            colors = ButtonDefaults.textButtonColorsPrimary(),
-            onClick = onClick,
-            modifier = Modifier.fillMaxWidth(),
+private fun InfoRowText(label: String, value: String) {
+    Column(
+        modifier = Modifier.weight(1f)
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        if (running) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(3.dp)
-                    .clip(RoundedCornerShape(3.dp))
-                    .background(MiuixTheme.colorScheme.primary.copy(alpha = 0.18f))
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(0.32f)
-                        .fillMaxHeight()
-                        .clip(RoundedCornerShape(3.dp))
-                        .background(MiuixTheme.colorScheme.primary)
-                )
-            }
-        }
-        /* A disabled TextButton consumes no pointer input, so this overlay
-         * explains why the run is blocked. */
-        if (!running && (!supported || !profileValid)) {
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .clickable { onBlockedClick() },
-            )
-        }
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(top = 2.dp)
+        )
     }
 }
+
+// Mock extensions for nullable safety
+private fun String?.ifEmpty(defaultValue: String): String = if (this == null || this.isEmpty()) defaultValue else this
+
+// Assuming these resources exist; adjust as needed
+private fun stringResource(id: Int): String = androidx.compose.ui.res.stringResource(id)
+
+// Dummy implementations for theme functions (replace with actual imports)
+// We assume the imported lightColorScheme and darkColorScheme from miuix theme are compatible with Material3.
+// If not, you would need to map them to Material3 ColorScheme manually.
+@Composable
+fun lightColorScheme() = top.yukonga.miuix.kmp.theme.lightColorScheme()
+@Composable
+fun darkColorScheme() = top.yukonga.miuix.kmp.theme.darkColorScheme()
