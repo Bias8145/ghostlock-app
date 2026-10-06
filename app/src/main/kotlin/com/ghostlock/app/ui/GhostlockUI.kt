@@ -98,6 +98,7 @@ data class GhostlockUiState(
     val kernelSupported: Boolean = false,
     val shizukuEnabled: Boolean = false,
     val shizukuStatus: ShizukuStatus = ShizukuStatus.NOT_REQUIRED,
+    val manager: ManagerDetection = ManagerDetection(),
     val running: Boolean = false,
     val cpuPairLabels: List<String> = emptyList(),
     val cpuPairIndex: Int = 0,
@@ -679,6 +680,9 @@ private fun MainContent(
                 modifier = Modifier.fillMaxWidth(),
             )
         }
+        item(key = "manager") {
+            ManagerStatusCard(manager = state.manager, modifier = Modifier.fillMaxWidth())
+        }
         item(key = "run") {
             RunButton(
                 running = state.running,
@@ -981,6 +985,76 @@ internal val OverrideHighlight = Color(0xFFF5A623)
 internal val FieldErrorHighlight = Color(0xFFE53935)
 
 internal fun isFieldInputInvalid(text: String): Boolean = text.trim().toLongOrNull() == null
+
+@Composable
+private fun ManagerStatusCard(
+    manager: ManagerDetection,
+    modifier: Modifier = Modifier,
+) {
+    val dark = isSystemInDarkTheme()
+    val statusColor = when {
+        !manager.installed -> MiuixTheme.colorScheme.onSurfaceVariant
+        manager.spoofed -> MiuixTheme.colorScheme.error
+        manager.identityVerified -> Color(0xFF4D9B67)
+        else -> MiuixTheme.colorScheme.primary
+    }
+    val surface = when {
+        manager.spoofed -> if (dark) Color(0xFF3A2928) else Color(0xFFF5E4E1)
+        manager.installed -> if (dark) Color(0xFF302D25) else Color(0xFFF4EFE3)
+        else -> if (dark) Color(0xFF292820) else Color(0xFFF1ECE2)
+    }
+    Card(
+        modifier = modifier.clip(RoundedCornerShape(18.dp)),
+        colors = CardDefaults.defaultColors(color = surface),
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = "RUNTIME MANAGER",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = MiuixTheme.colorScheme.onSurfaceVariant,
+            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = if (manager.installed) manager.name else "No Manager",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Text(
+                        text = when {
+                            !manager.installed -> "Not installed"
+                            manager.spoofed -> "Identity Mismatch"
+                            manager.identityVerified -> "Verified"
+                            manager.recognized -> "Recognized"
+                            else -> "Unknown"
+                        },
+                        fontSize = 12.sp,
+                        color = statusColor,
+                    )
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                ManagerMeta(label = "PACKAGE", value = manager.packageName.ifEmpty { "—" }, modifier = Modifier.weight(1.2f))
+                ManagerMeta(label = "SIGNATURE", value = if (manager.identityVerified) "Verified" else "Not Verified", modifier = Modifier.weight(1f))
+                ManagerMeta(label = "INTEGRITY", value = if (manager.installed) {
+                    if (manager.spoofed) "Mismatch" else "Recognized"
+                } else "Not available", modifier = Modifier.weight(1f))
+            }
+        }
+    }
+}
+
+@Composable
+private fun ManagerMeta(label: String, value: String, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        Text(label, fontSize = 9.sp, fontWeight = FontWeight.SemiBold, color = MiuixTheme.colorScheme.onSurfaceVariant)
+        Text(value, modifier = Modifier.padding(top = 3.dp), fontSize = 11.sp, maxLines = 1)
+    }
+}
 
 @Composable
 private fun RunButton(
