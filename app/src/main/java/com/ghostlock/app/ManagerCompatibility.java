@@ -39,12 +39,14 @@ public final class ManagerCompatibility {
     }
 
     /*
-     * GhostLock's execution path consumes ksud. Keep package identity separate
-     * from signature trust so ReSukiSU/KOWSU are not rejected merely because
-     * their signing certificate is different from KernelSU's.
+     * BakaSU is the current rebrand of ReSukiSU. Its current upstream build
+     * deliberately keeps com.resukisu.resukisu as the default package name.
+     * Keep the legacy package registered and resolve the display name from the
+     * installed application label so both ReSukiSU and BakaSU remain supported.
      */
+    private static final String RESUKISU_PACKAGE = "com.resukisu.resukisu";
     private static final Registered[] REGISTERED = {
-            new Registered("com.resukisu.resukisu", "ReSukiSU", "https://github.com/ReSukiSU/ReSukiSU/releases"),
+            new Registered(RESUKISU_PACKAGE, "ReSukiSU / BakaSU", "https://github.com/Baka-SU/BakaSU"),
             new Registered("me.weishu.kernelsu.pr", "KernelSU PR", "https://github.com/tiann/KernelSU/releases"),
             new Registered("me.weishu.kernelsu", "KernelSU", "https://github.com/tiann/KernelSU/releases", "1417081413bf7ab1de8e440ecbcb62685037c8f28f048f0f8b79e305b31ab916"),
             new Registered("com.kowx712.supermanager", "KOWSU", "https://github.com/KOWX712/KernelSU/releases")
@@ -93,8 +95,9 @@ public final class ManagerCompatibility {
     public static ManagerInfo detectManager(Context context) {
         PackageManager pm = context.getPackageManager();
 
-        // Detect by package identity first. This is deliberately independent of
-        // certificate verification: the native execution path only needs ksud.
+        // Detect by package identity first. BakaSU and legacy ReSukiSU share
+        // the default package, so use the installed application label to keep
+        // the two names distinct without weakening package recognition.
         for (Registered r : REGISTERED) {
             ApplicationInfo app = findApplication(pm, r.pkg);
             if (app == null) continue;
@@ -108,10 +111,12 @@ public final class ManagerCompatibility {
                 }
             }
 
-            // A known package is a recognized manager. Signature mismatch is only
-            // a warning for pinned managers, never a reason to hide ReSukiSU/KOWSU.
             boolean spoofed = r.certs.length > 0 && !verified;
-            return new ManagerInfo(r.pkg, r.name, r.url, true, true, verified, spoofed);
+            String displayName = resolveManagerName(pm, app, r);
+            String installUrl = r.pkg.equals(RESUKISU_PACKAGE)
+                    ? "https://github.com/Baka-SU/BakaSU"
+                    : r.url;
+            return new ManagerInfo(r.pkg, displayName, installUrl, true, true, verified, spoofed);
         }
 
         // Fallback for renamed/spoofed managers: locate an installed package
@@ -135,6 +140,19 @@ public final class ManagerCompatibility {
         } catch (Throwable ignored) {}
 
         return new ManagerInfo("", "", "", false, false, false, false);
+    }
+
+    private static String resolveManagerName(PackageManager pm, ApplicationInfo app, Registered registered) {
+        if (!RESUKISU_PACKAGE.equals(registered.pkg)) return registered.name;
+        try {
+            CharSequence label = app.loadLabel(pm);
+            if (label != null) {
+                String value = label.toString().trim();
+                if (value.toLowerCase(Locale.ROOT).contains("bakasu")) return "BakaSU";
+                if (value.toLowerCase(Locale.ROOT).contains("resukisu")) return "ReSukiSU";
+            }
+        } catch (Throwable ignored) {}
+        return registered.name;
     }
 
     private static ApplicationInfo findApplication(PackageManager pm, String pkg) {
@@ -190,7 +208,11 @@ public final class ManagerCompatibility {
                     verified = hasExpectedCertificate(packageInfo(pm, r.pkg), r.certs);
                 } catch (Throwable ignored) {}
             }
-            result.add(new ManagerInfo(r.pkg, r.name, r.url, installed, true, verified, installed && r.certs.length > 0 && !verified));
+            String displayName = installed ? resolveManagerName(pm, app, r) : r.name;
+            String installUrl = r.pkg.equals(RESUKISU_PACKAGE)
+                    ? "https://github.com/Baka-SU/BakaSU"
+                    : r.url;
+            result.add(new ManagerInfo(r.pkg, displayName, installUrl, installed, true, verified, installed && r.certs.length > 0 && !verified));
         }
         return Collections.unmodifiableList(result);
     }
