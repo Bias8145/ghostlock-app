@@ -65,7 +65,7 @@ object ManagerDetector {
         runCatching {
             val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
             val apps = if (Build.VERSION.SDK_INT >= 33) {
-                pm.queryIntentActivities(intent, PackageManager.ResolveInfoFlags.of(PackageManager.MATCH_ALL))
+                pm.queryIntentActivities(intent, PackageManager.ResolveInfoFlags.of(PackageManager.MATCH_ALL.toLong()))
             } else {
                 pm.queryIntentActivities(intent, PackageManager.MATCH_ALL)
             }
