@@ -6,6 +6,7 @@ on:
       - "**.md"
     branches:
       - main
+      - original
   pull_request:
     branches:
       - main
