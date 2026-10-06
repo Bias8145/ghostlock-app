@@ -91,7 +91,7 @@ private fun settingsItems(
     val prefs = remember { GhostlockPrefs(context) }
     val scope = rememberCoroutineScope()
 
-    return listOf(
+    val items: List<@Composable () -> Unit> = listOf(
         { SectionHeader("General") },
         { ThemePreference(themeRepository) },
         { LanguagePreference() },
@@ -106,6 +106,8 @@ private fun settingsItems(
         { SectionHeader("About") },
         { AboutShortcut(actions) }
     )
+
+    return items
 }
 
 @Composable
