@@ -458,6 +458,56 @@ internal fun pageContentPadding(
 }
 
 @Composable
+private fun LogPanel(
+    lines: List<GhostlockLogLine>,
+    modifier: Modifier = Modifier,
+) {
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(lines.size) {
+        if (lines.isNotEmpty()) {
+            listState.animateScrollToItem(lines.lastIndex)
+        }
+    }
+
+    Card(
+        modifier = modifier.clip(RoundedCornerShape(18.dp)),
+        colors = CardDefaults.defaultColors(
+            color = if (isSystemInDarkTheme()) Color(0xFF1B1915) else Color(0xFFF4EFE3),
+        ),
+    ) {
+        SelectionContainer {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(14.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                if (lines.isEmpty()) {
+                    item {
+                        Text(
+                            text = stringResource(R.string.log_empty),
+                            color = MiuixTheme.colorScheme.onSurface.copy(alpha = 0.68f),
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 12.sp,
+                        )
+                    }
+                } else {
+                    items(lines) { line ->
+                        Text(
+                            text = line.text,
+                            color = Color(line.color),
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 11.sp,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun GhostlockExecutionSheet(
     state: GhostlockUiState,
     actions: GhostlockActions,
