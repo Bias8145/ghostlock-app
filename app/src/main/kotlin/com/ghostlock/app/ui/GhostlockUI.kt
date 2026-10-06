@@ -843,7 +843,7 @@ private fun ActivationStatusCard(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                 .heightIn(min = 104.dp)
+                .heightIn(min = 104.dp)
         ) {
             Icon(
                 imageVector = icon,
@@ -1023,7 +1023,7 @@ private fun LogPanel(
     }
     Column(
         modifier = modifier
-             .clip(RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(18.dp))
             .background(if (isSystemInDarkTheme()) Color(0xFF1B1915) else Color(0xFFF4EFE3))
             .padding(12.dp),
     ) {
