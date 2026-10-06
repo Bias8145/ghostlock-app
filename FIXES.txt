@@ -1,0 +1,124 @@
+# Instructions to fix build and enable Kotlin/Jetpack Compose
+
+## 1. Update `app/build.gradle`
+
+Add the Kotlin plugin, enable Kotlin, and add Compose and DataStore dependencies.
+
+```groovy
+plugins {
+    id 'org.jetbrains.kotlin.android'
+    id 'com.android.application'
+}
+
+android {
+    // ... existing config ...
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
+    buildFeatures {
+        compose true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = '1.6.0' // match your compose_version
+    }
+
+    // ...
+}
+
+ext {
+    kotlin_version = '1.9.0'
+    compose_version = '1.6.7'
+    lifecycle_version = '2.8.0'
+    activity_compose_version = '1.9.0'
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    implementation 'androidx.core:core-ktx:1.13.1'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.8.0'
+    implementation 'androidx.activity:activity-compose:1.9.0'
+    implementation "androidx.compose.ui:ui:$compose_version"
+    implementation "androidx.compose.ui:ui-tooling-preview:$compose_version"
+    implementation "androidx.compose.material3:material3:$compose_version"
+    implementation "androidx.compose.ui:ui-graphics:$compose_version"
+    implementation 'androidx.datastore:datastore-preferences:1.1.1'
+    // keep existing dependencies
+}
+```
+
+## 2. (Optional) Update GitHub Actions workflow
+
+In `.github/workflows/build.yml`, under the **Set up Android SDK** step, specify API level and build tools:
+
+```yaml
+- name: Set up Android SDK
+  uses: android-actions/setup-android@v3
+  with:
+    api-level: 37
+    build-tools: "34.0.0"
+    packages: platform-tools
+```
+
+## 3. Apply Kotlin source fixes
+
+### SettingsScreen.kt
+- Line 91: Change  
+  `val prefs = remember { GhostlockPrefs(context) }`  
+  to  
+  `val prefs = remember<GhostlockPrefs> { GhostlockPrefs(context) }`
+
+- Ensure you have a method to set UI mode in `ThemeRepository`. Add if missing:
+
+```kotlin
+fun setUiMode(mode: UiMode) {
+    viewModelScope.launch {
+        val modeInt = when (mode) {
+            UiMode.SYSTEM -> 0
+            UiMode.LIGHT -> 1
+            UiMode.DARK -> 2
+        }
+        context.setThemeMode(modeInt)
+        _uiMode.value = mode
+    }
+}
+```
+
+### GhostlockUI.kt (or your main Compose activity)
+- Add missing imports:
+  ```kotlin
+  import androidx.compose.material.icons.filled.MoreVert
+  import androidx.compose.material.icons.filled.PlayArrow
+  ```
+- Fix `BottomAppBar` syntax (example):
+  ```kotlin
+  bottomBar = {
+      BottomAppBar(
+          actions = { /* optional actions */ },
+          floatingActionButton = {
+              FloatingActionButton(
+                  onClick = { actions.onRun() },
+                  containerColor = MaterialTheme.colorScheme.primary,
+                  contentColor = MaterialTheme.colorScheme.onPrimary
+              ) {
+                  Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null)
+              }
+          }
+      )
+  }
+- Ensure `GhostlockActions` interface includes `fun onRun()`.
+- Remove duplicate `readOnly = true` in `TextField`.
+
+## 4. Sync and push
+
+After making the above changes, commit and push to branch `original`:
+
+```bash
+git add .
+git commit -m "Fix build: enable Kotlin, Compose, and apply SettingsScreen fixes"
+git push origin original
+```
+
+The GitHub Actions workflow should now succeed.
