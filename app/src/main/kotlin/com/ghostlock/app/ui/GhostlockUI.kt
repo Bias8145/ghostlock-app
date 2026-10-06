@@ -1074,6 +1074,23 @@ private fun RunButton(
             onClick = onClick,
             modifier = Modifier.fillMaxWidth(),
         )
+        if (running) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(3.dp)
+                    .clip(RoundedCornerShape(3.dp))
+                    .background(MiuixTheme.colorScheme.primary.copy(alpha = 0.18f))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.32f)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(3.dp))
+                        .background(MiuixTheme.colorScheme.primary)
+                )
+            }
+        }
         /* A disabled TextButton consumes no pointer input, so this overlay
          * explains why the run is blocked. */
         if (!running && (!supported || !profileValid)) {
