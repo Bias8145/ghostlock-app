@@ -1,5 +1,6 @@
 package com.ghostlock.app.ui
 
+import android.content.Context
 import android.net.Uri
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
@@ -52,6 +53,7 @@ private enum class ParseDialogStage { Mode, Attach }
 
 class GhostlockViewModel(
     private val repository: GhostlockRepository,
+    private val context: Context,
 ) : ViewModel() {
     private val effectChannel = Channel<GhostlockEffect>(Channel.BUFFERED)
     private val mutableState = MutableStateFlow(GhostlockUiState())
@@ -82,6 +84,7 @@ class GhostlockViewModel(
         if (initialized) return
         initialized = true
         repository.setShizukuStatusListener { refreshAccessStatus() }
+        mutableState.update { it.copy(manager = ManagerDetector.detect(context)) }
         viewModelScope.launch {
             refreshSnapshot()
             applyRecommendedShizuku()
