@@ -17,18 +17,12 @@ import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.ghostlock.app.R
 import com.ghostlock.app.data.GhostlockPrefs
 import com.ghostlock.app.ui.theme.ThemeRepository
 import com.ghostlock.app.ui.theme.UiMode
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 interface GhostlockActions {
@@ -88,7 +82,6 @@ private fun settingsItems(
     openFilePicker: ActivityResultLauncher<String>,
     actions: GhostlockActions
 ): List<@Composable () -> Unit> {
-    val prefs = remember { GhostlockPrefs(context) }
     val scope = rememberCoroutineScope()
 
     val items: List<@Composable () -> Unit> = listOf(
@@ -96,7 +89,7 @@ private fun settingsItems(
         { ThemePreference(themeRepository) },
         { LanguagePreference() },
         { TextScalePreference() },
-        { SafeModeSwitchPreference(prefs, scope, actions) },
+        { SafeModeSwitchPreference(context, scope, actions) },
         { SectionHeader("Runtime") },
         { ShizukuPreference(actions) },
         { SectionHeader("Configuration") },
@@ -137,7 +130,7 @@ private fun ThemePreference(repository: ThemeRepository) {
                 UiMode.LIGHT -> UiMode.DARK
                 UiMode.DARK -> UiMode.SYSTEM
             }
-            repository.setUiMode(mode)
+            repository.setUserChoice(mode)
         }
     )
 }
@@ -154,8 +147,8 @@ private fun TextScalePreference() {
 
 @Composable
 private fun SafeModeSwitchPreference(
-    prefs: GhostlockPrefs,
-    scope: kotlinx.coroutines.CoroutineScope,
+    context: Context,
+    scope: CoroutineScope,
     actions: GhostlockActions
 ) {
     var enabled by remember { mutableStateOf(false) }
@@ -164,7 +157,7 @@ private fun SafeModeSwitchPreference(
         subtitle = if (enabled) "Enabled" else "Disabled",
         onClick = {
             enabled = !enabled
-            scope.launch { prefs.setSafeMode(enabled) }
+            scope.launch { context.setSafeMode(enabled) }
             actions.onSafeModeChanged(enabled)
         }
     )
