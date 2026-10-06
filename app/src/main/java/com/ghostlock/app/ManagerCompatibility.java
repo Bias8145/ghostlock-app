@@ -39,12 +39,13 @@ public final class ManagerCompatibility {
     }
 
     /*
-     * BakaSU is the current rebrand of ReSukiSU. Its current upstream build
-     * deliberately keeps com.resukisu.resukisu as the default package name.
-     * Keep the legacy package registered and resolve the display name from the
-     * installed application label so both ReSukiSU and BakaSU remain supported.
+     * BakaSU is the current rebrand of ReSukiSU.
+     * Official builds keep com.resukisu.resukisu, while development/PR builds
+     * may use com.resukisu.resukisu.dev or com.resukisu.resukisu.pr<number>.
+     * Keep all ReSukiSU identities compatible.
      */
     private static final String RESUKISU_PACKAGE = "com.resukisu.resukisu";
+    private static final String RESUKISU_PREFIX = "com.resukisu.resukisu.";
     private static final Registered[] REGISTERED = {
             new Registered(RESUKISU_PACKAGE, "ReSukiSU / BakaSU", "https://github.com/Baka-SU/BakaSU"),
             new Registered("me.weishu.kernelsu.pr", "KernelSU PR", "https://github.com/tiann/KernelSU/releases"),
@@ -95,38 +96,51 @@ public final class ManagerCompatibility {
     public static ManagerInfo detectManager(Context context) {
         PackageManager pm = context.getPackageManager();
 
-        // Detect by package identity first. BakaSU and legacy ReSukiSU share
-        // the default package, so use the installed application label to keep
-        // the two names distinct without weakening package recognition.
+        // First check known package IDs, including BakaSU/ReSukiSU dev and PR variants.
         for (Registered r : REGISTERED) {
             ApplicationInfo app = findApplication(pm, r.pkg);
             if (app == null) continue;
-
-            boolean verified = false;
-            if (r.certs.length > 0) {
-                try {
-                    verified = hasExpectedCertificate(packageInfo(pm, r.pkg), r.certs);
-                } catch (Throwable ignored) {
-                    // Package is still recognized even when signing metadata is unavailable.
-                }
-            }
-
-            boolean spoofed = r.certs.length > 0 && !verified;
-            String displayName = resolveManagerName(pm, app, r);
-            String installUrl = r.pkg.equals(RESUKISU_PACKAGE)
-                    ? "https://github.com/Baka-SU/BakaSU"
-                    : r.url;
-            return new ManagerInfo(r.pkg, displayName, installUrl, true, true, verified, spoofed);
+            return buildManagerInfo(pm, r.pkg, app, r);
         }
 
-        // Fallback for renamed/spoofed managers: locate an installed package
-        // that actually ships ksud. This mirrors GhostLock's runtime dependency
-        // instead of treating arbitrary package labels as managers.
         try {
             List<ApplicationInfo> apps = pm.getInstalledApplications(PackageManager.GET_META_DATA);
             for (ApplicationInfo app : apps) {
                 if (app == null || app.packageName == null) continue;
-                if (!hasKsud(app)) continue;
+
+                String pkg = app.packageName;
+                String lowerLabel = "";
+                try {
+                    CharSequence label = app.loadLabel(pm);
+                    if (label != null) lowerLabel = label.toString().trim().toLowerCase(Locale.ROOT);
+                } catch (Throwable ignored) {}
+
+                // BakaSU/ReSukiSU official, dev, PR, or repackaged builds.
+                boolean resukisuFamily = pkg.equals(RESUKISU_PACKAGE) || pkg.startsWith(RESUKISU_PREFIX);
+                boolean bakaLabel = lowerLabel.contains("bakasu") || lowerLabel.contains("resukisu");
+                if (!resukisuFamily && !bakaLabel) continue;
+
+                if (!hasKsud(app) && !resukisuFamily) continue;
+
+                String name = lowerLabel.contains("bakasu") ? "BakaSU"
+                        : lowerLabel.contains("resukisu") ? "ReSukiSU"
+                        : "BakaSU / ReSukiSU";
+                return new ManagerInfo(
+                        pkg,
+                        name,
+                        "https://github.com/Baka-SU/BakaSU",
+                        true,
+                        true,
+                        false,
+                        false);
+            }
+        } catch (Throwable ignored) {}
+
+        // Final runtime fallback: locate a manager that actually ships ksud.
+        try {
+            List<ApplicationInfo> apps = pm.getInstalledApplications(PackageManager.GET_META_DATA);
+            for (ApplicationInfo app : apps) {
+                if (app == null || app.packageName == null || !hasKsud(app)) continue;
                 CharSequence label = app.loadLabel(pm);
                 return new ManagerInfo(
                         app.packageName,
@@ -142,14 +156,34 @@ public final class ManagerCompatibility {
         return new ManagerInfo("", "", "", false, false, false, false);
     }
 
+    private static ManagerInfo buildManagerInfo(PackageManager pm, String pkg, ApplicationInfo app, Registered r) {
+        boolean verified = false;
+        if (r.certs.length > 0) {
+            try {
+                verified = hasExpectedCertificate(packageInfo(pm, pkg), r.certs);
+            } catch (Throwable ignored) {}
+        }
+
+        boolean spoofed = r.certs.length > 0 && !verified;
+        String displayName = resolveManagerName(pm, app, r);
+        return new ManagerInfo(
+                pkg,
+                displayName,
+                r.pkg.equals(RESUKISU_PACKAGE) ? "https://github.com/Baka-SU/BakaSU" : r.url,
+                true,
+                true,
+                verified,
+                spoofed);
+    }
+
     private static String resolveManagerName(PackageManager pm, ApplicationInfo app, Registered registered) {
-        if (!RESUKISU_PACKAGE.equals(registered.pkg)) return registered.name;
+        if (!registered.pkg.equals(RESUKISU_PACKAGE)) return registered.name;
         try {
             CharSequence label = app.loadLabel(pm);
             if (label != null) {
-                String value = label.toString().trim();
-                if (value.toLowerCase(Locale.ROOT).contains("bakasu")) return "BakaSU";
-                if (value.toLowerCase(Locale.ROOT).contains("resukisu")) return "ReSukiSU";
+                String value = label.toString().trim().toLowerCase(Locale.ROOT);
+                if (value.contains("bakasu")) return "BakaSU";
+                if (value.contains("resukisu")) return "ReSukiSU";
             }
         } catch (Throwable ignored) {}
         return registered.name;
