@@ -62,7 +62,7 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(stringResource(R.string.settings_title)) },
+                title = { Text("Settings") },
                 navigationIcon = {
                     IconButton(onClick = { actions.onCloseParameters() }) {
                         Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
@@ -108,66 +108,66 @@ private fun settingsItems(
     return listOf(
         // ---------- DISPLAY ----------
         SettingsItem(
-            title = stringResource(R.string.settings_theme_title),
-            icon = R.drawable.ic_theme, // add this icon to drawable if needed
+            title = "Theme",
+            icon = android.R.drawable.ic_menu_manage, // add this icon to drawable if needed
             content = { ThemeSelector(themeRepository) }
         ),
         SettingsItem(
-            title = stringResource(R.string.settings_language_title),
-            icon = R.drawable.ic_language,
+            title = "Language",
+            icon = android.R.drawable.ic_menu_sort_by_size,
             content = { LanguageSelector() }
         ),
         SettingsItem(
-            title = stringResource(R.string.settings_text_scale_title),
-            icon = R.drawable.ic_text_size,
+            title = "Text size",
+            icon = android.R.drawable.ic_menu_zoom,
             content = { TextScaleSelector() }
         ),
         // ---------- FUNCTIONALITY ----------
         SettingsItem(
-            title = stringResource(R.string.settings_shizuku),
-            icon = R.drawable.ic_shizuku,
+            title = "Shizuku",
+            icon = android.R.drawable.ic_menu_manage,
             content = { ShizukuShortcut(actions) }
         ),
         SettingsItem(
-            title = stringResource(R.string.settings_safe_mode),
-            icon = R.drawable.ic_safe_mode,
+            title = "Safe mode",
+            icon = android.R.drawable.ic_lock_lock,
             content = { SafeModeSwitchPreference(themeRepository, actions) }
         ),
         SettingsItem(
-            title = stringResource(R.string.settings_cpu_pair),
-            icon = R.drawable.ic_cpu,
+            title = "CPU cores",
+            icon = android.R.drawable.ic_menu_manage,
             content = { CpuPairPreference(actions) }
         ),
         SettingsItem(
-            title = stringResource(R.string.settings_advanced),
-            icon = R.drawable.ic_advanced,
+            title = "Advanced",
+            icon = android.R.drawable.ic_menu_preferences,
             content = { AdvancedShortcut(actions) }
         ),
         // ---------- DATA & PRIVACY ----------
         SettingsItem(
-            title = stringResource(R.string.settings_export_profile),
-            icon = R.drawable.ic_export,
+            title = "Export profile",
+            icon = android.R.drawable.ic_menu_upload,
             content = { ExportProfileShortcut(actions) }
         ),
         SettingsItem(
-            title = stringResource(R.string.settings_import_config),
-            icon = R.drawable.ic_import,
+            title = "Import config",
+            icon = android.R.drawable.ic_menu_save,
             content = { ImportConfigShortcut(openFilePicker) }
         ),
         SettingsItem(
-            title = stringResource(R.string.settings_clear_logs),
-            icon = R.drawable.ic_delete,
+            title = "Clear logs",
+            icon = android.R.drawable.ic_menu_delete,
             content = { ClearLogsShortcut(actions) }
         ),
         // ---------- ABOUT ----------
         SettingsItem(
-            title = stringResource(R.string.settings_about_title),
-            icon = R.drawable.ic_info,
+            title = "About",
+            icon = android.R.drawable.ic_menu_info_details,
             content = { AboutShortcut(actions) }
         ),
         SettingsItem(
-            title = stringResource(R.string.settings_github),
-            icon = R.drawable.ic_github,
+            title = "GitHub",
+            icon = android.R.drawable.ic_menu_view,
             content = { GithubShortcut() }
         )
     )
@@ -178,7 +178,7 @@ private fun settingsItems(
 fun ThemeSelector(repository: ThemeRepository) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
-            text = stringResource(R.string.settings_theme_subtitle),
+            text = "Choose the app appearance",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -196,9 +196,9 @@ fun ThemeSelector(repository: ThemeRepository) {
                 )
                 Text(
                     text = when (mode) {
-                        UiMode.SYSTEM -> stringResource(R.string.theme_system)
-                        UiMode.LIGHT -> stringResource(R.string.theme_light)
-                        UiMode.DARK -> stringResource(R.string.theme_dark)
+                        UiMode.SYSTEM -> "System"
+                        UiMode.LIGHT -> "Light"
+                        UiMode.DARK -> "Dark"
                     },
                     style = MaterialTheme.typography.labelLarge,
                     color = if (isSelected) MaterialTheme.colorScheme.onPrimary
@@ -213,7 +213,7 @@ fun ThemeSelector(repository: ThemeRepository) {
 @Composable
 fun LanguageSelector() {
     Text(
-        text = stringResource(R.string.not_yet_implemented),
+        text = "Not yet implemented",
         style = MaterialTheme.typography.bodyLarge,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.padding(24.dp)
@@ -225,7 +225,7 @@ fun TextScaleSelector() {
     var scale by remember { mutableStateOf(1f) }
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
-            text = stringResource(R.string.settings_text_scale_subtitle),
+            text = "Adjust text size",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -248,7 +248,7 @@ fun TextScaleSelector() {
 @Composable
 fun ShizukuShortcut(actions: GhostlockActions) {
     ListItem(
-        headline = { Text(stringResource(R.string.settings_shizuku)) },
+        headline = { Text("Shizuku") },
         leadingIcon = {
             Icon(imageVector = Icons.Default.Terminal, contentDescription = null)
         },
@@ -264,7 +264,7 @@ fun SafeModeSwitchPreference(repository: ThemeRepository, actions: GhostlockActi
     val scope = rememberCoroutineScope()
     LaunchedEffect(Unit) { enabled = prefs.isSafeModeEnabled(context) }
     ListItem(
-        headline = { Text(stringResource(R.string.settings_safe_mode)) },
+        headline = { Text("Safe mode") },
         leadingIcon = {
             Icon(imageVector = Icons.Default.Shield, contentDescription = null)
         },
@@ -284,7 +284,7 @@ fun SafeModeSwitchPreference(repository: ThemeRepository, actions: GhostlockActi
 @Composable
 fun CpuPairPreference(actions: GhostlockActions) {
     ListItem(
-        headline = { Text(stringResource(R.string.settings_cpu_pair)) },
+        headline = { Text("CPU cores") },
         leadingIcon = {
             Icon(imageVector = Icons.Default.Speed, contentDescription = null)
         },
@@ -295,7 +295,7 @@ fun CpuPairPreference(actions: GhostlockActions) {
 @Composable
 fun AdvancedShortcut(actions: GhostlockActions) {
     ListItem(
-        headline = { Text(stringResource(R.string.settings_advanced)) },
+        headline = { Text("Advanced") },
         leadingIcon = {
             Icon(imageVector = Icons.Default.Settings, contentDescription = null)
         },
@@ -306,7 +306,7 @@ fun AdvancedShortcut(actions: GhostlockActions) {
 @Composable
 fun ExportProfileShortcut(actions: GhostlockActions) {
     ListItem(
-        headline = { Text(stringResource(R.string.settings_export_profile)) },
+        headline = { Text("Export profile") },
         leadingIcon = {
             Icon(imageVector = Icons.Default.FileUpload, contentDescription = null)
         },
@@ -317,7 +317,7 @@ fun ExportProfileShortcut(actions: GhostlockActions) {
 @Composable
 fun ImportConfigShortcut(openFilePicker: ActivityResultLauncher<String>) {
     ListItem(
-        headline = { Text(stringResource(R.string.settings_import_config)) },
+        headline = { Text("Import config") },
         leadingIcon = {
             Icon(imageVector = Icons.Default.FileDownload, contentDescription = null)
         },
@@ -328,7 +328,7 @@ fun ImportConfigShortcut(openFilePicker: ActivityResultLauncher<String>) {
 @Composable
 fun ClearLogsShortcut(actions: GhostlockActions) {
     ListItem(
-        headline = { Text(stringResource(R.string.settings_clear_logs)) },
+        headline = { Text("Clear logs") },
         leadingIcon = {
             Icon(imageVector = Icons.Default.Delete, contentDescription = null)
         },
@@ -341,7 +341,7 @@ fun ClearLogsShortcut(actions: GhostlockActions) {
 @Composable
 fun AboutShortcut(actions: GhostlockActions) {
     ListItem(
-        headline = { Text(stringResource(R.string.settings_about_title)) },
+        headline = { Text("About") },
         leadingIcon = {
             Icon(imageVector = Icons.Default.Info, contentDescription = null)
         },
@@ -352,7 +352,7 @@ fun AboutShortcut(actions: GhostlockActions) {
 @Composable
 fun GithubShortcut() {
     ListItem(
-        headline = { Text(stringResource(R.string.settings_github)) },
+        headline = { Text("GitHub") },
         leadingIcon = {
             Icon(imageVector = Icons.Default.Web, contentDescription = null)
         },
