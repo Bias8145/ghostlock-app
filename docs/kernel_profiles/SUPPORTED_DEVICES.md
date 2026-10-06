@@ -23,12 +23,12 @@ bypass there as well, so it saves time even where it isn't required.
 
 | Kernel                                                 | Devices                                                          |
 |--------------------------------------------------------|------------------------------------------------------------------|
-| `6.1.25-android14-11-maybe-dirty` | MEIZU 21 · Flyme 12.6.0.0A |
-| `5.15.41-android13-8-g8dc4c75ab7d8-ab1673212412` | MEIZU 20 Pro · Flyme 10.2.0.0A · Shizuku recommended |
-| `5.15.119-android13-8-g6ff5097ee32a-ab1764665171`  | MEIZU 21 Note                                                  |
+| `5.15.41-android13-8-g8dc4c75ab7d8-ab1673212412`       | MEIZU 20 Pro · Shizuku recommended                               |
+| `5.15.119-android13-8-g6ff5097ee32a-ab1764665171`      | MEIZU 21 Note                                                    |
 | `5.15.167-android13-8-00017-gb1f32b310a30-ab12826353`  | Red Magic 8 Pro                                                  |
 | `5.15.189-android13-8-00016-g51bba4309aac-ab14546557`  | Sony Xperia 1 V                                                  |
 | `5.15.189-android13-8-00004-g1c3825f8ac0a-ab14110541`  | Sony Xperia 1 V                                                  |
+| `6.1.25-android14-11-maybe-dirty`                      | MEIZU 21                                                         |
 | `6.1.115-android14-11-ga2521ca27699-ab13294383`        | POCO X6 Pro                                                      |
 | `6.1.118-android14-11-ga3b9c44908dd-ab13320413`        | Redmi Note 15 Pro+                                               |
 | `6.1.118-android14-11-gca0ef6d17716-ab13624819`        | Xiaomi 14                                                        |
@@ -56,6 +56,7 @@ bypass there as well, so it saves time even where it isn't required.
 | `6.6.89-android15-8-g8e4be6b47e40-ab14134548-4k`       | POCO X8 Pro                                                      |
 | `6.6.89-android15-8-g42db9ecb036b-ab14487600-4k`       | Honor Magic V5 (10.0.0.164)                                      |
 | `6.6.89-android15-8-gb99b4586a3ee-ab13754593-4k`       | Honor Magic V5 (9.0.1.160)                                       |
+| `6.6.89-android15-8-g5a0ffb447c1d-ab13771415-4k`       | Redmi 15C 4G / POCO C85 4G                                       |
 | `6.6.89-android15-8-gf4dc45704e54-abogki446052083-4k`  | OnePlus 13                                                       |
 | `6.6.92-android15-8-g3637f4904cf5-ab13944661-4k`       | Red Magic Tablet 3 Pro, Red Magic 10 Pro, Red Magic 11 Air       |
 | `6.6.102-android15-8-gab8eb70a71b8-ab14350911-4k`      | Nothing Phone 3                                                  |
@@ -84,4 +85,3 @@ bypass there as well, so it saves time even where it isn't required.
 | `6.12.38-android16-5-g665eafb62659-ab14778838-4k`      | NX809J / NX888J                                                  |
 | `6.12.38-android16-5-g74ad46052215-ab14494108-4k`      | Lenovo Legion Y700 Wuji                                          |
 | `6.12.38-android16-5-g844001fb8721-ab14552068-4k`      | OnePlus 15T                                                      |
-| `6.6.89-android15-8-g5a0ffb447c1d-ab13771415-4k`       | Redmi 15C 4G / POCO C85 4G                                       |
