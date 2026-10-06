@@ -20,8 +20,8 @@ W3 seccomp bypass，即使并非必需，也能节省时间。
 
 | Kernel                                                 | Devices                                                          |
 |--------------------------------------------------------|------------------------------------------------------------------|
-| `5.15.41-android13-8-g8dc4c75ab7d8-ab1673212412` | 魅族 20 Pro · Flyme 10.2.0.0A · 推荐 Shizuku |
-| `5.15.119-android13-8-g6ff5097ee32a-ab1764665171`  | MEIZU 21 Note                                                  |
+| `5.15.41-android13-8-g8dc4c75ab7d8-ab1673212412`       | 魅族 20 Pro · Flyme 10.2.0.0A · 推荐 Shizuku                      |
+| `5.15.119-android13-8-g6ff5097ee32a-ab1764665171`      | MEIZU 21 Note                                                    |
 | `5.15.167-android13-8-00017-gb1f32b310a30-ab12826353`  | Red Magic 8 Pro                                                  |
 | `5.15.189-android13-8-00016-g51bba4309aac-ab14546557`  | Sony Xperia 1 V                                                  |
 | `5.15.189-android13-8-00004-g1c3825f8ac0a-ab14110541`  | Sony Xperia 1 V                                                  |
@@ -39,7 +39,7 @@ W3 seccomp bypass，即使并非必需，也能节省时间。
 | `6.1.145-android14-11-g74d1702dab4d-ab14669069`        | vivo T4, IQOO 12                                                 |
 | `6.1.145-android14-11-geaa643a2c0ee-ab14763719`        | Motorola Razr 50 Ultra / Motorola Razr+ 2024                     |
 | `6.1.157-android14-11-ga8b0b542991e-ab15601211`        | Infinix GT 30 Pro (X6873)                                        |
-| `6.1.157-android14-11-gbd23337e42e7-ab14791245`        | Google Pixel 9a (Tensor G4)                                      |
+| `6.1.157-android14-11-gbd23337e42e7-ab14791245`        | Google Pixel 9a (Tensor G4), Google Pixel 7 (Tensor G2)          |
 | `6.1.162-android14-11-gce140c0e5bf5-ab15450923`        | Zenfone 11 Ultra                                                 |
 | `6.1.162-android14-11-g752d9c17787d-ab15574904`        | Google Pixel 9 Pro / 9 Pro Fold (Tensor G4)                      |
 | `6.1.162-android14-11-g5e8b0cffebd1-ab15202165`        | Google Pixel 9a (Tensor G4)                                      |
@@ -62,7 +62,7 @@ W3 seccomp bypass，即使并非必需，也能节省时间。
 | `6.6.118-android15-8-g608a629fedf7-ab15154340-4k`      | REDMI K90 Ultra                                                  |
 | `6.6.118-android15-8-gbf8cd367de7a-ab15314822-4k`      | Motorola Razr 60 Ultra                                           |
 | `6.6.118-android15-8-gc44b714366cc-abogki519650608-4k` | REDMI K80 Pro / Turbo 5 Max, POCO X8 Pro Max, Xiaomi Pad 7 Ultra |
-| `6.6.118-android15-8-ge56cf6b09cca-ab15511674-4k`      | REDMI K90 Ultra, POCO F7                                         |
+| `6.6.118-android15-8-ge56cf6b09cca-ab15511674-4k`      | REDMI K90 Ultra, POCO F7, Redmi Note 13 5G                       |
 | `6.6.118-android15-8-ge58033dc8ea6-abogki498046332-4k` | OPPO Pad 5, OnePlus Pad 2, OPPO Find X8s                         |
 | `6.6.118-android15-8-gebdfad32d749-ab15099304-4k`      | OPPO Find X8 / Find X8 Pro                                       |
 | `6.6.118-android15-8-g21be90ecfb5e-ab15480137-4k`      | Honor Magic V5 (10.0.0.105)                                      |
@@ -80,4 +80,4 @@ W3 seccomp bypass，即使并非必需，也能节省时间。
 | `6.12.38-android16-5-g665eafb62659-ab14778838-4k`      | NX809J / NX888J                                                  |
 | `6.12.38-android16-5-g74ad46052215-ab14494108-4k`      | Lenovo Legion Y700 Wuji                                          |
 | `6.12.38-android16-5-g844001fb8721-ab14552068-4k`      | OnePlus 15T                                                      |
-| `6.6.89-android15-8-g5a0ffb447c1d-ab13771415-4k`      | Redmi 15C 4G / POCO C85 4G                                                     |
+| `6.6.89-android15-8-g5a0ffb447c1d-ab13771415-4k`       | Redmi 15C 4G / POCO C85 4G                                       |
