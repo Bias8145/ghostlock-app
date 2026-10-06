@@ -5,9 +5,16 @@
         <package android:name="me.weishu.kernelsu" />
         <package android:name="me.weishu.kernelsu.pr" />
         <package android:name="com.resukisu.resukisu" />
+        <package android:name="com.resukisu.resukisu.dev" />
         <package android:name="com.kowx712.supermanager" />
         <package android:name="com.rifsxd.ksunext" />
         <package android:name="com.sukisu.ultra" />
+
+        <!-- Allow detection of renamed/repackaged BakaSU builds by app label. -->
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
     </queries>
     <application
         android:allowBackup="false"
