@@ -674,6 +674,7 @@ private fun MainContent(
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         item(key = "controls") {
+            SectionLabel(text = "KERNEL & PARAMETERS")
             ControlPanel(
                 state = state,
                 actions = actions,
@@ -681,9 +682,11 @@ private fun MainContent(
             )
         }
         item(key = "manager") {
+            SectionLabel(text = "RUNTIME")
             ManagerStatusCard(manager = state.manager, modifier = Modifier.fillMaxWidth())
         }
         item(key = "run") {
+            SectionLabel(text = "EXECUTION")
             RunButton(
                 running = state.running,
                 supported = state.kernelSupported &&
@@ -698,6 +701,20 @@ private fun MainContent(
             )
         }
     }
+}
+
+@Composable
+private fun SectionLabel(
+    text: String,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        text = text,
+        modifier = modifier.padding(start = 2.dp, bottom = 2.dp),
+        fontSize = 10.sp,
+        fontWeight = FontWeight.Bold,
+        color = MiuixTheme.colorScheme.onSurfaceVariant,
+    )
 }
 
 @Composable
@@ -1098,52 +1115,3 @@ private fun RunButton(
                 modifier = Modifier
                     .matchParentSize()
                     .clickable { onBlockedClick() },
-            )
-        }
-    }
-}
-
-@Composable
-private fun LogPanel(
-    lines: List<GhostlockLogLine>,
-    modifier: Modifier = Modifier,
-) {
-    val listState = rememberLazyListState()
-    LaunchedEffect(lines.size) {
-        if (lines.isNotEmpty()) listState.scrollToItem(lines.lastIndex)
-    }
-    Column(
-        modifier = modifier
-            .clip(RoundedCornerShape(18.dp))
-            .background(if (isSystemInDarkTheme()) Color(0xFF1B1915) else Color(0xFFF4EFE3))
-            .padding(12.dp),
-    ) {
-        SelectionContainer {
-            LazyColumn(
-                state = listState,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(top = 8.dp),
-            ) {
-                items(lines) { line ->
-                    Text(
-                        text = line.text.trimEnd('\r', '\n'),
-                        color = lineColor(line.color, isSystemInDarkTheme()),
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 12.sp,
-                        lineHeight = 16.sp,
-                    )
-                }
-            }
-        }
-    }
-}
-
-private fun lineColor(color: Int, dark: Boolean): Color = when (color) {
-    0xFFFF6B6B.toInt() -> Color(0xFFFF6B6B)
-    0xFF5FD68A.toInt() -> Color(0xFF5FD68A)
-    0xFFFFC94D.toInt() -> Color(0xFFFFC94D)
-    0xFF60A5FA.toInt() -> Color(0xFF60A5FA)
-    else -> if (dark) Color(0xFFF3EDE1) else Color(0xFF302C25)
-}
