@@ -26,7 +26,7 @@ import com.ghostlock.app.R
 class MainActivity : ComponentActivity() {
     private val viewModel by viewModels<GhostlockViewModel> {
         viewModelFactory {
-            initializer { GhostlockViewModel((application as GhostlockApplication).createRepository()) }
+            initializer { GhostlockViewModel((application as GhostlockApplication).createRepository(), applicationContext) }
         }
     }
 
