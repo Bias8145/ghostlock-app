@@ -75,7 +75,7 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(settings.size) { index ->
-                settings[index].content()
+                settings[index].content.invoke()
             }
         }
     }
