@@ -23,8 +23,6 @@ import androidx.compose.ui.unit.dp
 import com.ghostlock.app.data.GhostlockPrefs
 import com.ghostlock.app.ui.theme.ThemeRepository
 import com.ghostlock.app.ui.theme.UiMode
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 
 interface GhostlockActions {
     fun onShizukuClick()
@@ -83,14 +81,12 @@ private fun settingsItems(
     openFilePicker: ActivityResultLauncher<String>,
     actions: GhostlockActions
 ): List<@Composable () -> Unit> {
-    val scope = rememberCoroutineScope()
-
     val items: List<@Composable () -> Unit> = listOf(
         { SectionHeader("General") },
         { ThemePreference(themeRepository) },
         { LanguagePreference() },
         { TextScalePreference() },
-        { SafeModeSwitchPreference(context, scope, actions) },
+        { SafeModeSwitchPreference(actions) },
         { SectionHeader("Runtime") },
         { ShizukuPreference(actions) },
         { SectionHeader("Configuration") },
@@ -148,8 +144,6 @@ private fun TextScalePreference() {
 
 @Composable
 private fun SafeModeSwitchPreference(
-    context: Context,
-    scope: CoroutineScope,
     actions: GhostlockActions
 ) {
     var enabled by remember { mutableStateOf(false) }
@@ -158,7 +152,6 @@ private fun SafeModeSwitchPreference(
         subtitle = if (enabled) "Enabled" else "Disabled",
         onClick = {
             enabled = !enabled
-            scope.launch { context.setSafeMode(enabled) }
             actions.onSafeModeChanged(enabled)
         }
     )
