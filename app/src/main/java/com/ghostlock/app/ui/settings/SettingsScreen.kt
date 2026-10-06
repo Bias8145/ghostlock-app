@@ -75,23 +75,11 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(settings.size) { index ->
-                settings[index].content.invoke()
+                settings[index]()
             }
         }
     }
 }
-
-private data class SettingsItem(
-    val title: String,
-    val icon: Int? = null,
-    val content: @Composable () -> Unit
-)
-
-private fun SettingsItem(
-    title: String,
-    icon: Int? = null,
-    content: @Composable () -> Unit
-) = SettingsItem(title, icon, content)
 
 @Composable
 private fun settingsItems(
