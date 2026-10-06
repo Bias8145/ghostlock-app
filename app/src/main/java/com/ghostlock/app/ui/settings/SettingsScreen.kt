@@ -6,6 +6,7 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -267,7 +268,7 @@ fun SafeModeSwitchPreference(repository: ThemeRepository, actions: GhostlockActi
         },
         trailingIcon = {
             Switch(
-                checked = enabled.value,
+                checked = enabled,
                 onCheckedChange = {
                     enabled = it
                     scope.launch { prefs.setSafeMode(context, it) }
@@ -312,7 +313,7 @@ fun ExportProfileShortcut(actions: GhostlockActions) {
 }
 
 @Composable
-fun ImportConfigShortcut(openFilePicker: (Uri?) -> Unit) {
+fun ImportConfigShortcut(openFilePicker: ActivityResultLauncher<String>) {
     ListItem(
         headline = { Text(stringResource(R.string.settings_import_config)) },
         leadingIcon = {
