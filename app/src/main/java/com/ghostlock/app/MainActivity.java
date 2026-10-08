@@ -473,6 +473,7 @@ public class MainActivity extends Activity {
         setupSystemBars();
 
         rootView = findViewById(R.id.root);
+        PixelUi.apply(this, rootView);
         deviceInfo = findViewById(R.id.deviceInfo);
         logView = findViewById(R.id.logView);
         logScroll = findViewById(R.id.logScroll);
