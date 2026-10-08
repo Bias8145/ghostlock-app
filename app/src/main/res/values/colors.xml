@@ -1,36 +1,56 @@
 <resources>
-    <color name="bg">#FFF7F0DE</color>
-    <color name="surface">#FFFFFAEE</color>
-    <color name="surface_container_low">#FFF0E7D2</color>
-    <color name="surface_container">#FFE4D7B9</color>
-    <color name="text_primary">#FF241F2B</color>
-    <color name="text_secondary">#FF6D6675</color>
-    <color name="icon_tint">#FF6C4CC5</color>
-    <color name="theme_icon_light">#FF6C4CC5</color>
-    <color name="theme_icon_dark">#FFE7D37D</color>
-    <color name="accent">#FF7C5CDB</color>
-    <color name="primary">#FF7C5CDB</color>
-    <color name="accent_pressed">#FF6849C0</color>
-    <color name="accent_disabled">#FFD8CDEB</color>
-    <color name="accent_container">#FFE9DFFF</color>
-    <color name="on_accent">#FFFFFFFF</color>
-    <color name="on_accent_container">#FF33264D</color>
-    <color name="run_text">#FFFFFFFF</color>
-    <color name="border">#FF342B43</color>
-    <color name="outline_variant">#FFB8A9C9</color>
-    <color name="divider">#FFD8CCB8</color>
-    <color name="status_success">#FF3C8066</color>
-    <color name="status_success_bg">#FFD8F0E5</color>
-    <color name="status_error">#FFB54C62</color>
-    <color name="status_error_bg">#FFF6D9E0</color>
-    <color name="log_bg">#FFF0E9D9</color>
-    <color name="log_border">#FF342B43</color>
-    <color name="log_divider">#FFD5C9B5</color>
-    <color name="log_text">#FF302A37</color>
-    <color name="log_title">#FF241F2B</color>
-    <color name="log_secondary">#FF6D6675</color>
-    <color name="launcher_icon_background">#FFE9DFFF</color>
-    <color name="pixel_shadow">#FF342B43</color>
-    <color name="pixel_ghost">#FF7C5CDB</color>
-    <color name="pixel_highlight">#FFFFD86B</color>
+    <color name="bg">#FFF8F7FC</color>
+    <color name="surface">#FFFEFBFF</color>
+    <color name="surface_container_low">#FFF4F0F7</color>
+    <color name="surface_container">#FFEEE9F2</color>
+    <color name="surface_container_high">#FFE8E2EC</color>
+
+    <color name="text_primary">#FF1D1B20</color>
+    <color name="text_secondary">#FF625F66</color>
+    <color name="text_disabled">#FF9A969E</color>
+
+    <color name="primary">#FF6750A4</color>
+    <color name="primary_pressed">#FF55418D</color>
+    <color name="on_primary">#FFFFFFFF</color>
+    <color name="primary_container">#FFEADDFF</color>
+    <color name="on_primary_container">#FF21005D</color>
+
+    <color name="secondary">#FF625B71</color>
+    <color name="on_secondary">#FFFFFFFF</color>
+    <color name="secondary_container">#FFE8DEF8</color>
+    <color name="on_secondary_container">#FF1D192B</color>
+
+    <color name="icon_tint">#FF6750A4</color>
+    <color name="theme_icon_light">#FF6750A4</color>
+    <color name="theme_icon_dark">#FFEADDFF</color>
+
+    <color name="outline">#FF79747E</color>
+    <color name="border">#FF79747E</color>
+    <color name="outline_variant">#FFCAC4D0</color>
+    <color name="divider">#FFE4DFE7</color>
+
+    <color name="status_success">#FF2E7D5B</color>
+    <color name="status_success_bg">#FFD9F2E6</color>
+    <color name="status_error">#FFBA1A1A</color>
+    <color name="status_error_bg">#FFFFDAD6</color>
+
+    <color name="log_bg">#FFF1EDF4</color>
+    <color name="log_border">#FFCAC4D0</color>
+    <color name="log_divider">#FFE0DAE3</color>
+    <color name="log_text">#FF38343B</color>
+    <color name="log_title">#FF1D1B20</color>
+    <color name="log_secondary">#FF625F66</color>
+
+    <color name="accent">@color/primary</color>
+    <color name="accent_pressed">@color/primary_pressed</color>
+    <color name="accent_disabled">#FFE7E0EB</color>
+    <color name="accent_container">@color/primary_container</color>
+    <color name="on_accent">@color/on_primary</color>
+    <color name="on_accent_container">@color/on_primary_container</color>
+    <color name="run_text">@color/on_primary</color>
+
+    <color name="launcher_icon_background">@color/primary_container</color>
+    <color name="pixel_shadow">@color/outline_variant</color>
+    <color name="pixel_ghost">@color/primary</color>
+    <color name="pixel_highlight">#FFFFD54F</color>
 </resources>
