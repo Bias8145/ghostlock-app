@@ -51,10 +51,14 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:gravity="center_vertical">
-                        <com.ghostlock.app.PixelGhostView
+                        <ImageView
                             android:layout_width="44dp"
                             android:layout_height="44dp"
-                            android:layout_marginEnd="10dp" />
+                            android:layout_marginEnd="10dp"
+                            android:padding="8dp"
+                            android:src="@drawable/ic_shield_check"
+                            android:contentDescription="@string/app_name"
+                            android:tint="@color/icon_tint" />
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -131,9 +135,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
                 app:cardBackgroundColor="@color/surface_container_low"
-                app:cardCornerRadius="0dp"
+                app:cardCornerRadius="24dp"
                 app:cardElevation="0dp"
-                app:strokeWidth="2dp">
+                app:strokeWidth="1dp">
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -166,9 +170,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
                 app:cardBackgroundColor="@color/surface_container_low"
-                app:cardCornerRadius="0dp"
+                app:cardCornerRadius="24dp"
                 app:cardElevation="0dp"
-                app:strokeWidth="2dp">
+                app:strokeWidth="1dp">
                 <com.ghostlock.app.DashboardStatsView
                     android:id="@+id/dashboardStats"
                     android:layout_width="match_parent"
@@ -234,7 +238,7 @@
                                 android:layout_weight="1"
                                 android:text="Import Offsets"
                                 android:textAllCaps="false"
-                                app:cornerRadius="0dp" />
+                                app:cornerRadius="18dp" />
                             <com.ghostlock.app.ThemedToolButton
                                 android:id="@+id/otaButton"
                                 android:tag="parse_link"
@@ -245,7 +249,7 @@
                                 android:layout_weight="1"
                                 android:text="Parse OTA"
                                 android:textAllCaps="false"
-                                app:cornerRadius="0dp" />
+                                app:cornerRadius="18dp" />
                         </LinearLayout>
                         <com.ghostlock.app.ThemedToolButton
                             android:id="@+id/parseButton"
@@ -256,7 +260,7 @@
                             android:layout_marginTop="8dp"
                             android:text="Parse Boot"
                             android:textAllCaps="false"
-                            app:cornerRadius="0dp" />
+                            app:cornerRadius="18dp" />
                     </LinearLayout>
                     <com.ghostlock.app.ThemedToolButton
                         android:id="@+id/exportButton"
@@ -268,7 +272,7 @@
                         android:text="@string/action_export_offsets"
                         android:textAllCaps="false"
                         android:visibility="gone"
-                        app:cornerRadius="0dp" />
+                        app:cornerRadius="18dp" />
                 </com.ghostlock.app.CollapsibleToolsLayout>
                 <com.ghostlock.app.ConfirmRunButton
                     android:id="@+id/runButton"
@@ -276,7 +280,7 @@
                     android:layout_height="54dp"
                     android:layout_weight="0.8"
                     android:background="@drawable/bg_tool_header"
-                    android:elevation="0dp"
+                    android:elevation="1dp"
                     android:gravity="center"
                     android:minHeight="54dp"
                     android:paddingStart="8dp"
@@ -297,9 +301,9 @@
                 android:layout_marginBottom="8dp"
                 android:minHeight="0dp"
                 app:cardBackgroundColor="@color/log_bg"
-                app:cardCornerRadius="0dp"
+                app:cardCornerRadius="24dp"
                 app:cardElevation="0dp"
-                app:strokeWidth="2dp">
+                app:strokeWidth="1dp">
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -333,8 +337,8 @@
                             android:textSize="12sp"
                             android:contentDescription="Copy log"
                             app:backgroundTint="@color/surface_container"
-                            app:cornerRadius="0dp"
-                            app:strokeWidth="2dp" />
+                            app:cornerRadius="18dp"
+                            app:strokeWidth="1dp" />
                         <com.ghostlock.app.ClearLogButton
                             android:id="@+id/clearLogButton"
                             style="@style/Widget.Material3.Button.TonalButton"
@@ -351,8 +355,8 @@
                             android:textSize="12sp"
                             android:contentDescription="Clear log"
                             app:backgroundTint="@color/surface_container"
-                            app:cornerRadius="0dp"
-                            app:strokeWidth="2dp" />
+                            app:cornerRadius="18dp"
+                            app:strokeWidth="1dp" />
                     </LinearLayout>
                     <View
                         android:layout_width="match_parent"
