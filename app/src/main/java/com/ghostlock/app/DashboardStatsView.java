@@ -216,7 +216,8 @@ public class DashboardStatsView extends LinearLayout {
     private GradientDrawable roundBackground(int colorRes, int radiusDp) {
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(getResources().getColor(colorRes));
-        bg.setCornerRadius(dp(radiusDp));
+        bg.setCornerRadius(0f);
+        bg.setStroke(dp(2), getResources().getColor(R.color.border));
         return bg;
     }
 
