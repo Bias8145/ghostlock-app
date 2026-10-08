@@ -82,7 +82,7 @@ public class ConfirmRunButton extends MaterialButton {
         MaterialButton b = new MaterialButton(getContext()); b.setText(text); b.setAllCaps(false); b.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL), Typeface.BOLD); b.setMinWidth(0); b.setTextSize(13); b.setCornerRadius(dp(18)); b.setStrokeWidth(0); b.setInsetTop(0); b.setInsetBottom(0); b.setBackgroundTintList(ColorStateList.valueOf(color(primary ? R.color.primary : R.color.surface_container_high)));  b.setTextColor(color(primary ? R.color.on_accent : R.color.text_primary)); return b;
     }
     private TextView text(int size, boolean bold) { TextView v = new TextView(getContext()); v.setTextSize(size); v.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL), bold ? Typeface.BOLD : Typeface.NORMAL); v.setTextColor(color(bold ? R.color.text_primary : R.color.text_secondary)); v.getPaint().setAntiAlias(true); return v; }
-    private int color(int id) { return ContextCompat.color(getContext(), id); }
+    private int color(int id) { return ContextCompat.getColor(getContext(), id); }
     private LinearLayout.LayoutParams margin(int w, int h, int l, int t, int r, int b) { LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(w, h); p.setMargins(dp(l), dp(t), dp(r), dp(b)); return p; }
     private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
 }
