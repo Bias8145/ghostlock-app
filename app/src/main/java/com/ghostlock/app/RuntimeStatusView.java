@@ -405,7 +405,8 @@ public class RuntimeStatusView extends FrameLayout {
     private GradientDrawable createRoundedBackground(int color, int radius) {
         GradientDrawable d = new GradientDrawable();
         d.setColor(color);
-        d.setCornerRadius(dp(Math.min(radius, 4)));
+        d.setCornerRadius(0f);
+        d.setStroke(dp(2), ContextCompat.getColor(getContext(), R.color.border));
         return d;
     }
 
