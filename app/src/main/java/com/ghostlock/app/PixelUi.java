@@ -7,12 +7,13 @@ import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 
-/** Central visual pass for the GhostLock 8-bit interface. */
+/** Central visual pass for the GhostLock retro 8-bit interface. */
 public final class PixelUi {
     private PixelUi() {}
 
@@ -51,6 +52,22 @@ public final class PixelUi {
             Drawable background = new PixelFrameDrawable(context, PixelFrameDrawable.Kind.BUTTON);
             button.setBackground(background);
             button.setPadding(dp(context, 10), dp(context, 2), dp(context, 10), dp(context, 2));
+        }
+
+        if (view instanceof ImageView) {
+            ImageView image = (ImageView) view;
+            int id = image.getId();
+            if (id != View.NO_ID) {
+                String resourceName;
+                try {
+                    resourceName = context.getResources().getResourceEntryName(id);
+                } catch (Exception ignored) {
+                    resourceName = "icon";
+                }
+                image.setImageDrawable(new PixelIconDrawable(context, resourceName));
+                image.setColorFilter(null);
+                image.setAlpha(1f);
+            }
         }
 
         if (view instanceof ViewGroup) {
