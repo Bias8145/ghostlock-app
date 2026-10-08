@@ -1,12 +1,1 @@
-<?xml version="1.0" encoding="utf-8"?>
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_enabled="false">
-        <shape android:shape="rectangle"><solid android:color="@color/accent_disabled" /><stroke android:width="2dp" android:color="@color/pixel_shadow" /><corners android:radius="3dp" /></shape>
-    </item>
-    <item android:state_pressed="true">
-        <shape android:shape="rectangle"><solid android:color="@color/accent_pressed" /><stroke android:width="2dp" android:color="@color/pixel_shadow" /><corners android:radius="3dp" /></shape>
-    </item>
-    <item>
-        <shape android:shape="rectangle"><solid android:color="@color/accent" /><stroke android:width="2dp" android:color="@color/pixel_shadow" /><corners android:radius="3dp" /></shape>
-    </item>
-</selector>
+<selector xmlns:android="http://schemas.android.com/apk/res/android"><item android:state_enabled="false"><shape android:shape="rectangle"><solid android:color="@color/accent_disabled"/><corners android:radius="18dp"/></shape></item><item android:state_pressed="true"><shape android:shape="rectangle"><solid android:color="@color/accent_pressed"/><corners android:radius="18dp"/></shape></item><item><shape android:shape="rectangle"><solid android:color="@color/accent"/><corners android:radius="18dp"/></shape></item></selector>
