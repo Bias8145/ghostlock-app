@@ -39,7 +39,6 @@ public class SettingsActivity extends Activity {
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
-        PixelUi.apply(this, findViewById(android.R.id.content));
         findViewById(R.id.backButton).setOnClickListener(v -> goHome());
         cpuSpinner = findViewById(R.id.cpuSpinner);
         buildCpuPairs();
