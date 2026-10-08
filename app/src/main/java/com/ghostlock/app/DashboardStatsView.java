@@ -76,7 +76,7 @@ public class DashboardStatsView extends LinearLayout {
         heroRow.addView(icon("ic_analytics", dp(20)));
         ratePanel.addView(heroRow);
         LinearLayout progressTrack = new LinearLayout(getContext());
-        progressTrack.setBackground(new PixelFrameDrawable(getContext(), PixelFrameDrawable.Kind.PANEL));
+        progressTrack.setBackground(roundBackground(R.color.surface_container, 16));
         progressTrack.setPadding(1, 1, 1, 1);
         LinearLayout.LayoutParams trackParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(7));
         trackParams.topMargin = dp(9);
@@ -125,7 +125,8 @@ public class DashboardStatsView extends LinearLayout {
 
     private ImageView icon(String name, int size) {
         ImageView v = new ImageView(getContext());
-        int res = getResources().getIdentifier(name, "drawable", getContext().getPackageName());\n        v.setImageResource(res);\n        v.setImageTintList(ColorStateList.valueOf(getResources().getColor(R.color.icon_tint)));
+        int res = getResources().getIdentifier(name, "drawable", getContext().getPackageName());
+        v.setImageResource(res);\n        v.setImageTintList(ColorStateList.valueOf(getResources().getColor(R.color.icon_tint)));
         v.setScaleType(ImageView.ScaleType.CENTER);
         v.setLayoutParams(new LinearLayout.LayoutParams(size, size));
         return v;
@@ -177,5 +178,6 @@ public class DashboardStatsView extends LinearLayout {
         if (width > 0) updateProgressFill(analytics.getSuccessRate());
     }
 
-    private GradientDrawable roundBackground(int colorRes, int radiusDp) { GradientDrawable bg = new GradientDrawable(); bg.setColor(getResources().getColor(colorRes)); bg.setCornerRadius(dp(radiusDp)); return bg; }\n    private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
+    private GradientDrawable roundBackground(int colorRes, int radiusDp) { GradientDrawable bg = new GradientDrawable(); bg.setColor(getResources().getColor(colorRes)); bg.setCornerRadius(dp(radiusDp)); return bg; }
+    private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
 }
