@@ -11,7 +11,6 @@ import android.util.StateSet;
 /** Hard-edged 8-bit frame with stepped corners and an offset pixel shadow. */
 public final class PixelFrameDrawable extends Drawable {
     public enum Kind { PANEL, BUTTON }
-
     private final float density;
     private final Paint fill = new Paint();
     private final Paint border = new Paint();
@@ -19,13 +18,8 @@ public final class PixelFrameDrawable extends Drawable {
     private final Path path = new Path();
     private final Path shadowPath = new Path();
     private final Kind kind;
-    private final int normalColor;
-    private final int pressedColor;
-    private final int borderColor;
-    private final int shadowColor;
-    private final float step;
-    private final float stroke;
-    private final float offset;
+    private final int normalColor, pressedColor, borderColor, shadowColor;
+    private final float step, stroke, offset;
     private boolean pressed;
 
     public PixelFrameDrawable(Context context, Kind kind) {
@@ -38,7 +32,6 @@ public final class PixelFrameDrawable extends Drawable {
         step = dp(kind == Kind.BUTTON ? 3 : 4);
         stroke = dp(2);
         offset = dp(kind == Kind.BUTTON ? 4 : 3);
-
         fill.setStyle(Paint.Style.FILL);
         border.setStyle(Paint.Style.STROKE);
         border.setStrokeWidth(stroke);
@@ -53,11 +46,13 @@ public final class PixelFrameDrawable extends Drawable {
     @Override public void draw(Canvas canvas) {
         RectF b = new RectF(getBounds());
         float inset = stroke / 2f;
-        makeSteppedPath(shadowPath, b.left + offset, b.top + offset, b.right + offset, b.bottom + offset, step);
+        makeSteppedPath(shadowPath, b.left, b.top, b.right, b.bottom, step);
         shadow.setColor(shadowColor);
         canvas.drawPath(shadowPath, shadow);
 
-        makeSteppedPath(path, b.left + inset, b.top + inset, b.right - inset, b.bottom - inset, step);
+        // Leave a hard 3-4dp depth strip visible on the lower/right edges.
+        makeSteppedPath(path, b.left + inset, b.top + inset,
+                b.right - inset - offset, b.bottom - inset - offset, step);
         fill.setColor(pressed ? pressedColor : normalColor);
         canvas.drawPath(path, fill);
         border.setColor(borderColor);
