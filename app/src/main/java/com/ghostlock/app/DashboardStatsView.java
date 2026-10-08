@@ -2,6 +2,8 @@ package com.ghostlock.app;
 
 import android.content.Context;
 import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
+import android.content.res.ColorStateList;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,7 +12,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import java.util.Locale;
 
-/** Retro statistics panel with an expandable body. */
+/** Material 3 statistics panel with an expandable body. */
 public class DashboardStatsView extends LinearLayout {
     private AnalyticsManager analytics;
     private TextView totalRunsText;
@@ -61,7 +63,7 @@ public class DashboardStatsView extends LinearLayout {
         LinearLayout ratePanel = new LinearLayout(getContext());
         ratePanel.setOrientation(VERTICAL);
         ratePanel.setPadding(dp(12), dp(11), dp(12), dp(11));
-        ratePanel.setBackground(new PixelFrameDrawable(getContext(), PixelFrameDrawable.Kind.PANEL));
+        ratePanel.setBackground(roundBackground(R.color.surface_container_low, 20));
         LinearLayout heroRow = new LinearLayout(getContext());
         heroRow.setGravity(Gravity.CENTER_VERTICAL);
         LinearLayout heroText = new LinearLayout(getContext());
@@ -80,7 +82,7 @@ public class DashboardStatsView extends LinearLayout {
         trackParams.topMargin = dp(9);
         ratePanel.addView(progressTrack, trackParams);
         progressFill = new View(getContext());
-        progressFill.setBackgroundColor(getResources().getColor(R.color.accent));
+        progressFill.setBackground(roundBackground(R.color.accent, 999));
         progressTrack.addView(progressFill, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT));
         body.addView(ratePanel);
 
@@ -123,7 +125,7 @@ public class DashboardStatsView extends LinearLayout {
 
     private ImageView icon(String name, int size) {
         ImageView v = new ImageView(getContext());
-        v.setImageDrawable(new PixelIconDrawable(getContext(), name));
+        int res = getResources().getIdentifier(name, "drawable", getContext().getPackageName());\n        v.setImageResource(res);\n        v.setImageTintList(ColorStateList.valueOf(getResources().getColor(R.color.icon_tint)));
         v.setScaleType(ImageView.ScaleType.CENTER);
         v.setLayoutParams(new LinearLayout.LayoutParams(size, size));
         return v;
@@ -175,5 +177,5 @@ public class DashboardStatsView extends LinearLayout {
         if (width > 0) updateProgressFill(analytics.getSuccessRate());
     }
 
-    private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
+    private GradientDrawable roundBackground(int colorRes, int radiusDp) { GradientDrawable bg = new GradientDrawable(); bg.setColor(getResources().getColor(colorRes)); bg.setCornerRadius(dp(radiusDp)); return bg; }\n    private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
 }
