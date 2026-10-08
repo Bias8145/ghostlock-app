@@ -31,5 +31,6 @@
     <color name="log_secondary">#FF6D6675</color>
     <color name="launcher_icon_background">#FFE9DFFF</color>
     <color name="pixel_shadow">#FF342B43</color>
+    <color name="pixel_ghost">#FF7C5CDB</color>
     <color name="pixel_highlight">#FFFFD86B</color>
 </resources>
