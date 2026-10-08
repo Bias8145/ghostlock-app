@@ -6,11 +6,12 @@ import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.graphics.drawable.GradientDrawable;
 import android.view.Window;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-/** Tools trigger that presents utility controls in a hard-edged retro panel. */
+/** Tools trigger that presents utility controls in a Material 3 bottom sheet. */
 public class CollapsibleToolsLayout extends LinearLayout {
     private View header;
     private View content;
@@ -31,7 +32,7 @@ public class CollapsibleToolsLayout extends LinearLayout {
         contentParent = this;
         contentIndex = indexOfChild(content);
         originalContentLayoutParams = content.getLayoutParams();
-        header.setBackground(new PixelFrameDrawable(getContext(), PixelFrameDrawable.Kind.BUTTON));
+        header.setBackground(roundBackground(R.color.accent_container, 18));
         header.setClickable(true);
         header.setFocusable(true);
         header.setContentDescription("Open tools");
@@ -46,34 +47,34 @@ public class CollapsibleToolsLayout extends LinearLayout {
         LinearLayout panel = new LinearLayout(getContext());
         panel.setOrientation(VERTICAL);
         panel.setPadding(dp(18), dp(12), dp(18), dp(14));
-        panel.setBackground(new PixelFrameDrawable(getContext(), PixelFrameDrawable.Kind.PANEL));
+        panel.setBackground(roundBackground(R.color.surface, 28));
 
         LinearLayout handleRow = new LinearLayout(getContext());
         handleRow.setGravity(Gravity.CENTER);
         TextView handle = new TextView(getContext());
-        handle.setText("[::]");
+        handle.setText("•••");
         handle.setTextColor(color(R.color.text_secondary));
         handle.setTextSize(11);
-        handle.setTypeface(android.graphics.Typeface.MONOSPACE, android.graphics.Typeface.BOLD);
+        handle.setTypeface(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD);
         handle.setGravity(Gravity.CENTER);
-        handle.getPaint().setAntiAlias(false);
+        handle.getPaint().setAntiAlias(true);
         handleRow.addView(handle, new LinearLayout.LayoutParams(dp(48), dp(24)));
         panel.addView(handleRow, new LinearLayout.LayoutParams(-1, dp(28)));
 
         TextView title = new TextView(getContext());
-        title.setText("TOOLS");
+        title.setText("Tools");
         title.setTextColor(color(R.color.text_primary));
         title.setTextSize(18);
-        title.setTypeface(android.graphics.Typeface.MONOSPACE, android.graphics.Typeface.BOLD);
-        title.getPaint().setAntiAlias(false);
+        title.setTypeface(android.graphics.Typeface.create("sans-serif", android.graphics.Typeface.BOLD));
+        title.getPaint().setAntiAlias(true);
         panel.addView(title, new LinearLayout.LayoutParams(-1, dp(44)));
 
         TextView subtitle = new TextView(getContext());
         subtitle.setText("Utility actions for offsets and kernel images");
         subtitle.setTextColor(color(R.color.text_secondary));
         subtitle.setTextSize(11);
-        subtitle.setTypeface(android.graphics.Typeface.MONOSPACE);
-        subtitle.getPaint().setAntiAlias(false);
+        subtitle.setTypeface(android.graphics.Typeface.create("sans-serif", android.graphics.Typeface.NORMAL));
+        subtitle.getPaint().setAntiAlias(true);
         panel.addView(subtitle, margin(-1, -2, 0, 0, 0, 12));
 
         contentParent.removeView(content);
@@ -110,5 +111,5 @@ public class CollapsibleToolsLayout extends LinearLayout {
 
     private LinearLayout.LayoutParams margin(int w, int h, int l, int t, int r, int b) { LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(w, h); p.setMargins(dp(l), dp(t), dp(r), dp(b)); return p; }
     private int color(int id) { return androidx.core.content.ContextCompat.getColor(getContext(), id); }
-    private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
+    private GradientDrawable roundBackground(int colorRes, int radiusDp) { GradientDrawable bg = new GradientDrawable(); bg.setColor(color(colorRes)); bg.setCornerRadius(dp(radiusDp)); return bg; }\n    private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
 }
