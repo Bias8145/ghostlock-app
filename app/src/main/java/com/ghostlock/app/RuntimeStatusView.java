@@ -30,13 +30,13 @@ public class RuntimeStatusView extends FrameLayout {
     private final LinearLayout actionButtons;
     private final TextView installButton;
     private final TextView toggleGlyph;
-    private boolean expanded = true;
+    private boolean expanded = false;
 
     public RuntimeStatusView(Context context) { this(context, null); }
 
     public RuntimeStatusView(Context context, android.util.AttributeSet attrs) {
         super(context, attrs);
-        setBackground(roundBackground(R.color.surface_container_low, 24));
+        setBackground(roundBackground(R.color.surface_container_low, 18));
 
         content = new LinearLayout(context);
         content.setOrientation(LinearLayout.VERTICAL);
@@ -79,7 +79,7 @@ public class RuntimeStatusView extends FrameLayout {
         detailBody.addView(message, msgParams);
 
         managerCard = new FrameLayout(context);
-        managerCard.setBackground(roundBackground(R.color.surface_container, 20));
+        managerCard.setBackground(roundBackground(R.color.surface_container, 16));
         LinearLayout cardContent = new LinearLayout(context);
         cardContent.setOrientation(LinearLayout.VERTICAL);
         cardContent.setPadding(dp(14), dp(12), dp(14), dp(12));
@@ -165,7 +165,7 @@ public class RuntimeStatusView extends FrameLayout {
 
         statusHeader.setOnClickListener(v -> toggle());
         refresh();
-        setExpanded(true);
+        setExpanded(false);
     }
 
     private LinearLayout metadataColumn(Context context, String label) {
