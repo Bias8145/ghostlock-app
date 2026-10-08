@@ -111,5 +111,6 @@ public class CollapsibleToolsLayout extends LinearLayout {
 
     private LinearLayout.LayoutParams margin(int w, int h, int l, int t, int r, int b) { LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(w, h); p.setMargins(dp(l), dp(t), dp(r), dp(b)); return p; }
     private int color(int id) { return androidx.core.content.ContextCompat.getColor(getContext(), id); }
-    private GradientDrawable roundBackground(int colorRes, int radiusDp) { GradientDrawable bg = new GradientDrawable(); bg.setColor(color(colorRes)); bg.setCornerRadius(dp(radiusDp)); return bg; }\n    private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
+    private GradientDrawable roundBackground(int colorRes, int radiusDp) { GradientDrawable bg = new GradientDrawable(); bg.setColor(color(colorRes)); bg.setCornerRadius(dp(radiusDp)); return bg; }
+    private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
 }
