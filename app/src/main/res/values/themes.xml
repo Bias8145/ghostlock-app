@@ -23,8 +23,8 @@
         <item name="colorSurfaceVariant">@color/surface_container_low</item>
         <item name="colorOnSurface">@color/text_primary</item>
         <item name="colorOnSurfaceVariant">@color/text_secondary</item>
-        <item name="colorOutline">@color/outline</item>
-        <item name="colorOutlineVariant">@color/outline_variant</item>
+        <item name="colorOutline">@android:color/transparent</item>
+        <item name="colorOutlineVariant">@android:color/transparent</item>
 
         <item name="materialAlertDialogTheme">@style/ThemeOverlay.GhostLock.AlertDialog</item>
         <item name="android:alertDialogTheme">@style/ThemeOverlay.GhostLock.AlertDialog</item>
@@ -51,7 +51,7 @@
         <item name="colorOnPrimary">@color/on_primary</item>
         <item name="colorSecondaryContainer">@color/secondary_container</item>
         <item name="colorOnSecondaryContainer">@color/on_secondary_container</item>
-        <item name="colorOutline">@color/outline</item>
+        <item name="colorOutline">@android:color/transparent</item>
         <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.GhostLock.Dialog</item>
         <item name="buttonBarPositiveButtonStyle">@style/Widget.GhostLock.DialogButton</item>
         <item name="buttonBarNegativeButtonStyle">@style/Widget.GhostLock.DialogButton</item>
