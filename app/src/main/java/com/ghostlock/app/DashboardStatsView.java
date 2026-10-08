@@ -126,7 +126,8 @@ public class DashboardStatsView extends LinearLayout {
     private ImageView icon(String name, int size) {
         ImageView v = new ImageView(getContext());
         int res = getResources().getIdentifier(name, "drawable", getContext().getPackageName());
-        v.setImageResource(res);\n        v.setImageTintList(ColorStateList.valueOf(getResources().getColor(R.color.icon_tint)));
+        v.setImageResource(res);
+        v.setImageTintList(ColorStateList.valueOf(getResources().getColor(R.color.icon_tint)));
         v.setScaleType(ImageView.ScaleType.CENTER);
         v.setLayoutParams(new LinearLayout.LayoutParams(size, size));
         return v;
