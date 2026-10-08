@@ -12,7 +12,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.core.content.ContextCompat;
 
-/** Retro runtime manager status component with an expandable detail body. */
+/** Material 3 runtime manager status component with an expressive expandable detail body. */
 public class RuntimeStatusView extends FrameLayout {
     private final LinearLayout content;
     private final LinearLayout statusHeader;
@@ -36,7 +36,7 @@ public class RuntimeStatusView extends FrameLayout {
 
     public RuntimeStatusView(Context context, android.util.AttributeSet attrs) {
         super(context, attrs);
-        setBackground(new PixelFrameDrawable(context, PixelFrameDrawable.Kind.PANEL));
+        setBackground(roundBackground(R.color.surface_container_low, 24));
 
         content = new LinearLayout(context);
         content.setOrientation(LinearLayout.VERTICAL);
@@ -79,7 +79,7 @@ public class RuntimeStatusView extends FrameLayout {
         detailBody.addView(message, msgParams);
 
         managerCard = new FrameLayout(context);
-        managerCard.setBackground(new PixelFrameDrawable(context, PixelFrameDrawable.Kind.PANEL));
+        managerCard.setBackground(roundBackground(R.color.surface_container, 20));
         LinearLayout cardContent = new LinearLayout(context);
         cardContent.setOrientation(LinearLayout.VERTICAL);
         cardContent.setPadding(dp(14), dp(12), dp(14), dp(12));
@@ -156,7 +156,7 @@ public class RuntimeStatusView extends FrameLayout {
         installButton.setText("Install Manager");
         installButton.setGravity(Gravity.CENTER);
         installButton.setPadding(dp(14), dp(8), dp(14), dp(8));
-        installButton.setBackground(new PixelFrameDrawable(context, PixelFrameDrawable.Kind.BUTTON));
+        installButton.setBackground(roundBackground(R.color.primary, 18));
         installButton.setTextColor(ContextCompat.getColor(context, R.color.on_accent));
         actionButtons.addView(installButton, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, dp(44)));
         LinearLayout.LayoutParams btnParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
@@ -265,7 +265,7 @@ public class RuntimeStatusView extends FrameLayout {
             else { status = "Unknown"; statusColorRes = R.color.text_secondary; }
             managerStatus.setText(status);
             managerStatus.setTextColor(ContextCompat.getColor(getContext(), statusColorRes));
-            managerIcon.setImageDrawable(new PixelIconDrawable(getContext(), result.manager.spoofed ? "shield_alert" : "shield_check"));
+            managerIcon.setImageResource(getResources().getIdentifier(result.manager.spoofed ? "ic_shield_alert" : "ic_shield_check", "drawable", getContext().getPackageName()));
             packageLabel.setText(result.manager.packageName);
             packageLabel.setTextColor(ContextCompat.getColor(getContext(), R.color.text_primary));
             signatureValue.setText(result.manager.identityVerified ? "Verified" : "Not Verified");
@@ -276,7 +276,7 @@ public class RuntimeStatusView extends FrameLayout {
             managerName.setText("No Manager");
             managerStatus.setText("Not installed");
             managerStatus.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
-            managerIcon.setImageDrawable(new PixelIconDrawable(getContext(), "shield_alert"));
+            managerIcon.setImageResource(R.drawable.ic_shield_alert);
             packageLabel.setText("—");
             packageLabel.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
             signatureValue.setText("Not Verified");
@@ -295,7 +295,7 @@ public class RuntimeStatusView extends FrameLayout {
         LinearLayout box = new LinearLayout(getContext());
         box.setOrientation(LinearLayout.VERTICAL);
         box.setPadding(dp(20), dp(18), dp(20), dp(14));
-        box.setBackground(new PixelFrameDrawable(getContext(), PixelFrameDrawable.Kind.PANEL));
+        box.setBackground(roundBackground(R.color.surface, 28));
         TextView title = text(18, true);
         title.setText("INSTALL MANAGER");
         box.addView(title);
@@ -309,10 +309,10 @@ public class RuntimeStatusView extends FrameLayout {
             LinearLayout row = new LinearLayout(getContext());
             row.setGravity(Gravity.CENTER_VERTICAL);
             row.setPadding(dp(12), dp(10), dp(12), dp(10));
-            row.setBackground(new PixelFrameDrawable(getContext(), PixelFrameDrawable.Kind.PANEL));
+            row.setBackground(roundBackground(R.color.surface_container_low, 18));
             row.setClickable(true); row.setFocusable(true);
             ImageView icon = new ImageView(getContext());
-            icon.setImageDrawable(new PixelIconDrawable(getContext(), "shield_check"));
+            icon.setImageResource(R.drawable.ic_shield_check);
             row.addView(icon, new LinearLayout.LayoutParams(dp(22), dp(22)));
             LinearLayout textLayout = new LinearLayout(getContext());
             textLayout.setOrientation(LinearLayout.VERTICAL);
@@ -343,15 +343,15 @@ public class RuntimeStatusView extends FrameLayout {
         v.setTextSize(size);
         v.setIncludeFontPadding(false);
         v.setTextColor(ContextCompat.getColor(getContext(), R.color.text_primary));
-        v.setTypeface(Typeface.MONOSPACE, bold ? Typeface.BOLD : Typeface.NORMAL);
-        v.getPaint().setAntiAlias(false);
+        v.setTypeface(Typeface.create("sans-serif-medium", bold ? Typeface.BOLD : Typeface.NORMAL));
+        v.getPaint().setAntiAlias(true);
         return v;
     }
 
     private void setSurface(int colorRes) {
-        PixelFrameDrawable frame = new PixelFrameDrawable(getContext(), PixelFrameDrawable.Kind.PANEL);
+        android.graphics.drawable.GradientDrawable frame = roundBackground(colorRes, 24);
         if (getParent() instanceof View) ((View) getParent()).setBackground(frame);
     }
 
-    private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
+    private android.graphics.drawable.GradientDrawable roundBackground(int colorRes, int radiusDp) { android.graphics.drawable.GradientDrawable bg = new android.graphics.drawable.GradientDrawable(); bg.setColor(ContextCompat.getColor(getContext(), colorRes)); bg.setCornerRadius(dp(radiusDp)); return bg; }\n\n    private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
 }
