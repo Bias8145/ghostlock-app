@@ -51,7 +51,8 @@ public class RuntimeStatusView extends FrameLayout {
         statusTitle.setText("RUNTIME MANAGER");
         statusTitle.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
         statusHeader.addView(statusTitle, new LinearLayout.LayoutParams(0, dp(22), 1f));
-        toggleGlyph = text("−", 16, true);
+        toggleGlyph = text(16, true);
+        toggleGlyph.setText("−");
         toggleGlyph.setGravity(Gravity.CENTER);
         statusHeader.addView(toggleGlyph, new LinearLayout.LayoutParams(dp(30), dp(22)));
         content.addView(statusHeader);
