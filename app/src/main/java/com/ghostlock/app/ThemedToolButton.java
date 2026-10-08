@@ -50,7 +50,7 @@ public class ThemedToolButton extends MaterialButton {
         input.setSingleLine(true);
         input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
         input.setHint("https://...");
-        input.setTypeface(Typeface.MONOSPACE);
+        input.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
         input.setTextColor(getColor(R.color.text_primary));
         input.setHintTextColor(getColor(R.color.text_secondary));
         input.setBackgroundTintList(ColorStateList.valueOf(getColor(R.color.border)));
@@ -78,7 +78,7 @@ public class ThemedToolButton extends MaterialButton {
         LinearLayout root = new LinearLayout(getContext());
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(22), dp(20), dp(22), dp(16));
-        root.setBackground(new PixelFrameDrawable(getContext(), PixelFrameDrawable.Kind.PANEL));
+        root.setBackgroundColor(getColor(R.color.surface));
         root.addView(text(title, 20, true), margin(-1, -2, 0, 0, 0, 4));
         root.addView(text(subtitle, 12, false), margin(-1, -2, 0, 0, 0, 12));
         d.setContentView(root);
@@ -98,7 +98,7 @@ public class ThemedToolButton extends MaterialButton {
         LinearLayout row = new LinearLayout(getContext());
         row.setOrientation(LinearLayout.VERTICAL);
         row.setPadding(dp(14), dp(9), dp(14), dp(9));
-        row.setBackground(new PixelFrameDrawable(getContext(), PixelFrameDrawable.Kind.PANEL));
+        row.setBackgroundColor(getColor(R.color.surface_container_low));
         row.setClickable(true);
         row.setFocusable(true);
         row.setOnClickListener(v -> r.run());
@@ -119,16 +119,16 @@ public class ThemedToolButton extends MaterialButton {
         MaterialButton b = new MaterialButton(getContext());
         b.setText(text);
         b.setAllCaps(false);
-        b.setTypeface(Typeface.MONOSPACE, Typeface.BOLD);
+        b.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL), Typeface.BOLD);
         b.setMinWidth(0);
         b.setTextSize(13);
-        b.setCornerRadius(0);
+        b.setCornerRadius(dp(18));
         b.setStrokeWidth(0);
         b.setInsetTop(0);
         b.setInsetBottom(0);
-        b.setBackgroundTintList(null);
-        b.setBackground(new PixelFrameDrawable(getContext(), primary ? PixelFrameDrawable.Kind.BUTTON : PixelFrameDrawable.Kind.PANEL));
-        b.setTextColor(getColor(primary ? R.color.on_accent : R.color.text_primary));
+        b.setBackgroundTintList(ColorStateList.valueOf(getColor(primary ? R.color.primary : R.color.surface_container_high)));
+        
+        b.setTextColor(getColor(primary ? R.color.on_primary : R.color.text_primary));
         return b;
     }
 
@@ -136,9 +136,9 @@ public class ThemedToolButton extends MaterialButton {
         TextView v = new TextView(getContext());
         v.setText(s);
         v.setTextSize(size);
-        v.setTypeface(Typeface.MONOSPACE, bold ? Typeface.BOLD : Typeface.NORMAL);
+        v.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL), bold ? Typeface.BOLD : Typeface.NORMAL);
         v.setTextColor(getColor(bold ? R.color.text_primary : R.color.text_secondary));
-        v.getPaint().setAntiAlias(false);
+        v.getPaint().setAntiAlias(true);
         return v;
     }
 
