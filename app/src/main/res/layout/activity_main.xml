@@ -200,16 +200,6 @@
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/cpuSelectionLabel"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:layout_marginBottom="10dp"
-                android:text="CPU 0,1 · 2.84 GHz"
-                android:textColor="@color/text_secondary"
-                android:textSize="11sp" />
-
             <!-- Secondary tools -->
             <com.ghostlock.app.CollapsibleToolsLayout
                 android:layout_width="match_parent"
