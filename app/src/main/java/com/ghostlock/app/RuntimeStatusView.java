@@ -1,7 +1,7 @@
 package com.ghostlock.app;
 
 import android.content.Context;
-import android.graphics.drawable.GradientDrawable;
+import android.graphics.Typeface;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
@@ -12,12 +12,13 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.core.content.ContextCompat;
 
-/** Compact, informative manager status component. */
+/** Retro runtime manager status component with an expandable detail body. */
 public class RuntimeStatusView extends FrameLayout {
     private final LinearLayout content;
     private final LinearLayout statusHeader;
     private final TextView statusTitle;
     private final TextView statusLabel;
+    private final LinearLayout detailBody;
     private final TextView message;
     private final FrameLayout managerCard;
     private final ImageView managerIcon;
@@ -28,177 +29,152 @@ public class RuntimeStatusView extends FrameLayout {
     private final TextView signatureValue;
     private final LinearLayout actionButtons;
     private final TextView installButton;
+    private final TextView toggleGlyph;
+    private boolean expanded = true;
 
     public RuntimeStatusView(Context context) { this(context, null); }
 
     public RuntimeStatusView(Context context, android.util.AttributeSet attrs) {
         super(context, attrs);
-        setBackground(null);
+        setBackground(new PixelFrameDrawable(context, PixelFrameDrawable.Kind.PANEL));
 
         content = new LinearLayout(context);
         content.setOrientation(LinearLayout.VERTICAL);
-        content.setPadding(dp(16), dp(14), dp(16), dp(13));
+        content.setPadding(dp(14), dp(12), dp(14), dp(11));
         addView(content, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
         statusHeader = new LinearLayout(context);
-        statusHeader.setOrientation(LinearLayout.VERTICAL);
-        statusHeader.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
+        statusHeader.setGravity(Gravity.CENTER_VERTICAL);
+        statusHeader.setClickable(true);
+        statusHeader.setFocusable(true);
         statusTitle = text(10, true);
         statusTitle.setText("RUNTIME MANAGER");
         statusTitle.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
-        statusTitle.setGravity(Gravity.START);
-        statusHeader.addView(statusTitle, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+        statusHeader.addView(statusTitle, new LinearLayout.LayoutParams(0, dp(22), 1f));
+        toggleGlyph = text("−", 16, true);
+        toggleGlyph.setGravity(Gravity.CENTER);
+        statusHeader.addView(toggleGlyph, new LinearLayout.LayoutParams(dp(30), dp(22)));
+        content.addView(statusHeader);
+
         statusLabel = text(12, true);
         statusLabel.setGravity(Gravity.START);
         statusLabel.setMaxLines(2);
         statusLabel.setEllipsize(TextUtils.TruncateAt.END);
         LinearLayout.LayoutParams statusParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        statusParams.topMargin = dp(4);
-        statusHeader.addView(statusLabel, statusParams);
-        content.addView(statusHeader);
+        statusParams.topMargin = dp(3);
+        content.addView(statusLabel, statusParams);
+
+        detailBody = new LinearLayout(context);
+        detailBody.setOrientation(LinearLayout.VERTICAL);
+        content.addView(detailBody, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+
         message = text(11, false);
         message.setGravity(Gravity.START);
         message.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
         message.setLineSpacing(dp(1), 1.0f);
         LinearLayout.LayoutParams msgParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        msgParams.topMargin = dp(5);
-        msgParams.bottomMargin = dp(10);
-        content.addView(message, msgParams);
+        msgParams.topMargin = dp(4);
+        msgParams.bottomMargin = dp(9);
+        detailBody.addView(message, msgParams);
 
         managerCard = new FrameLayout(context);
-        managerCard.setBackground(createRoundedBackground(
-                ContextCompat.getColor(context, R.color.surface_container_low), 16));
-        managerCard.setClipToOutline(true);
-        managerCard.setOutlineProvider(new android.view.ViewOutlineProvider() {
-            @Override public void getOutline(View view, android.graphics.Outline outline) {
-                outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), dp(4));
-            }
-        });
-
+        managerCard.setBackground(new PixelFrameDrawable(context, PixelFrameDrawable.Kind.PANEL));
         LinearLayout cardContent = new LinearLayout(context);
         cardContent.setOrientation(LinearLayout.VERTICAL);
-        cardContent.setPadding(dp(16), dp(14), dp(16), dp(14));
-        managerCard.addView(cardContent, new FrameLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+        cardContent.setPadding(dp(14), dp(12), dp(14), dp(12));
+        managerCard.addView(cardContent, new FrameLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
         LinearLayout identityRow = new LinearLayout(context);
-        identityRow.setOrientation(LinearLayout.HORIZONTAL);
         identityRow.setGravity(Gravity.CENTER_VERTICAL);
         identityRow.setMinimumHeight(dp(42));
-
         managerIcon = new ImageView(context);
         managerIcon.setScaleType(ImageView.ScaleType.CENTER);
-        managerIcon.setColorFilter(ContextCompat.getColor(context, R.color.icon_tint));
         identityRow.addView(managerIcon, new LinearLayout.LayoutParams(dp(24), dp(24)));
 
         LinearLayout identityText = new LinearLayout(context);
         identityText.setOrientation(LinearLayout.VERTICAL);
         identityText.setGravity(Gravity.START);
         identityText.setPadding(dp(10), 0, 0, 0);
-        identityRow.addView(identityText, new LinearLayout.LayoutParams(
-                0, LayoutParams.WRAP_CONTENT, 1f));
-
+        identityRow.addView(identityText, new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
         managerName = text(15, true);
         managerName.setMaxLines(2);
-        managerName.setEllipsize(null);
-        identityText.addView(managerName, new LinearLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
-
+        identityText.addView(managerName);
         managerStatus = text(11, false);
         managerStatus.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
         managerStatus.setMaxLines(1);
         managerStatus.setEllipsize(TextUtils.TruncateAt.END);
-        LinearLayout.LayoutParams managerStatusParams = new LinearLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        LinearLayout.LayoutParams managerStatusParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         managerStatusParams.topMargin = dp(3);
         identityText.addView(managerStatus, managerStatusParams);
-
         cardContent.addView(identityRow);
 
         View divider = new View(context);
         divider.setBackgroundColor(ContextCompat.getColor(context, R.color.outline_variant));
-        LinearLayout.LayoutParams dividerParams = new LinearLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, dp(1));
-        dividerParams.topMargin = dp(12);
-        dividerParams.bottomMargin = dp(12);
+        LinearLayout.LayoutParams dividerParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, dp(1));
+        dividerParams.topMargin = dp(10);
+        dividerParams.bottomMargin = dp(10);
         cardContent.addView(divider, dividerParams);
 
-        // Compact three-column metadata: Package • Signature • Integrity.
         LinearLayout details = new LinearLayout(context);
-        details.setOrientation(LinearLayout.HORIZONTAL);
         details.setGravity(Gravity.TOP);
-        details.setPadding(0, 0, 0, 0);
-
         LinearLayout packageColumn = metadataColumn(context, "PACKAGE");
-        packageColumn.setMinimumWidth(dp(0));
         packageLabel = text(11, true);
         packageLabel.setSingleLine(true);
-        packageLabel.setHorizontallyScrolling(true);
-        packageLabel.setEllipsize(null);
-        LinearLayout.LayoutParams packageValueParams = new LinearLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        packageValueParams.topMargin = dp(5);
-        packageLabel.setMaxLines(1);
         packageLabel.setEllipsize(TextUtils.TruncateAt.END);
+        LinearLayout.LayoutParams packageValueParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        packageValueParams.topMargin = dp(5);
         packageColumn.addView(packageLabel, packageValueParams);
         details.addView(packageColumn, new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1.15f));
-
         details.addView(metadataSeparator(context), new LinearLayout.LayoutParams(dp(8), LayoutParams.WRAP_CONTENT));
 
         LinearLayout signatureColumn = metadataColumn(context, "SIGNATURE");
         signatureValue = text(11, true);
-        LinearLayout.LayoutParams signatureValueParams = new LinearLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        signatureValueParams.topMargin = dp(5);
         signatureValue.setMaxLines(1);
         signatureValue.setEllipsize(TextUtils.TruncateAt.END);
+        LinearLayout.LayoutParams signatureValueParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        signatureValueParams.topMargin = dp(5);
         signatureColumn.addView(signatureValue, signatureValueParams);
         details.addView(signatureColumn, new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 0.95f));
-
         details.addView(metadataSeparator(context), new LinearLayout.LayoutParams(dp(16), LayoutParams.WRAP_CONTENT));
 
         LinearLayout integrityColumn = metadataColumn(context, "INTEGRITY");
         integrityLabel = text(11, true);
-        LinearLayout.LayoutParams integrityValueParams = new LinearLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        integrityValueParams.topMargin = dp(5);
         integrityLabel.setMaxLines(1);
         integrityLabel.setEllipsize(TextUtils.TruncateAt.END);
+        LinearLayout.LayoutParams integrityValueParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        integrityValueParams.topMargin = dp(5);
         integrityColumn.addView(integrityLabel, integrityValueParams);
         details.addView(integrityColumn, new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 0.9f));
         cardContent.addView(details);
-
-        content.addView(managerCard);
+        detailBody.addView(managerCard);
 
         actionButtons = new LinearLayout(context);
-        actionButtons.setOrientation(LinearLayout.HORIZONTAL);
         actionButtons.setGravity(Gravity.END | Gravity.CENTER_VERTICAL);
         actionButtons.setVisibility(View.GONE);
         installButton = text(12, true);
         installButton.setText("Install Manager");
         installButton.setGravity(Gravity.CENTER);
-        installButton.setPadding(dp(16), dp(9), dp(16), dp(9));
-        installButton.setBackground(createRoundedBackground(
-                ContextCompat.getColor(context, R.color.accent), 12));
+        installButton.setPadding(dp(14), dp(8), dp(14), dp(8));
+        installButton.setBackground(new PixelFrameDrawable(context, PixelFrameDrawable.Kind.BUTTON));
         installButton.setTextColor(ContextCompat.getColor(context, R.color.on_accent));
-        actionButtons.addView(installButton);
-        LinearLayout.LayoutParams btnParams = new LinearLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        btnParams.topMargin = dp(9);
-        content.addView(actionButtons, btnParams);
+        actionButtons.addView(installButton, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, dp(44)));
+        LinearLayout.LayoutParams btnParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        btnParams.topMargin = dp(8);
+        detailBody.addView(actionButtons, btnParams);
+
+        statusHeader.setOnClickListener(v -> toggle());
         refresh();
+        setExpanded(true);
     }
 
     private LinearLayout metadataColumn(Context context, String label) {
         LinearLayout column = new LinearLayout(context);
         column.setOrientation(LinearLayout.VERTICAL);
-        column.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
         TextView title = text(9, false);
         title.setText(label);
         title.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
         title.setMaxLines(1);
-        column.addView(title, new LinearLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+        column.addView(title);
         return column;
     }
 
@@ -212,6 +188,17 @@ public class RuntimeStatusView extends FrameLayout {
     }
 
     @Override protected void onAttachedToWindow() { super.onAttachedToWindow(); refresh(); }
+
+    public void toggle() { setExpanded(!expanded); }
+    public void expand() { setExpanded(true); }
+    public void collapse() { setExpanded(false); }
+    public boolean isExpanded() { return expanded; }
+
+    public void setExpanded(boolean value) {
+        expanded = value;
+        detailBody.setVisibility(expanded ? View.VISIBLE : View.GONE);
+        toggleGlyph.setText(expanded ? "−" : "+");
+    }
 
     public void refresh() {
         ManagerCompatibility.Result result = ManagerCompatibility.evaluate(getContext());
@@ -271,40 +258,25 @@ public class RuntimeStatusView extends FrameLayout {
             managerName.setText(result.manager.name);
             String status;
             int statusColorRes;
-            if (result.manager.spoofed) {
-                status = "Identity Mismatch";
-                statusColorRes = R.color.status_error;
-            } else if (result.manager.identityVerified) {
-                status = "Verified";
-                statusColorRes = R.color.status_success;
-            } else if (result.manager.recognized) {
-                status = "Recognized";
-                statusColorRes = R.color.accent;
-            } else {
-                status = "Unknown";
-                statusColorRes = R.color.text_secondary;
-            }
+            if (result.manager.spoofed) { status = "Identity Mismatch"; statusColorRes = R.color.status_error; }
+            else if (result.manager.identityVerified) { status = "Verified"; statusColorRes = R.color.status_success; }
+            else if (result.manager.recognized) { status = "Recognized"; statusColorRes = R.color.accent; }
+            else { status = "Unknown"; statusColorRes = R.color.text_secondary; }
             managerStatus.setText(status);
             managerStatus.setTextColor(ContextCompat.getColor(getContext(), statusColorRes));
-            managerIcon.setImageResource(result.manager.spoofed
-                    ? R.drawable.ic_shield_alert : R.drawable.ic_shield_check);
+            managerIcon.setImageDrawable(new PixelIconDrawable(getContext(), result.manager.spoofed ? "shield_alert" : "shield_check"));
             packageLabel.setText(result.manager.packageName);
-            packageLabel.setSingleLine(true);
-            packageLabel.setHorizontallyScrolling(true);
             packageLabel.setTextColor(ContextCompat.getColor(getContext(), R.color.text_primary));
             signatureValue.setText(result.manager.identityVerified ? "Verified" : "Not Verified");
-            signatureValue.setTextColor(ContextCompat.getColor(getContext(),
-                    result.manager.identityVerified ? R.color.status_success : R.color.text_secondary));
+            signatureValue.setTextColor(ContextCompat.getColor(getContext(), result.manager.identityVerified ? R.color.status_success : R.color.text_secondary));
             integrityLabel.setText(result.manager.identityVerified ? "✓ Verified" : "Not Verified");
-            integrityLabel.setTextColor(ContextCompat.getColor(getContext(),
-                    result.manager.identityVerified ? R.color.status_success : R.color.text_secondary));
+            integrityLabel.setTextColor(ContextCompat.getColor(getContext(), result.manager.identityVerified ? R.color.status_success : R.color.text_secondary));
         } else {
             managerName.setText("No Manager");
             managerStatus.setText("Not installed");
             managerStatus.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
-            managerIcon.setImageResource(R.drawable.ic_shield_alert);
+            managerIcon.setImageDrawable(new PixelIconDrawable(getContext(), "shield_alert"));
             packageLabel.setText("—");
-            packageLabel.setMaxLines(1);
             packageLabel.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
             signatureValue.setText("Not Verified");
             signatureValue.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
@@ -317,80 +289,52 @@ public class RuntimeStatusView extends FrameLayout {
     }
 
     private void showManagerPicker() {
-        final java.util.List<ManagerCompatibility.ManagerInfo> managers =
-                ManagerCompatibility.registeredManagers(getContext());
+        final java.util.List<ManagerCompatibility.ManagerInfo> managers = ManagerCompatibility.registeredManagers(getContext());
         final android.app.Dialog dialog = new android.app.Dialog(getContext());
         LinearLayout box = new LinearLayout(getContext());
         box.setOrientation(LinearLayout.VERTICAL);
-        box.setPadding(dp(24), dp(22), dp(24), dp(18));
-        box.setBackground(createRoundedBackground(
-                ContextCompat.getColor(getContext(), R.color.surface), 26));
-        TextView title = text(20, true);
-        title.setText("Install Manager");
+        box.setPadding(dp(20), dp(18), dp(20), dp(14));
+        box.setBackground(new PixelFrameDrawable(getContext(), PixelFrameDrawable.Kind.PANEL));
+        TextView title = text(18, true);
+        title.setText("INSTALL MANAGER");
         box.addView(title);
-        TextView subtitle = text(13, false);
+        TextView subtitle = text(12, false);
         subtitle.setText("Select a supported manager to continue");
         subtitle.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
-        LinearLayout.LayoutParams subtitleParams = new LinearLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        subtitleParams.topMargin = dp(6);
-        subtitleParams.bottomMargin = dp(16);
+        LinearLayout.LayoutParams subtitleParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        subtitleParams.topMargin = dp(5); subtitleParams.bottomMargin = dp(13);
         box.addView(subtitle, subtitleParams);
         for (ManagerCompatibility.ManagerInfo info : managers) {
             LinearLayout row = new LinearLayout(getContext());
-            row.setOrientation(LinearLayout.HORIZONTAL);
             row.setGravity(Gravity.CENTER_VERTICAL);
-            row.setPadding(dp(16), dp(14), dp(16), dp(14));
-            row.setBackground(createRoundedBackground(
-                    ContextCompat.getColor(getContext(), R.color.surface_container_low), 14));
-            row.setClickable(true);
-            row.setFocusable(true);
+            row.setPadding(dp(12), dp(10), dp(12), dp(10));
+            row.setBackground(new PixelFrameDrawable(getContext(), PixelFrameDrawable.Kind.PANEL));
+            row.setClickable(true); row.setFocusable(true);
             ImageView icon = new ImageView(getContext());
-            icon.setImageResource(R.drawable.ic_shield_check);
-            icon.setColorFilter(ContextCompat.getColor(getContext(), R.color.icon_tint));
-            row.addView(icon, new LinearLayout.LayoutParams(dp(24), dp(24)));
+            icon.setImageDrawable(new PixelIconDrawable(getContext(), "shield_check"));
+            row.addView(icon, new LinearLayout.LayoutParams(dp(22), dp(22)));
             LinearLayout textLayout = new LinearLayout(getContext());
             textLayout.setOrientation(LinearLayout.VERTICAL);
-            textLayout.setPadding(dp(12), 0, 0, 0);
-            row.addView(textLayout, new LinearLayout.LayoutParams(
-                    0, LayoutParams.WRAP_CONTENT, 1f));
-            TextView nameText = text(14, true);
-            nameText.setText(info.name);
-            textLayout.addView(nameText);
-            TextView statusText = text(12, false);
-            statusText.setText(info.installed ? "Installed" : "Not installed");
-            statusText.setTextColor(ContextCompat.getColor(getContext(),
-                    info.installed ? R.color.status_success : R.color.text_secondary));
-            LinearLayout.LayoutParams statusParams = new LinearLayout.LayoutParams(
-                    LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-            statusParams.topMargin = dp(2);
-            textLayout.addView(statusText, statusParams);
-            row.setOnClickListener(v -> {
-                dialog.dismiss();
-                ManagerCompatibility.openInstaller(getContext(), info);
-            });
-            LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
-                    LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-            rowParams.bottomMargin = dp(8);
+            textLayout.setPadding(dp(10), 0, 0, 0);
+            row.addView(textLayout, new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
+            TextView nameText = text(13, true); nameText.setText(info.name); textLayout.addView(nameText);
+            TextView statusText = text(11, false); statusText.setText(info.installed ? "Installed" : "Not installed");
+            statusText.setTextColor(ContextCompat.getColor(getContext(), info.installed ? R.color.status_success : R.color.text_secondary));
+            textLayout.addView(statusText);
+            row.setOnClickListener(v -> { dialog.dismiss(); ManagerCompatibility.openInstaller(getContext(), info); });
+            LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, dp(50));
+            rowParams.bottomMargin = dp(7);
             box.addView(row, rowParams);
         }
-        TextView cancel = text(14, true);
-        cancel.setText("Cancel");
-        cancel.setGravity(Gravity.CENTER);
-        cancel.setTextColor(ContextCompat.getColor(getContext(), R.color.accent));
-        cancel.setMinHeight(dp(48));
-        cancel.setOnClickListener(v -> dialog.dismiss());
-        box.addView(cancel, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, dp(48)));
+        TextView cancel = text(13, true); cancel.setText("CANCEL"); cancel.setGravity(Gravity.CENTER); cancel.setTextColor(ContextCompat.getColor(getContext(), R.color.accent));
+        cancel.setMinHeight(dp(44)); cancel.setOnClickListener(v -> dialog.dismiss());
+        box.addView(cancel, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, dp(44)));
         dialog.setContentView(box);
         GhostLockModal.apply(dialog, false);
         dialog.setOnDismissListener(d -> GhostLockModal.clear(dialog));
         dialog.show();
         Window window = dialog.getWindow();
-        if (window != null) {
-            window.setLayout(
-                    Math.min((int) (getResources().getDisplayMetrics().widthPixels * 0.88f), dp(390)),
-                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
-        }
+        if (window != null) window.setLayout(Math.min((int) (getResources().getDisplayMetrics().widthPixels * 0.88f), dp(390)), android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
     }
 
     private TextView text(int size, boolean bold) {
@@ -398,25 +342,15 @@ public class RuntimeStatusView extends FrameLayout {
         v.setTextSize(size);
         v.setIncludeFontPadding(false);
         v.setTextColor(ContextCompat.getColor(getContext(), R.color.text_primary));
-        if (bold) v.setTypeface(null, android.graphics.Typeface.BOLD);
+        v.setTypeface(Typeface.MONOSPACE, bold ? Typeface.BOLD : Typeface.NORMAL);
+        v.getPaint().setAntiAlias(false);
         return v;
     }
 
-    private GradientDrawable createRoundedBackground(int color, int radius) {
-        GradientDrawable d = new GradientDrawable();
-        d.setColor(color);
-        d.setCornerRadius(0f);
-        d.setStroke(dp(2), ContextCompat.getColor(getContext(), R.color.border));
-        return d;
-    }
-
     private void setSurface(int colorRes) {
-        GradientDrawable surface = createRoundedBackground(
-                ContextCompat.getColor(getContext(), colorRes), 16);
-        if (getParent() instanceof View) ((View) getParent()).setBackground(surface);
+        PixelFrameDrawable frame = new PixelFrameDrawable(getContext(), PixelFrameDrawable.Kind.PANEL);
+        if (getParent() instanceof View) ((View) getParent()).setBackground(frame);
     }
 
-    private int dp(int value) {
-        return Math.round(value * getResources().getDisplayMetrics().density);
-    }
+    private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
 }
