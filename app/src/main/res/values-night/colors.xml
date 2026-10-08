@@ -1,36 +1,12 @@
 <resources>
-    <color name="bg">#FF020617</color>
-    <color name="surface">#FF0F172A</color>
-    <color name="surface_container_low">#FF1E293B</color>
-    <color name="surface_container">#FF26364A</color>
-    <color name="text_primary">#FFF8FAFC</color>
-    <color name="text_secondary">#FFCBD5E1</color>
-    <color name="icon_tint">#FF8FA6C2</color>
-    <color name="theme_icon_light">#FF8FA6C2</color>
-    <color name="theme_icon_dark">#FFE8C26C</color>
-    <color name="accent">#FF14ADFF</color>
-    <color name="primary">#FF14ADFF</color>
-    <color name="accent_pressed">#FF0B86C8</color>
-    <color name="accent_disabled">#FF475569</color>
-    <color name="accent_container">#FF123B55</color>
-    <color name="on_accent">#FFFFFFFF</color>
-    <color name="on_accent_container">#FFE0F2FF</color>
-    <color name="run_text">#FFFFFFFF</color>
-    <color name="border">#FF64748B</color>
-    <color name="outline_variant">#FF475569</color>
-    <color name="divider">#FF334155</color>
-    <color name="status_success">#FF86EFAC</color>
-    <color name="status_success_bg">#FF163B2B</color>
-    <color name="status_error">#FFFF8FA3</color>
-    <color name="status_error_bg">#FF4A2530</color>
-    <color name="log_bg">#FF030712</color>
-    <color name="log_border">#FF475569</color>
-    <color name="log_divider">#FF334155</color>
-    <color name="log_text">#FFE2E8F0</color>
-    <color name="log_title">#FFF8FAFC</color>
-    <color name="log_secondary">#FFCBD5E1</color>
-    <color name="launcher_icon_background">#FF123B55</color>
-    <color name="pixel_shadow">#FF020617</color>
-    <color name="pixel_ghost">#FF8B5CF6</color>
-    <color name="pixel_highlight">#FFE8C26C</color>
+    <color name="bg">#FF201F1B</color><color name="surface">#FF292820</color><color name="surface_container_low">#FF322F25</color><color name="surface_container">#FF3B362A</color><color name="surface_container_high">#FF494334</color>
+    <color name="text_primary">#FFF5F0E5</color><color name="text_secondary">#FFCCC3B2</color><color name="text_disabled">#FF8E8675</color>
+    <color name="icon_tint">#FFE6D29A</color><color name="theme_icon_light">#FFD9C18A</color><color name="theme_icon_dark">#FFF2D9A0</color>
+    <color name="accent">#FFE3C982</color><color name="primary">#FFE3C982</color><color name="primary_pressed">#FFF0D79E</color><color name="accent_pressed">#FFF0D79E</color><color name="accent_disabled">#FF6C6248</color>
+    <color name="primary_container">#FF574A2F</color><color name="accent_container">#FF574A2F</color><color name="on_primary">#FF3B3017</color><color name="on_accent">#FF3B3017</color><color name="on_primary_container">#FFF8E9B7</color><color name="on_accent_container">#FFF8E9B7</color>
+    <color name="secondary">#FFE3C982</color><color name="on_secondary">#FF3B3017</color><color name="secondary_container">#FF574A2F</color><color name="on_secondary_container">#FFF8E9B7</color>
+    <color name="run_text">#FF29261F</color><color name="outline">#FF6E6758</color><color name="border">#00000000</color><color name="outline_variant">#00000000</color><color name="divider">#00000000</color>
+    <color name="status_success">#FFB8D8C1</color><color name="status_success_bg">#FF354A3E</color><color name="status_error">#FFFFB5BF</color><color name="status_error_bg">#FF5A343D</color>
+    <color name="log_bg">#FF1B1915</color><color name="log_border">#00000000</color><color name="log_divider">#FF4A4438</color><color name="log_text">#FFF3EDE1</color><color name="log_title">#FFFFF8E9</color><color name="log_secondary">#FFCCC2B0</color>
+    <color name="launcher_icon_background">#FF574A2F</color><color name="pixel_shadow">@color/outline_variant</color><color name="pixel_ghost">@color/primary</color><color name="pixel_highlight">@color/primary_container</color>
 </resources>
