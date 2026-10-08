@@ -3,7 +3,7 @@ import android.app.Activity;import android.content.Context;import android.graphi
 import com.google.android.material.button.MaterialButton;import com.google.android.material.card.MaterialCardView;
 public final class PixelUi{
  private PixelUi(){}
- public static void apply(Activity a,View root){if(root==null)return;Typeface p=a.getResources().getFont(R.font.ghost_pixel);walk(a,root,p);}
+ public static void apply(Activity a,View root){if(root==null)return;Typeface p=Typeface.MONOSPACE;walk(a,root,p);}
  private static void walk(Context c,View v,Typeface p){
   if(v instanceof TextView){TextView t=(TextView)v;boolean b=t.getTypeface()!=null&&t.getTypeface().isBold();t.setTypeface(p,b?Typeface.BOLD:Typeface.NORMAL);t.getPaint().setAntiAlias(false);t.getPaint().setSubpixelText(false);}
   if(v instanceof MaterialCardView){MaterialCardView card=(MaterialCardView)v;card.setCardElevation(0);card.setRadius(0);card.setStrokeWidth(dp(c,2));card.setStrokeColor(c.getResources().getColor(R.color.border));}
