@@ -8,17 +8,18 @@ import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.util.StateSet;
 
-/** Hard-edged 8-bit frame with stepped corners and an offset pixel shadow. */
+/** Hard-edged 8-bit frame with stepped corners, bevel and offset shadow. */
 public final class PixelFrameDrawable extends Drawable {
     public enum Kind { PANEL, BUTTON }
     private final float density;
     private final Paint fill = new Paint();
     private final Paint border = new Paint();
     private final Paint shadow = new Paint();
+    private final Paint bevel = new Paint();
     private final Path path = new Path();
     private final Path shadowPath = new Path();
     private final Kind kind;
-    private final int normalColor, pressedColor, borderColor, shadowColor;
+    private final int normalColor, pressedColor, borderColor, shadowColor, highlightColor;
     private final float step, stroke, offset;
     private boolean pressed;
 
@@ -29,6 +30,7 @@ public final class PixelFrameDrawable extends Drawable {
         pressedColor = context.getResources().getColor(kind == Kind.BUTTON ? R.color.accent_pressed : R.color.surface_container, context.getTheme());
         borderColor = context.getResources().getColor(R.color.border, context.getTheme());
         shadowColor = context.getResources().getColor(R.color.pixel_shadow, context.getTheme());
+        highlightColor = context.getResources().getColor(R.color.pixel_highlight, context.getTheme());
         step = dp(kind == Kind.BUTTON ? 3 : 4);
         stroke = dp(2);
         offset = dp(kind == Kind.BUTTON ? 4 : 3);
@@ -38,25 +40,37 @@ public final class PixelFrameDrawable extends Drawable {
         border.setStrokeJoin(Paint.Join.MITER);
         border.setStrokeCap(Paint.Cap.SQUARE);
         shadow.setStyle(Paint.Style.FILL);
+        bevel.setStyle(Paint.Style.FILL);
         fill.setAntiAlias(false);
         border.setAntiAlias(false);
         shadow.setAntiAlias(false);
+        bevel.setAntiAlias(false);
     }
 
     @Override public void draw(Canvas canvas) {
         RectF b = new RectF(getBounds());
         float inset = stroke / 2f;
-        makeSteppedPath(shadowPath, b.left, b.top, b.right, b.bottom, step);
+        float depth = pressed ? dp(2) : offset;
+        makeSteppedPath(shadowPath, b.left + offset, b.top + offset, b.right + offset, b.bottom + offset, step);
         shadow.setColor(shadowColor);
         canvas.drawPath(shadowPath, shadow);
 
-        // Leave a hard 3-4dp depth strip visible on the lower/right edges.
         makeSteppedPath(path, b.left + inset, b.top + inset,
-                b.right - inset - offset, b.bottom - inset - offset, step);
+                b.right - inset, b.bottom - inset - depth, step);
         fill.setColor(pressed ? pressedColor : normalColor);
         canvas.drawPath(path, fill);
         border.setColor(borderColor);
         canvas.drawPath(path, border);
+
+        // One-pixel bevel catches light without introducing gradients or blur.
+        bevel.setColor(highlightColor);
+        float p = dp(1);
+        canvas.drawRect(b.left + step + p, b.top + p,
+                b.right - step - p, b.top + p + p, bevel);
+        if (kind == Kind.BUTTON && !pressed) {
+            canvas.drawRect(b.left + p, b.top + step + p,
+                    b.left + p + p, b.bottom - step - offset, bevel);
+        }
     }
 
     private void makeSteppedPath(Path out, float left, float top, float right, float bottom, float s) {
@@ -81,8 +95,8 @@ public final class PixelFrameDrawable extends Drawable {
     }
     @Override public boolean isStateful() { return true; }
     @Override public int getOpacity() { return android.graphics.PixelFormat.TRANSLUCENT; }
-    @Override public void setAlpha(int alpha) { fill.setAlpha(alpha); border.setAlpha(alpha); shadow.setAlpha(alpha); }
-    @Override public void setColorFilter(android.graphics.ColorFilter filter) { fill.setColorFilter(filter); border.setColorFilter(filter); shadow.setColorFilter(filter); }
+    @Override public void setAlpha(int alpha) { fill.setAlpha(alpha); border.setAlpha(alpha); shadow.setAlpha(alpha); bevel.setAlpha(alpha); }
+    @Override public void setColorFilter(android.graphics.ColorFilter filter) { fill.setColorFilter(filter); border.setColorFilter(filter); shadow.setColorFilter(filter); bevel.setColorFilter(filter); }
     @Override public int getIntrinsicHeight() { return -1; }
     @Override public int getIntrinsicWidth() { return -1; }
 }
