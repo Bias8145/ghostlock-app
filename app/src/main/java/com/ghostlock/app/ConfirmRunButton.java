@@ -60,7 +60,7 @@ public class ConfirmRunButton extends MaterialButton {
         Dialog dialog = createDialog(); LinearLayout box = box(); TextView title = text(19, true); title.setText("Install supported manager"); box.addView(title);
         TextView subtitle = text(12, false); subtitle.setText("Select a registered manager to continue."); box.addView(subtitle, margin(-1, -2, 0, 6, 0, 14));
         for (ManagerCompatibility.ManagerInfo manager : ManagerCompatibility.registeredManagers(getContext())) {
-            TextView row = text(14, true); row.setText(manager.name + (manager.installed ? "  ·  Installed" : "  ·  Not installed")); row.setGravity(Gravity.CENTER_VERTICAL); row.setPadding(dp(14), 0, dp(14), 0); row.setBackgroundColor(getColor(R.color.surface_container_low)); row.setClickable(true); row.setFocusable(true); row.setOnClickListener(v -> { dialog.dismiss(); ManagerCompatibility.openInstaller(getContext(), manager); }); box.addView(row, margin(-1, dp(54), 0, 0, 0, 9));
+            TextView row = text(14, true); row.setText(manager.name + (manager.installed ? "  ·  Installed" : "  ·  Not installed")); row.setGravity(Gravity.CENTER_VERTICAL); row.setPadding(dp(14), 0, dp(14), 0); row.setBackgroundColor(color(R.color.surface_container_low)); row.setClickable(true); row.setFocusable(true); row.setOnClickListener(v -> { dialog.dismiss(); ManagerCompatibility.openInstaller(getContext(), manager); }); box.addView(row, margin(-1, dp(54), 0, 0, 0, 9));
         }
         MaterialButton cancel = actionButton("Cancel", false); cancel.setOnClickListener(v -> dialog.dismiss()); box.addView(cancel, margin(-1, dp(48), 0, 4, 0, 0)); show(dialog, box, false);
     }
@@ -79,10 +79,10 @@ public class ConfirmRunButton extends MaterialButton {
     private void show(Dialog dialog, LinearLayout box, boolean warning) { dialog.setContentView(box); GhostLockModal.apply(dialog, warning); dialog.setOnDismissListener(d -> GhostLockModal.clear(dialog)); dialog.show(); }
 
     private MaterialButton actionButton(String text, boolean primary) {
-        MaterialButton b = new MaterialButton(getContext()); b.setText(text); b.setAllCaps(false); b.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL), Typeface.BOLD); b.setMinWidth(0); b.setTextSize(13); b.setCornerRadius(dp(18)); b.setStrokeWidth(0); b.setInsetTop(0); b.setInsetBottom(0); b.setBackgroundTintList(ColorStateList.valueOf(getColor(primary ? R.color.primary : R.color.surface_container_high)));  b.setTextColor(color(primary ? R.color.on_accent : R.color.text_primary)); return b;
+        MaterialButton b = new MaterialButton(getContext()); b.setText(text); b.setAllCaps(false); b.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL), Typeface.BOLD); b.setMinWidth(0); b.setTextSize(13); b.setCornerRadius(dp(18)); b.setStrokeWidth(0); b.setInsetTop(0); b.setInsetBottom(0); b.setBackgroundTintList(ColorStateList.valueOf(color(primary ? R.color.primary : R.color.surface_container_high)));  b.setTextColor(color(primary ? R.color.on_accent : R.color.text_primary)); return b;
     }
     private TextView text(int size, boolean bold) { TextView v = new TextView(getContext()); v.setTextSize(size); v.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL), bold ? Typeface.BOLD : Typeface.NORMAL); v.setTextColor(color(bold ? R.color.text_primary : R.color.text_secondary)); v.getPaint().setAntiAlias(true); return v; }
-    private int color(int id) { return ContextCompat.getColor(getContext(), id); }
+    private int color(int id) { return ContextCompat.color(getContext(), id); }
     private LinearLayout.LayoutParams margin(int w, int h, int l, int t, int r, int b) { LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(w, h); p.setMargins(dp(l), dp(t), dp(r), dp(b)); return p; }
     private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
 }
