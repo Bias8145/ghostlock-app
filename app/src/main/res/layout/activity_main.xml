@@ -39,8 +39,8 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginBottom="8dp"
+                android:layout_height="64dp"
+                android:layout_marginBottom="10dp"
                 android:gravity="center_vertical">
                 <LinearLayout
                     android:layout_width="0dp"
@@ -51,12 +51,16 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:gravity="center_vertical">
+                        <com.ghostlock.app.PixelGhostView
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:layout_marginEnd="10dp" />
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/app_name"
                             android:textColor="@color/text_primary"
-                            android:textSize="20sp"
+                            android:textSize="22sp"
                             android:textStyle="bold" />
                         <LinearLayout
                             android:id="@+id/kernelChip"
@@ -127,9 +131,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
                 app:cardBackgroundColor="@color/surface_container_low"
-                app:cardCornerRadius="18dp"
+                app:cardCornerRadius="0dp"
                 app:cardElevation="0dp"
-                app:strokeWidth="0dp">
+                app:strokeWidth="2dp">
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -162,9 +166,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
                 app:cardBackgroundColor="@color/surface_container_low"
-                app:cardCornerRadius="18dp"
+                app:cardCornerRadius="0dp"
                 app:cardElevation="0dp"
-                app:strokeWidth="0dp">
+                app:strokeWidth="2dp">
                 <com.ghostlock.app.DashboardStatsView
                     android:id="@+id/dashboardStats"
                     android:layout_width="match_parent"
@@ -230,7 +234,7 @@
                                 android:layout_weight="1"
                                 android:text="Import Offsets"
                                 android:textAllCaps="false"
-                                app:cornerRadius="18dp" />
+                                app:cornerRadius="0dp" />
                             <com.ghostlock.app.ThemedToolButton
                                 android:id="@+id/otaButton"
                                 android:tag="parse_link"
@@ -241,7 +245,7 @@
                                 android:layout_weight="1"
                                 android:text="Parse OTA"
                                 android:textAllCaps="false"
-                                app:cornerRadius="18dp" />
+                                app:cornerRadius="0dp" />
                         </LinearLayout>
                         <com.ghostlock.app.ThemedToolButton
                             android:id="@+id/parseButton"
@@ -252,7 +256,7 @@
                             android:layout_marginTop="8dp"
                             android:text="Parse Boot"
                             android:textAllCaps="false"
-                            app:cornerRadius="18dp" />
+                            app:cornerRadius="0dp" />
                     </LinearLayout>
                     <com.ghostlock.app.ThemedToolButton
                         android:id="@+id/exportButton"
@@ -264,7 +268,7 @@
                         android:text="@string/action_export_offsets"
                         android:textAllCaps="false"
                         android:visibility="gone"
-                        app:cornerRadius="18dp" />
+                        app:cornerRadius="0dp" />
                 </com.ghostlock.app.CollapsibleToolsLayout>
                 <com.ghostlock.app.ConfirmRunButton
                     android:id="@+id/runButton"
@@ -293,9 +297,9 @@
                 android:layout_marginBottom="8dp"
                 android:minHeight="0dp"
                 app:cardBackgroundColor="@color/log_bg"
-                app:cardCornerRadius="18dp"
+                app:cardCornerRadius="0dp"
                 app:cardElevation="0dp"
-                app:strokeWidth="0dp">
+                app:strokeWidth="2dp">
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -329,8 +333,8 @@
                             android:textSize="12sp"
                             android:contentDescription="Copy log"
                             app:backgroundTint="@color/surface_container"
-                            app:cornerRadius="13dp"
-                            app:strokeWidth="0dp" />
+                            app:cornerRadius="0dp"
+                            app:strokeWidth="2dp" />
                         <com.ghostlock.app.ClearLogButton
                             android:id="@+id/clearLogButton"
                             style="@style/Widget.Material3.Button.TonalButton"
@@ -347,8 +351,8 @@
                             android:textSize="12sp"
                             android:contentDescription="Clear log"
                             app:backgroundTint="@color/surface_container"
-                            app:cornerRadius="13dp"
-                            app:strokeWidth="0dp" />
+                            app:cornerRadius="0dp"
+                            app:strokeWidth="2dp" />
                     </LinearLayout>
                     <View
                         android:layout_width="match_parent"
