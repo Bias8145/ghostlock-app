@@ -28,7 +28,7 @@ public final class PixelUi {
             boolean bold = text.getTypeface() != null && text.getTypeface().isBold();
             text.setTypeface(pixelTypeface, bold ? Typeface.BOLD : Typeface.NORMAL);
             text.getPaint().setAntiAlias(false);
-            text.getPaint().setSubpixelText(false);
+            text.setPaint().setSubpixelText(false);
         }
 
         if (view instanceof MaterialCardView) {
@@ -49,8 +49,7 @@ public final class PixelUi {
             button.setInsetTop(0);
             button.setInsetBottom(0);
             button.setBackgroundTintList(null);
-            Drawable background = new PixelFrameDrawable(context, PixelFrameDrawable.Kind.BUTTON);
-            button.setBackground(background);
+            button.setBackground(new PixelFrameDrawable(context, PixelFrameDrawable.Kind.BUTTON));
             button.setPadding(dp(context, 10), dp(context, 2), dp(context, 10), dp(context, 2));
         }
 
@@ -59,26 +58,29 @@ public final class PixelUi {
             int id = image.getId();
             if (id != View.NO_ID) {
                 String resourceName;
-                try {
-                    resourceName = context.getResources().getResourceEntryName(id);
-                } catch (Exception ignored) {
-                    resourceName = "icon";
-                }
+                try { resourceName = context.getResources().getResourceEntryName(id); }
+                catch (Exception ignored) { resourceName = "icon"; }
                 image.setImageDrawable(new PixelIconDrawable(context, resourceName));
                 image.setColorFilter(null);
                 image.setAlpha(1f);
             }
         }
 
+        int id = view.getId();
+        if (id != View.NO_ID) {
+            try {
+                String name = context.getResources().getResourceEntryName(id);
+                if ("kernelChip".equals(name)) {
+                    view.setBackground(new PixelFrameDrawable(context, PixelFrameDrawable.Kind.PANEL));
+                }
+            } catch (Exception ignored) { }
+        }
+
         if (view instanceof ViewGroup) {
             ViewGroup group = (ViewGroup) view;
-            for (int i = 0; i < group.getChildCount(); i++) {
-                walk(context, group.getChildAt(i), pixelTypeface);
-            }
+            for (int i = 0; i < group.getChildCount(); i++) walk(context, group.getChildAt(i), pixelTypeface);
         }
     }
 
-    private static int dp(Context context, int value) {
-        return Math.round(value * context.getResources().getDisplayMetrics().density);
-    }
+    private static int dp(Context context, int value) { return Math.round(value * context.getResources().getDisplayMetrics().density); }
 }
