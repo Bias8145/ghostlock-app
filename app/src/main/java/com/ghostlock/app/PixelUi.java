@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -27,8 +26,8 @@ public final class PixelUi {
             TextView text = (TextView) view;
             boolean bold = text.getTypeface() != null && text.getTypeface().isBold();
             text.setTypeface(pixelTypeface, bold ? Typeface.BOLD : Typeface.NORMAL);
+            // Keep text deliberately hard-edged for the pixel aesthetic.
             text.getPaint().setAntiAlias(false);
-            text.setPaint().setSubpixelText(false);
         }
 
         if (view instanceof MaterialCardView) {
