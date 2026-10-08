@@ -71,13 +71,13 @@ public class RuntimeStatusView extends FrameLayout {
         managerCard.setClipToOutline(true);
         managerCard.setOutlineProvider(new android.view.ViewOutlineProvider() {
             @Override public void getOutline(View view, android.graphics.Outline outline) {
-                outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), dp(16));
+                outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), dp(4));
             }
         });
 
         LinearLayout cardContent = new LinearLayout(context);
         cardContent.setOrientation(LinearLayout.VERTICAL);
-        cardContent.setPadding(dp(16), dp(14), dp(16), dp(14));
+        cardContent.setPadding(dp(16), dp(14), dp(16), dp(4));
         managerCard.addView(cardContent, new FrameLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
@@ -405,7 +405,7 @@ public class RuntimeStatusView extends FrameLayout {
     private GradientDrawable createRoundedBackground(int color, int radius) {
         GradientDrawable d = new GradientDrawable();
         d.setColor(color);
-        d.setCornerRadius(dp(radius));
+        d.setCornerRadius(dp(Math.min(radius, 4)));
         return d;
     }
 
