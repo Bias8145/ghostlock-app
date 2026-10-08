@@ -77,7 +77,7 @@ public class RuntimeStatusView extends FrameLayout {
 
         LinearLayout cardContent = new LinearLayout(context);
         cardContent.setOrientation(LinearLayout.VERTICAL);
-        cardContent.setPadding(dp(16), dp(14), dp(16), dp(4));
+        cardContent.setPadding(dp(16), dp(14), dp(16), dp(14));
         managerCard.addView(cardContent, new FrameLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
