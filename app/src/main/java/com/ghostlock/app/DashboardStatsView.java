@@ -100,7 +100,7 @@ public class DashboardStatsView extends LinearLayout {
         LinearLayout panel = new LinearLayout(getContext());
         panel.setOrientation(VERTICAL);
         panel.setPadding(dp(8), dp(9), dp(8), dp(9));
-        panel.setBackground(new PixelFrameDrawable(getContext(), PixelFrameDrawable.Kind.PANEL));
+        panel.setBackground(roundBackground(R.color.surface_container, 16));
         LinearLayout header = new LinearLayout(getContext());
         header.setGravity(Gravity.CENTER_VERTICAL);
         header.addView(icon(iconName, dp(16)), new LinearLayout.LayoutParams(dp(16), dp(16)));
