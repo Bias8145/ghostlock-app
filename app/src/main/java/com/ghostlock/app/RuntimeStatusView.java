@@ -353,5 +353,7 @@ public class RuntimeStatusView extends FrameLayout {
         if (getParent() instanceof View) ((View) getParent()).setBackground(frame);
     }
 
-    private android.graphics.drawable.GradientDrawable roundBackground(int colorRes, int radiusDp) { android.graphics.drawable.GradientDrawable bg = new android.graphics.drawable.GradientDrawable(); bg.setColor(ContextCompat.getColor(getContext(), colorRes)); bg.setCornerRadius(dp(radiusDp)); return bg; }\n\n    private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
+    private android.graphics.drawable.GradientDrawable roundBackground(int colorRes, int radiusDp) { android.graphics.drawable.GradientDrawable bg = new android.graphics.drawable.GradientDrawable(); bg.setColor(ContextCompat.getColor(getContext(), colorRes)); bg.setCornerRadius(dp(radiusDp)); return bg; }
+
+    private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
 }
