@@ -336,7 +336,6 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         setupSystemBars();
         rootView = findViewById(R.id.root);
-        PixelUi.apply(this, rootView);
         deviceInfo = findViewById(R.id.deviceInfo); logView = findViewById(R.id.logView); logScroll = findViewById(R.id.logScroll);
         runButton = findViewById(R.id.runButton); advancedButton = findViewById(R.id.advancedButton); advancedPanel = findViewById(R.id.advancedPanel);
         copyButton = findViewById(R.id.copyButton); importButton = findViewById(R.id.importButton); otaButton = findViewById(R.id.otaButton); parseButton = findViewById(R.id.parseButton); exportButton = findViewById(R.id.exportButton);
