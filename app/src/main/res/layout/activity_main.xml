@@ -283,7 +283,7 @@
                     android:layout_width="88dp"
                     android:layout_height="48dp"
                     android:layout_marginStart="8dp"
-                    android:background="@drawable/bg_tool_header"
+                    android:background="@drawable/bg_run_button"
                     android:elevation="0dp"
                     android:gravity="center"
                     android:minHeight="48dp"
