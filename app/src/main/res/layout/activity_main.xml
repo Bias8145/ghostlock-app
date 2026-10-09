@@ -46,37 +46,53 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:orientation="horizontal"
+                    android:orientation="vertical"
                     android:gravity="center_vertical">
 
-                    <TextView
-                        android:id="@+id/appTitle"
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/app_name"
-                        android:textColor="@color/text_primary"
-                        android:textSize="22sp"
-                        android:textStyle="bold" />
-
-                    <LinearLayout
-                        android:id="@+id/kernelChip"
-                        android:layout_width="wrap_content"
-                        android:layout_height="22dp"
-                        android:layout_marginStart="8dp"
-                        android:background="@drawable/bg_kernel_status"
-                        android:gravity="center_vertical"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp">
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
 
                         <TextView
-                            android:id="@+id/kernelChipText"
+                            android:id="@+id/appTitle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/kernel_supported"
+                            android:text="@string/app_name"
                             android:textColor="@color/text_primary"
-                            android:textSize="9sp"
+                            android:textSize="22sp"
                             android:textStyle="bold" />
+
+                        <LinearLayout
+                            android:id="@+id/kernelChip"
+                            android:layout_width="wrap_content"
+                            android:layout_height="22dp"
+                            android:layout_marginStart="8dp"
+                            android:background="@drawable/bg_kernel_status"
+                            android:gravity="center_vertical"
+                            android:paddingStart="8dp"
+                            android:paddingEnd="8dp">
+
+                            <TextView
+                                android:id="@+id/kernelChipText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/kernel_supported"
+                                android:textColor="@color/text_primary"
+                                android:textSize="9sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
                     </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/appSubtitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Android Kernel Exploit"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
                 </LinearLayout>
 
                 <LinearLayout
