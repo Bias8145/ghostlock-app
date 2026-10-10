@@ -31,7 +31,12 @@ public final class ManagerCompatibility {
         public final State state;
         public final ManagerInfo manager;
         Result(boolean k, State s, ManagerInfo m) { kernelSupported=k; state=s; manager=m; }
-        public boolean canRun() { return state == State.READY || (state == State.SPOOFED_MANAGER && manager.recognized); }
+        /** A recognized manager cannot make an unsupported kernel runnable. */
+        public boolean canRun() {
+            return kernelSupported
+                    && (state == State.READY
+                    || (state == State.SPOOFED_MANAGER && manager != null && manager.recognized));
+        }
     }
 
     private static final class Registered {
