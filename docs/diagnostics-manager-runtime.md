@@ -8,6 +8,7 @@ This document defines what GhostLock's manager/runtime diagnostics can and canno
 - **Runtime package coverage**: the detected package is present in the app's current runtime lookup list. A mismatch means the two recognition layers disagree; it is a diagnostic finding, not proof of the sole failure cause.
 - **ksud artifact found/prepared**: a candidate executable was found and copied/prepared for the app's own runtime. This does not prove that the manager accepts the request or that its protocol is compatible.
 - **Process exit 0**: the launched process returned zero. It must not be displayed or recorded as verified root-manager access. Analytics stores this as `processExitZero`; older history entries using `success` remain readable for backward compatibility.
+- **Readiness gate**: `ManagerCompatibility.Result.canRun()` requires kernel support even when a manager is recognized as spoofed/repackaged. Manager recognition alone must not override an unsupported-kernel state.
 - **Root-manager access verified**: only report this when a separate, explicit, authorized check confirms the intended manager access. Do not infer it from APK presence, an artifact, log phrases such as "ready", or process exit code.
 
 ## Diagnostic sequence
@@ -33,6 +34,7 @@ YukongA documents exact kernel-release matching, explicit unsupported states, pr
 - [ ] A detected package outside runtime coverage is explicitly reported.
 - [ ] Artifact presence is not treated as backend readiness.
 - [ ] Exit code 0 is reported as process completion only.
+- [ ] Unsupported kernel states cannot be overridden by manager recognition in `canRun()`.
 - [ ] UI and analytics do not label process exit 0 as verified root success.
 - [ ] New history records use `processExitZero`; legacy `success` records remain readable.
 - [ ] Existing statistics preference keys are retained so an app update does not reset local counters.
