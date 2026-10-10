@@ -67,8 +67,8 @@ public class AnalyticsManager {
         try {
             // Update counters
             int totalRuns = prefs.getInt(KEY_TOTAL_RUNS, 0) + 1;
-            int successCount = prefs.getInt(KEY_EXIT_ZERO_COUNT, 0) + (exitZero ? 1 : 0);
-            int failureCount = prefs.getInt(KEY_NON_ZERO_COUNT, 0) + (exitZero ? 0 : 1);
+            int exitZeroCount = prefs.getInt(KEY_EXIT_ZERO_COUNT, 0) + (exitZero ? 1 : 0);
+            int nonZeroCount = prefs.getInt(KEY_NON_ZERO_COUNT, 0) + (exitZero ? 0 : 1);
 
             // Add to history
             List<RunRecord> history = getRunHistory();
@@ -87,8 +87,8 @@ public class AnalyticsManager {
 
             prefs.edit()
                 .putInt(KEY_TOTAL_RUNS, totalRuns)
-                .putInt(KEY_EXIT_ZERO_COUNT, successCount)
-                .putInt(KEY_NON_ZERO_COUNT, failureCount)
+                .putInt(KEY_EXIT_ZERO_COUNT, exitZeroCount)
+                .putInt(KEY_NON_ZERO_COUNT, nonZeroCount)
                 .putString(KEY_RUN_HISTORY, array.toString())
                 .apply();
         } catch (JSONException e) {
