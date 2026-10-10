@@ -3,6 +3,7 @@
 ## Changelog
 
 ## Manager compatibility
+- Added an explicit post-run log warning that a zero process exit code does not verify root-manager access.
 - Added explicit KernelSU Next package recognition (`com.rifsxd.ksunext`).
 - Kept manager APK detection separate from claims about kernel activation or root readiness; APK presence alone does not prove that root is operational.
 
