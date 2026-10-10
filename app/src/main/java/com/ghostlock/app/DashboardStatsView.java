@@ -16,9 +16,9 @@ import java.util.Locale;
 public class DashboardStatsView extends LinearLayout {
     private AnalyticsManager analytics;
     private TextView totalRunsText;
-    private TextView successRateText;
-    private TextView successCountText;
-    private TextView failureCountText;
+    private TextView exitZeroRateText;
+    private TextView exitZeroCountText;
+    private TextView nonZeroCountText;
     private View progressFill;
     private LinearLayout body;
     private TextView chevron;
@@ -70,7 +70,7 @@ public class DashboardStatsView extends LinearLayout {
         heroText.setOrientation(VERTICAL);
         heroText.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
         heroText.addView(text("Process exit-0 rate", 11, R.color.text_secondary, Typeface.NORMAL));
-        successRateText = text("0.0%", 26, R.color.text_primary, Typeface.BOLD);
+        exitZeroRateText = text("0.0%", 26, R.color.text_primary, Typeface.BOLD);
         heroText.addView(successRateText);
         heroRow.addView(heroText);
         heroRow.addView(icon("ic_analytics", dp(20)));
@@ -115,8 +115,8 @@ public class DashboardStatsView extends LinearLayout {
         valueParams.topMargin = dp(4);
         panel.addView(valueText, valueParams);
         if (index == 0) totalRunsText = valueText;
-        else if (index == 1) successCountText = valueText;
-        else failureCountText = valueText;
+        else if (index == 1) exitZeroCountText = valueText;
+        else nonZeroCountText = valueText;
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
         if (index > 0) params.leftMargin = dp(4);
         if (index < 2) params.rightMargin = dp(4);
@@ -145,19 +145,19 @@ public class DashboardStatsView extends LinearLayout {
 
     public void refreshStats() {
         int total = analytics.getTotalRuns();
-        int success = analytics.getSuccessCount();
-        int failure = analytics.getFailureCount();
-        float successRate = analytics.getSuccessRate();
+        int exitZero = analytics.getExitZeroCount();
+        int nonZero = analytics.getNonZeroCount();
+        float exitZeroRate = analytics.getExitZeroRate();
         if (totalRunsText != null) totalRunsText.setText(String.valueOf(total));
-        if (successCountText != null) successCountText.setText(String.valueOf(success));
-        if (failureCountText != null) failureCountText.setText(String.valueOf(failure));
-        if (successRateText != null) successRateText.setText(String.format(Locale.ROOT, "%.1f%%", successRate));
-        updateProgressFill(successRate);
+        if (exitZeroCountText != null) exitZeroCountText.setText(String.valueOf(exitZero));
+        if (nonZeroCountText != null) nonZeroCountText.setText(String.valueOf(nonZero));
+        if (exitZeroRateText != null) exitZeroRateText.setText(String.format(Locale.ROOT, "%.1f%%", exitZeroRate));
+        updateProgressFill(exitZeroRate);
     }
 
-    private void updateProgressFill(float successRate) {
+    private void updateProgressFill(float exitZeroRate) {
         if (progressFill == null || getWidth() <= 0) return;
-        float ratio = Math.max(0f, Math.min(1f, successRate / 100f));
+        float ratio = Math.max(0f, Math.min(1f, exitZeroRate / 100f));
         ViewGroup.LayoutParams params = progressFill.getLayoutParams();
         int width = Math.max(0, Math.round(getWidth() * ratio));
         params.width = ratio == 0f ? 0 : Math.max(dp(2), width);
@@ -176,7 +176,7 @@ public class DashboardStatsView extends LinearLayout {
 
     @Override protected void onSizeChanged(int width, int height, int oldWidth, int oldHeight) {
         super.onSizeChanged(width, height, oldWidth, oldHeight);
-        if (width > 0) updateProgressFill(analytics.getSuccessRate());
+        if (width > 0) updateProgressFill(analytics.getExitZeroRate());
     }
 
     private GradientDrawable roundBackground(int colorRes, int radiusDp) { GradientDrawable bg = new GradientDrawable(); bg.setColor(getResources().getColor(colorRes)); bg.setCornerRadius(dp(radiusDp)); return bg; }
