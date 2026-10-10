@@ -71,7 +71,7 @@ public class DashboardStatsView extends LinearLayout {
         heroText.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
         heroText.addView(text("Process exit-0 rate", 11, R.color.text_secondary, Typeface.NORMAL));
         exitZeroRateText = text("0.0%", 26, R.color.text_primary, Typeface.BOLD);
-        heroText.addView(successRateText);
+        heroText.addView(exitZeroRateText);
         heroRow.addView(heroText);
         heroRow.addView(icon("ic_analytics", dp(20)));
         ratePanel.addView(heroRow);
