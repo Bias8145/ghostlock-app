@@ -69,7 +69,7 @@ public class DashboardStatsView extends LinearLayout {
         LinearLayout heroText = new LinearLayout(getContext());
         heroText.setOrientation(VERTICAL);
         heroText.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-        heroText.addView(text("Success rate", 11, R.color.text_secondary, Typeface.NORMAL));
+        heroText.addView(text("Process exit-0 rate", 11, R.color.text_secondary, Typeface.NORMAL));
         successRateText = text("0.0%", 26, R.color.text_primary, Typeface.BOLD);
         heroText.addView(successRateText);
         heroRow.addView(heroText);
@@ -89,8 +89,8 @@ public class DashboardStatsView extends LinearLayout {
         LinearLayout metricsRow = new LinearLayout(getContext());
         metricsRow.setGravity(Gravity.TOP);
         addMetric(metricsRow, "Total", "0", "ic_dashboard", false, 0);
-        addMetric(metricsRow, "Success", "0", "ic_check_circle", false, 1);
-        addMetric(metricsRow, "Failed", "0", "ic_error", true, 2);
+        addMetric(metricsRow, "Exit 0", "0", "ic_check_circle", false, 1);
+        addMetric(metricsRow, "Non-zero", "0", "ic_error", true, 2);
         LayoutParams metricsParams = new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         metricsParams.topMargin = dp(8);
         body.addView(metricsRow, metricsParams);
