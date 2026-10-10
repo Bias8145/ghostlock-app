@@ -577,13 +577,31 @@ public class MainActivity extends Activity {
     private File resolveBinary() throws IOException { File packaged = new File(getApplicationInfo().nativeLibraryDir, BINARY_NAME); if (packaged.isFile()) { appendLog("binary ready (" + packaged.length() + " bytes)"); return packaged; } throw new IOException("missing native binary: " + packaged.getAbsolutePath()); }
 
     private File prepareKsud(File workDir) {
-        File out = new File(workDir, KSUD_NAME); boolean anyInstalled = false;
+        File out = new File(workDir, KSUD_NAME);
+        boolean anyInstalled = false;
+        boolean artifactFound = false;
         for (String pkg : KSU_MANAGER_PACKAGES) {
-            ApplicationInfo appInfo; try { appInfo = getPackageManager().getApplicationInfo(pkg, 0); } catch (PackageManager.NameNotFoundException ignored) { continue; }
-            anyInstalled = true; File src = new File(appInfo.nativeLibraryDir, "libksud.so"); if (!src.isFile()) continue;
-            try { copyFile(src, out); try { Os.chmod(out.getAbsolutePath(), 448); } catch (ErrnoException ignored) { } return out; } catch (Throwable t) { appendLog("copy ksud failed: " + t.getMessage()); }
+            ApplicationInfo appInfo;
+            try {
+                appInfo = getPackageManager().getApplicationInfo(pkg, 0);
+            } catch (PackageManager.NameNotFoundException ignored) {
+                continue;
+            }
+            anyInstalled = true;
+            File src = new File(appInfo.nativeLibraryDir, "libksud.so");
+            if (!src.isFile()) {
+                appendLog("manager package is installed, but libksud.so was not found: " + pkg);
+                continue;
+            }
+            artifactFound = true;
+            appendLog("manager artifact detected: " + pkg + "/libksud.so");
         }
-        if (!anyInstalled) appendLog("KernelSU/ReSukiSU/KowSU app not installed"); return null;
+        if (!anyInstalled) {
+            appendLog("No manager package from the current runtime compatibility list was found");
+        } else if (!artifactFound) {
+            appendLog("No ksud artifact found for the recognized runtime package list; manager detection does not confirm runtime compatibility");
+        }
+        return null;
     }
 
     private int runBinary(File binary, File workDir) throws IOException, InterruptedException {
