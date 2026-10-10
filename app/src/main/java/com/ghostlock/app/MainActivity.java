@@ -567,7 +567,7 @@ public class MainActivity extends Activity {
                 code = runBinary(binary, workDir); tailer.interrupt(); try { tailer.join(1000); } catch (InterruptedException e) { Thread.currentThread().interrupt(); } tailKsuLog(logFile, ksuOffset); appendLog("exit code=" + code); appendLog(ProcessOutcome.fromExitCode(code).logMessage());
             } catch (Throwable t) { appendLog("error: " + t.getClass().getSimpleName() + ": " + t.getMessage()); }
             finally {
-                int finalCode = code; ui.post(() -> { running.set(false); getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); String kernel = System.getProperty("os.version", ""); String cpuPair = cpuPairLabels.get(cpuPairIndex); boolean success = finalCode == 0; String errorMsg = success ? null : "Exit code: " + finalCode; analytics.recordRun(success, kernel, cpuPair, errorMsg); dashboardStats.refreshStats(); if (success) setRunState(RunState.SUCCESS); else setRunState(RunState.FAILED); });
+                int finalCode = code; ui.post(() -> { running.set(false); getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); String kernel = System.getProperty("os.version", ""); String cpuPair = cpuPairLabels.get(cpuPairIndex); ProcessOutcome outcome = ProcessOutcome.fromExitCode(finalCode); String errorMsg = outcome.kind() == ProcessOutcome.Kind.EXIT_ZERO_UNVERIFIED ? null : "Exit code: " + finalCode; analytics.recordProcessOutcome(outcome, kernel, cpuPair, errorMsg); dashboardStats.refreshStats(); if (outcome.kind() == ProcessOutcome.Kind.EXIT_ZERO_UNVERIFIED) setRunState(RunState.COMPLETED_UNVERIFIED); else setRunState(RunState.NON_ZERO_EXIT); });
             }
         });
     }
@@ -666,5 +666,5 @@ public class MainActivity extends Activity {
     }
 
     private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
-    private enum RunState { IDLE, RUNNING, SUCCESS, FAILED }
+    private enum RunState { IDLE, RUNNING, COMPLETED_UNVERIFIED, NON_ZERO_EXIT }
 }
