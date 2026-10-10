@@ -561,7 +561,7 @@ public class MainActivity extends Activity {
         worker.execute(() -> {
             int code = 1;
             try {
-                File workDir = getFilesDir(); File binary = resolveBinary(); File ksud = prepareKsud(workDir); if (ksud != null) appendLog("ksud ready"); else appendLog("warning: ksud not found");
+                File workDir = getFilesDir(); File binary = resolveBinary(); logManagerCompatibilityDiagnostics(); File ksud = prepareKsud(workDir); if (ksud != null) appendLog("ksud ready"); else appendLog("warning: ksud not found");
                 File logFile = new File(workDir, KSU_LOG_NAME); logFile.delete(); AtomicLong ksuOffset = new AtomicLong();
                 Thread tailer = new Thread(() -> { try { while (!Thread.currentThread().isInterrupted()) { tailKsuLog(logFile, ksuOffset); Thread.sleep(200); } } catch (InterruptedException ignored) { } }, "ksu-log-tailer"); tailer.setDaemon(true); tailer.start();
                 code = runBinary(binary, workDir); tailer.interrupt(); try { tailer.join(1000); } catch (InterruptedException e) { Thread.currentThread().interrupt(); } tailKsuLog(logFile, ksuOffset); appendLog("exit code=" + code); if (code == 0) appendLog("execution process completed; root-manager access is not verified by exit code alone"); else appendLog("execution process returned non-zero; inspect the stage logs above");
@@ -575,6 +575,33 @@ public class MainActivity extends Activity {
     private void setRunState(RunState state) { runButton.setEnabled(state != RunState.RUNNING); runButton.setText(state == RunState.RUNNING ? R.string.action_running : R.string.action_run); }
 
     private File resolveBinary() throws IOException { File packaged = new File(getApplicationInfo().nativeLibraryDir, BINARY_NAME); if (packaged.isFile()) { appendLog("binary ready (" + packaged.length() + " bytes)"); return packaged; } throw new IOException("missing native binary: " + packaged.getAbsolutePath()); }
+
+    private void logManagerCompatibilityDiagnostics() {
+        try {
+            ManagerCompatibility.ManagerInfo manager = ManagerCompatibility.detectManager(this);
+            if (manager == null || !manager.installed) {
+                appendLog("[diag] manager detection: no recognized manager found");
+                return;
+            }
+
+            boolean runtimeListed = false;
+            for (String pkg : KSU_MANAGER_PACKAGES) {
+                if (pkg.equals(manager.packageName)) {
+                    runtimeListed = true;
+                    break;
+                }
+            }
+
+            appendLog("[diag] detected manager: " + manager.name + " (" + manager.packageName + ")");
+            appendLog("[diag] package in runtime ksud lookup list: " + runtimeListed);
+            if (!runtimeListed) {
+                appendLog("[diag] manager recognition and runtime artifact lookup have different package coverage");
+            }
+            appendLog("[diag] manager detection does not verify backend readiness or root access");
+        } catch (Throwable t) {
+            appendLog("[diag] manager compatibility check failed: " + t.getClass().getSimpleName());
+        }
+    }
 
     private File prepareKsud(File workDir) {
         File out = new File(workDir, KSUD_NAME);
