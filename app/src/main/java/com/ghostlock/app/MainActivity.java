@@ -594,12 +594,21 @@ public class MainActivity extends Activity {
                 continue;
             }
             artifactFound = true;
-            appendLog("manager artifact detected: " + pkg + "/libksud.so");
+            try {
+                copyFile(src, out);
+                try { Os.chmod(out.getAbsolutePath(), 448); } catch (ErrnoException ignored) { }
+                appendLog("ksud artifact located for package: " + pkg);
+                return out;
+            } catch (Throwable t) {
+                appendLog("copy ksud failed for " + pkg + ": " + t.getMessage());
+            }
         }
         if (!anyInstalled) {
             appendLog("No manager package from the current runtime compatibility list was found");
         } else if (!artifactFound) {
             appendLog("No ksud artifact found for the recognized runtime package list; manager detection does not confirm runtime compatibility");
+        } else {
+            appendLog("A ksud artifact was found, but it could not be prepared");
         }
         return null;
     }
