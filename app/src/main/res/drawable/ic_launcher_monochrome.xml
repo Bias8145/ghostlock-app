@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The foreground artwork is pure black with transparency, so its alpha is a
-     valid single-color mask for launcher theme tinting. -->
+<!-- Monochrome alpha mask for Android 13+ themed icons. Keep the glyph solid black
+     so the launcher can recolor it using the user's dynamic wallpaper palette. -->
 <inset xmlns:android="http://schemas.android.com/apk/res/android"
     android:inset="0dp"
-    android:drawable="@drawable/ic_launcher_foreground" />
+    android:drawable="@drawable/ic_launcher_monochrome_foreground" />
