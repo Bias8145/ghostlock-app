@@ -1,0 +1,8 @@
+<resources>
+    <dimen name="gl_screen_padding">20dp</dimen>
+    <dimen name="gl_section_spacing">24dp</dimen>
+    <dimen name="gl_card_radius">24dp</dimen>
+    <dimen name="gl_dialog_radius">28dp</dimen>
+    <dimen name="gl_control_height">52dp</dimen>
+    <dimen name="gl_icon_button_size">48dp</dimen>
+</resources>

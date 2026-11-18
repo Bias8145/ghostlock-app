@@ -31,7 +31,12 @@ public final class ManagerCompatibility {
         public final State state;
         public final ManagerInfo manager;
         Result(boolean k, State s, ManagerInfo m) { kernelSupported=k; state=s; manager=m; }
-        public boolean canRun() { return state == State.READY || (state == State.SPOOFED_MANAGER && manager.recognized); }
+        /** A recognized manager cannot make an unsupported kernel runnable. */
+        public boolean canRun() {
+            return kernelSupported
+                    && (state == State.READY
+                    || (state == State.SPOOFED_MANAGER && manager != null && manager.recognized));
+        }
     }
 
     private static final class Registered {
@@ -54,6 +59,7 @@ public final class ManagerCompatibility {
     private static final Registered[] REGISTERED = {
             new Registered(RESUKISU_PACKAGE, "ReSukiSU / BakaSU", BAKASU_URL),
             new Registered("me.weishu.kernelsu.pr", "KernelSU PR", "https://github.com/tiann/KernelSU/releases"),
+            new Registered("com.rifsxd.ksunext", "KernelSU Next", "https://github.com/KernelSU-Next/KernelSU-Next"),
             new Registered("me.weishu.kernelsu", "KernelSU", "https://github.com/tiann/KernelSU/releases", "1417081413bf7ab1de8e440ecbcb62685037c8f28f048f0f8b79e305b31ab916"),
             new Registered("com.kowx712.supermanager", "KOWSU", "https://github.com/KOWX712/KernelSU/releases")
     };
